@@ -18,7 +18,7 @@ def map_client(tmp_path) -> TestClient:
     (cache / "fonts" / "VT323.woff2").write_bytes(b"woff2data" * 100)
     (cache / "maps" / "erebos" / "bundle" / "map-bundle.bin").write_bytes(bytes(range(256)) * 100)
     (cache / "ludicrpg.png").write_bytes(b"\x89PNG" + b"\x00" * 100)
-    s = Settings(data_dir=tmp_path)
+    s = Settings(data_dir=tmp_path, map_cache_dir=cache)
     return TestClient(create_app(s))
 
 

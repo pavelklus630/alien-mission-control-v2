@@ -42,9 +42,11 @@ class Settings(BaseSettings):
     # Storage — writable user data (uploads, persisted state).
     data_dir: Path = Field(default_factory=paths.user_data_dir)
 
-    # Soundboard: where the audio library lives. Defaults under data_dir; can be
-    # pointed at the v1 library or a test fixture via MC_SOUNDS_DIR.
+    # Asset dirs — can be overridden via env vars; when None the resolved_*
+    # properties return the correct path for both dev and frozen (.app) modes.
     sounds_dir: Path | None = None
+    terminal_sounds_dir: Path | None = None
+    map_cache_dir: Path | None = None
 
     audio: AudioSettings = AudioSettings()
 
@@ -54,7 +56,30 @@ class Settings(BaseSettings):
 
     @property
     def resolved_sounds_dir(self) -> Path:
-        return self.sounds_dir if self.sounds_dir is not None else self.data_dir / "sounds"
+        if self.sounds_dir is not None:
+            return self.sounds_dir
+        if paths.is_frozen():
+            import sys
+            return Path(sys._MEIPASS) / "soundboard" / "sounds"
+        return self.data_dir / "sounds"
+
+    @property
+    def resolved_terminal_sounds_dir(self) -> Path:
+        if self.terminal_sounds_dir is not None:
+            return self.terminal_sounds_dir
+        if paths.is_frozen():
+            import sys
+            return Path(sys._MEIPASS) / "terminal" / "sounds"
+        return self.data_dir / "terminal_sounds"
+
+    @property
+    def resolved_map_cache_dir(self) -> Path:
+        if self.map_cache_dir is not None:
+            return self.map_cache_dir
+        if paths.is_frozen():
+            import sys
+            return Path(sys._MEIPASS) / "map" / "cache"
+        return self.data_dir / "map_cache"
 
 
 @lru_cache

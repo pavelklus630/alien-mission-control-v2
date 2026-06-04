@@ -8,7 +8,8 @@ __pycache__/
 .eggs/
 build/
 dist/
-*.spec
+# Keep mission_control.spec tracked; ignore generated .spec files from other tools.
+# *.spec
 .venv/
 venv/
 env/

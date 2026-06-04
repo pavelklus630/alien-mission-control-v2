@@ -12,7 +12,7 @@ def terminal_client(tmp_path) -> TestClient:
     sounds = tmp_path / "terminal_sounds"
     sounds.mkdir()
     (sounds / "beep.ogg").write_bytes(b"beep" * 100)
-    s = Settings(data_dir=tmp_path)
+    s = Settings(data_dir=tmp_path, terminal_sounds_dir=sounds)
     return TestClient(create_app(s))
 
 

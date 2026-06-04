@@ -13,7 +13,7 @@ from .state import MessageLog
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
-    sounds_dir = settings.data_dir / "terminal_sounds"
+    sounds_dir = settings.resolved_terminal_sounds_dir
     app = create_service_app("Terminal")
     log = MessageLog()
     app.include_router(build_router(settings, log, sounds_dir))

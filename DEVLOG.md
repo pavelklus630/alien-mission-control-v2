@@ -86,3 +86,16 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - **Map service** (port 8085): `MapState` (title/menu toggle), routes preserve v1 contract (`GET /` `/control` `/display` `/api/state` `/api/maps/erebos`, `POST /api/toggle` `/api/toggle-menu`, `GET /assets/*` `/fonts/*` `/maps/*` `/ludicrpg.png`). All cache files served via `core/ranges.py` — **fixes v1's whole-file-in-RAM debt** for `map-bundle.bin`. Traversal guard via `safe_join`. `/api/maps/erebos` structured descriptor = editor/multi-map seam. 10/10 tests pass.
 - **Full suite: 54/54 pass** (config 5, map 10, ranges 5, soundboard 9, terminal 8, uploads 10, vibe 7). No real ports, no real assets in tests.
 - **Stopped for consultation.** Phase 2 implementation (all four services) complete. Pending: launcher/supervisor, PyInstaller spec update, pre-launch test gate (Phase 3).
+
+### 2026-06-04 — launcher, __main__ gate, build tooling (user: "review and proceed")
+
+- **Config**: added `resolved_terminal_sounds_dir` and `resolved_map_cache_dir` properties following the same frozen-path pattern as `resolved_sounds_dir` — in a frozen .app they resolve to `_MEIPASS/terminal/sounds` and `_MEIPASS/map/cache`; in dev to `data_dir/terminal_sounds` and `data_dir/map_cache`. Tests updated to use explicit dir fixtures.
+- **`core/server.py`**: added `on_crash` callback to `ThreadedUvicorn.start()` — fires if uvicorn thread exits without `should_exit` being set (unexpected crash), fed from the launcher's `_on_crash` handler.
+- **`launcher/supervisor.py`**: `ServiceDescriptor` dataclass + `make_services()` factory that defers service imports to call time (avoids Tkinter-level import side effects). Four descriptors with correct ports, URL labels, icons, and factories for all services.
+- **`launcher/app.py`**: full Tkinter Canvas launcher, identical look to v1. Key v2 improvements: drives `ThreadedUvicorn.start/stop` instead of `make_server()/serve_forever`; quit signals `should_exit` on all uvicorn instances (fixes v1's 500ms quit-race); auto-update backs up the old `.app` before replacing it (`cp -a` + `rm -rf`). LAN_IP, ports, and URLs all come from Settings.
+- **`__main__.py`**: pre-launch test gate — runs `pytest -m "not slow" -q --tb=short` as a subprocess before starting the launcher. Aborts with a clear message if tests fail. Bypassed automatically when frozen (pytest not bundled); bypassable manually via `MC_SKIP_TESTS=1` for rapid dev iteration.
+- **`build.sh`**: test-then-build script (creates venv if needed → `pytest -m "not slow"` → `PyInstaller`). Same pattern as v1 dev build.sh.
+- **`mission_control.spec`**: v2 PyInstaller spec — `src/` layout entry point, `collect_data_files("mission_control")` for templates/static, full hidden imports for FastAPI/Starlette/uvicorn/pydantic-v2/jinja2/anyio. Bundle ID `com.pavelklus.alien.missioncontrol.v2`, version `2.0.0a0`, `arm64`.
+- **`.gitignore`**: un-ignored `mission_control.spec` (was blanket-ignored by `*.spec`).
+- **Verified**: 54/54 tests pass; supervisor resolves all four factories at correct ports; `MC_SKIP_TESTS=1` gate bypass works; pre-launch pytest run exits 0.
+- **Phase 2 + Phase 3 (gate) complete.** Stopped for consultation before PyInstaller build smoke-test and any further work.

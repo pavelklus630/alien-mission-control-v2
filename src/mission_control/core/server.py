@@ -10,6 +10,7 @@ Vibe SSE shutdown hang).
 from __future__ import annotations
 
 import threading
+from collections.abc import Callable
 
 import uvicorn
 from fastapi import FastAPI
@@ -26,10 +27,17 @@ class ThreadedUvicorn:
     def port(self) -> int:
         return self._config.port
 
-    def start(self) -> None:
+    def start(self, on_crash: "Callable[[], None] | None" = None) -> None:
         if self._thread and self._thread.is_alive():
             return
-        self._thread = threading.Thread(target=self.server.run, daemon=True, name=f"uvicorn:{self.port}")
+
+        def _run():
+            self.server.run()
+            # If uvicorn exits while we did NOT ask it to, it crashed.
+            if on_crash and not self.server.should_exit:
+                on_crash()
+
+        self._thread = threading.Thread(target=_run, daemon=True, name=f"uvicorn:{self.port}")
         self._thread.start()
 
     def is_running(self) -> bool:
