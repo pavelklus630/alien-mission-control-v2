@@ -99,3 +99,23 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - **`.gitignore`**: un-ignored `mission_control.spec` (was blanket-ignored by `*.spec`).
 - **Verified**: 54/54 tests pass; supervisor resolves all four factories at correct ports; `MC_SKIP_TESTS=1` gate bypass works; pre-launch pytest run exits 0.
 - **Phase 2 + Phase 3 (gate) complete.** Stopped for consultation before PyInstaller build smoke-test and any further work.
+
+### 2026-06-04 — visual check of Tkinter launcher
+
+- **Issue found:** pyenv Python 3.11.8 lacks `_tkinter` (built without Tcl/Tk — standard pyenv gotcha on macOS). All four Homebrew Python 3.11/3.13 builds from `/opt/homebrew` also lack it. **`/usr/local/bin/python3.13` (Python.org framework build) has working Tkinter.** Venv rebuilt with that interpreter; 54/54 tests still pass on 3.13.
+- **Visual check result — PASSED.** All requirements met:
+  - Header: "MISSION CONTROL" title, live clock (ticking), LAN IP (192.168.1.49).
+  - Four service cards: SOUNDBOARD (:8765), MU/TH/UR TERMINAL (:8770), VIBE GENERATOR (:8090), EREBOS STATION (:8085) — all with correct icons, tags, port labels, link labels, log area.
+  - All four START buttons visible before launch.
+  - Footer: LAUNCH ALL / STOP ALL / QUIT — all present and styled correctly.
+  - After LAUNCH ALL: all four cards turned green (border + glow + dot), status = "● ONLINE · port XXXX responding", buttons changed to red STOP, log shows "Listening on :XXXX". HTTP 200 confirmed on all four ports via curl.
+  - Look is identical to v1.
+- **Note for setup docs:** To run the launcher, use `/usr/local/bin/python3.13` (Python.org framework build) or any Python with a working `_tkinter`. pyenv builds on macOS require `brew install tcl-tk` + pyenv reinstall to get Tk support. PyInstaller `.app` bundles its own Tk so this is a dev-only concern.
+
+### 2026-06-04 — icon fixes (user report: no icon in corner or dock)
+- **Root cause 1 (canvas corner icon):** `assets/` directory did not exist in V_2.0 — the path resolved correctly (4 parent levels from `app.py` = repo root) but the file wasn't there. Fixed by copying assets from v1: `cp -r alien-mission-control/assets V_2.0/assets`.
+- **Root cause 2 (dock icon):** Running as bare `python -m` shows the Python interpreter's dock icon. Fixed by calling `NSApplication.sharedApplication().setApplicationIconImage_()` via AppKit (PyObjC) in `_load_icon()`, with silent fallback if AppKit is unavailable. Also added `iconphoto()` call for the window titlebar icon.
+- **Dock icon:** now rounded — switched from `alien_avatar.png` (flat PNG, no mask) to `AlienMissionControl.icns` (carries the rounded icon mask) via `NSApplication.setApplicationIconImage_()`. Canvas corner icon unchanged (`alien_avatar.png`).
+- **Menu bar label:** "Mission Control" — set by patching `CFBundleName`/`CFBundleDisplayName` into `NSBundle.mainBundle().infoDictionary()` before Tkinter renders.
+- **Dock hover tooltip:** still reads "Python" in dev mode — known macOS limitation. The WindowServer registers the tooltip from `Python.app`'s bundle at process launch, before any runtime AppKit calls. This cannot be overridden without a stub `.app` wrapper. **Not a concern for production:** the PyInstaller `.app` bundle has its own `Info.plist` so the dock will show "Mission Control" correctly for real users.
+- **54/54 tests still pass.**

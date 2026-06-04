@@ -106,9 +106,21 @@ def _get_app_path():
     return os.path.dirname(os.path.dirname(os.path.dirname(sys.executable)))
 
 
+def _assets_dir() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys._MEIPASS) / "assets"
+    # dev: app.py is at src/mission_control/launcher/app.py → 4 levels up = repo root
+    return Path(__file__).resolve().parent.parent.parent.parent / "assets"
+
+
 def _icon_path() -> str:
-    base = sys._MEIPASS if getattr(sys, "frozen", False) else str(Path(__file__).resolve().parent.parent.parent.parent)
-    return os.path.join(base, "assets", "alien_avatar.png")
+    return str(_assets_dir() / "alien_avatar.png")
+
+
+def _dock_icon_path() -> str:
+    """macOS dock icon — use the .icns file which carries the correct icon mask
+    so macOS applies proper rounded-rectangle shaping in the dock."""
+    return str(_assets_dir() / "AlienMissionControl.icns")
 
 
 class Launcher(tk.Tk):
@@ -159,9 +171,28 @@ class Launcher(tk.Tk):
     # ── icon ──────────────────────────────────────────────────────────────────
     def _load_icon(self):
         self.icon = None
+        path = _icon_path()
         try:
-            img = tk.PhotoImage(file=_icon_path())
+            img = tk.PhotoImage(file=path)
             self.icon = img.subsample(2, 2)
+            # Set window icon (title-bar corner on Linux; no-op on macOS but harmless).
+            self.iconphoto(False, img)
+        except Exception:
+            pass
+        # Set the macOS dock icon and app name (dev mode; .app bundle sets these via Info.plist).
+        try:
+            from AppKit import NSApplication, NSBundle, NSImage  # type: ignore[import]
+            ns_app = NSApplication.sharedApplication()
+            # Dock icon — use .icns which carries the correct rounded icon mask.
+            ns_img = NSImage.alloc().initWithContentsOfFile_(_dock_icon_path())
+            if ns_img:
+                ns_app.setApplicationIconImage_(ns_img)
+            # Dock label — override CFBundleName so the dock reads the app name,
+            # not the Python interpreter name.
+            info = NSBundle.mainBundle().infoDictionary()
+            if info is not None:
+                info["CFBundleName"] = "Mission Control"
+                info["CFBundleDisplayName"] = "ALIEN — Mission Control"
         except Exception:
             pass
 
