@@ -110,6 +110,14 @@ Running record of every meaningful decision and change. Append-only; newest entr
   - Footer: LAUNCH ALL / STOP ALL / QUIT — all present and styled correctly.
   - After LAUNCH ALL: all four cards turned green (border + glow + dot), status = "● ONLINE · port XXXX responding", buttons changed to red STOP, log shows "Listening on :XXXX". HTTP 200 confirmed on all four ports via curl.
   - Look is identical to v1.
+### 2026-06-04 — first .app build
+
+- **Fixed:** `__main__.py` used `from .launcher.app import run` (relative import). PyInstaller executes `__main__` directly (not as `mission_control.__main__`), so relative imports fail. Changed to `from mission_control.launcher.app import run`.
+- **Fixed:** `.gitignore` was not excluding `build/` and `dist/`.
+- **Spec updated:** added `V1` path constant and uncommented sounds/map-cache asset lines pointing at v1 library (interim until v2 has its own asset pipeline).
+- **Build result:** `dist/Mission Control.app` — 141 MB, 54 tests pass before PyInstaller runs, clean build (no errors/warnings). Info.plist: `CFBundleName = Mission Control`, version `2.0.0a0`, arm64.
+- **Verified:** app launches without crash; menu bar reads "Mission Control"; alien avatar in canvas corner; rounded dock icon (.icns).
+- **Pending:** user to manually click LAUNCH ALL in the bundled .app and verify all 4 services go ONLINE + pages load in browser before creating a GitHub release.
 - **Note for setup docs:** To run the launcher, use `/usr/local/bin/python3.13` (Python.org framework build) or any Python with a working `_tkinter`. pyenv builds on macOS require `brew install tcl-tk` + pyenv reinstall to get Tk support. PyInstaller `.app` bundles its own Tk so this is a dev-only concern.
 
 ### 2026-06-04 — icon fixes (user report: no icon in corner or dock)

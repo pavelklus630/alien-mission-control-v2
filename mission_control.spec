@@ -10,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(os.path.abspath("."))
 SRC  = ROOT / "src" / "mission_control"
+V1   = Path(os.path.expanduser("~/alien-mission-control"))  # v1 asset source until v2 asset pipeline is ready
 
 # ── bundled data ─────────────────────────────────────────────────────────────
 # Templates are inside the package and collected via collect_data_files below.
@@ -20,11 +21,12 @@ datas = [
     (str(ROOT / "assets" / "alien_avatar.png"),   "assets"),
     (str(ROOT / "assets" / "AlienMissionControl.icns"), "assets"),
 
-    # Bundled sounds (packaged with the .app; user uploads go to data_dir later)
-    # Adjust these paths if you keep sounds in a different location.
-    # (str(ROOT / "SOUNDBOARD" / "sounds"), "soundboard/sounds"),
-    # (str(ROOT / "TERMINAL"  / "sounds"), "terminal/sounds"),
-    # (str(ROOT / "MAP"       / "cache"),  "map/cache"),
+    # Bundled sounds and map cache.
+    # Resolved frozen paths: _MEIPASS/soundboard/sounds, terminal/sounds, map/cache.
+    # Pointing at v1 library for now; replace once v2 has its own asset pipeline.
+    (str(V1 / "SOUNDBOARD" / "sounds"), "soundboard/sounds"),
+    (str(V1 / "TERMINAL"  / "sounds"), "terminal/sounds"),
+    (str(V1 / "MAP"       / "cache"),  "map/cache"),
 ]
 
 # Collect all package data (templates, static, shared_static) from the

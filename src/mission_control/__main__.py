@@ -44,7 +44,7 @@ def _run_gate() -> None:
 
 def main() -> None:
     _run_gate()
-    from .launcher.app import run
+    from mission_control.launcher.app import run
     run()
 
 
