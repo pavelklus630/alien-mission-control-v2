@@ -117,7 +117,8 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - **Spec updated:** added `V1` path constant and uncommented sounds/map-cache asset lines pointing at v1 library (interim until v2 has its own asset pipeline).
 - **Build result:** `dist/Mission Control.app` — 141 MB, 54 tests pass before PyInstaller runs, clean build (no errors/warnings). Info.plist: `CFBundleName = Mission Control`, version `2.0.0a0`, arm64.
 - **Verified:** app launches without crash; menu bar reads "Mission Control"; alien avatar in canvas corner; rounded dock icon (.icns).
-- **Pending:** user to manually click LAUNCH ALL in the bundled .app and verify all 4 services go ONLINE + pages load in browser before creating a GitHub release.
+- **User verified:** LAUNCH ALL tested manually — all 4 services ONLINE, pages load. Dock tooltip reads "Mission Control" in the bundled .app (Info.plist bundle name confirmed in menu bar).
+- **Released:** tag `v2.0.0a0` pushed; `MissionControl-v2.0.0a0-arm64.zip` (116 MB, ditto-packed to preserve macOS metadata) uploaded to https://github.com/pavelklus630/alien-mission-control-v2/releases/tag/v2.0.0a0
 - **Note for setup docs:** To run the launcher, use `/usr/local/bin/python3.13` (Python.org framework build) or any Python with a working `_tkinter`. pyenv builds on macOS require `brew install tcl-tk` + pyenv reinstall to get Tk support. PyInstaller `.app` bundles its own Tk so this is a dev-only concern.
 
 ### 2026-06-04 — icon fixes (user report: no icon in corner or dock)
