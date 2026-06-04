@@ -135,7 +135,7 @@ Each service exposes content as typed pydantic models behind a repository, with 
 | Service | Model (sketch) | Store | Read API (now) | Write/upload API (designed, gated) |
 |---|---|---|---|---|
 | Soundboard | `Sound{id,name,category,file,duration,loop,gain}` | `data/sounds/library.json` + audio dir | `GET /api/sounds` | `POST /api/sounds` (upload+re-encode), `PUT /api/sounds/{id}` |
-| Map | `MapAsset{id,name,bundle,layers}` | `data/maps/` | `GET /api/maps`, `GET /api/maps/{id}` | `POST /api/maps` (image upload → Range-served) |
+| Map | `MapAsset{id,name,bundle,layers}` | `data/maps/` | `GET /api/maps/erebos` (single map now; model shaped so multi-map is a small later add) | `POST /api/maps` (image upload → Range-served) — deferred/gated |
 | Vibe | `Scene{id,name,params}` | `data/vibe/scenes.json` | `GET /api/scenes` | `PUT /api/scenes/{id}` (vibe editor) |
 | Terminal | `Message{id,ts,text,kind}` | in-memory (+ optional `data/terminal/`) | `GET /api/log` | n/a (authoring is live input) |
 
@@ -192,9 +192,9 @@ Tkinter stays stdlib (launcher). This is a deliberate, modest dependency set —
 | 1 | Ports fixed? | **Yes** — 8765/8770/8090/8085 unchanged (hard req). |
 | 2 | Dev hot-reload wanted? | Nice-to-have via uvicorn `--reload` in a dev script; not in the packaged app. |
 | 3 | How are audio/map assets distributed to new machines? | Shipped in the bundle; user uploads land in writable `data/`; tests use tiny fixtures, not real assets. |
-| 4 | Platform targets? | **macOS arm64 only** (as v1), but code stays portable. ← *confirm* |
-| 5 | Vibe scene: persist or reset on restart? | **Persist** last scene to `data/vibe/` (cheap, nice). ← *confirm* |
-| 6 | Map: Erebos-only or multi-map? | Design map service for **multiple maps** (aligns with upload goal); ship Erebos. ← *confirm* |
+| 4 | Platform targets? | **CONFIRMED: macOS arm64 only** (as v1). Code stays portable internally; only this build is produced/tested. |
+| 5 | Vibe scene: persist or reset on restart? | **CONFIRMED: persist** last scene to `data/vibe/scenes.json`; restore on launch. |
+| 6 | Map: Erebos-only or multi-map? | **CONFIRMED: Erebos-only for now.** Single-map model; keep the upload/`core/uploads` seam clean so multi-map is a small later change, but do not build the list/multi-map UI now. |
 | 7 | Log file under `~/Library/Logs/MissionControl/`? | **Yes.** |
 
 ---
