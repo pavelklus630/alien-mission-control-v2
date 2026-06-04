@@ -47,3 +47,14 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - **Architecture recommendation (analyst):** **Option A** — keep four separate in-process services, add shared `config.py` + `server_utils.py` + restore tests. Option B (unified) still needs 4 socket binds for OBS; only B3 (full asyncio rewrite) truly unifies and costs the most. Tension to resolve in Phase 2: analyst's zero-dep stdlib leaning vs. the user's stated want for mature libs (FastAPI/Jinja2/pydantic/pytest) that make uploads + future editors cleaner. **This is the central Phase 2 decision — flagged for the architect (Opus) and user consultation.**
 - **7 open questions** recorded for the user at the end of `docs/phase1-analysis.md`.
 - **Phase 1 complete.** Stopped for consultation before Phase 2 (design).
+
+---
+
+## Phase 2 — Greenfield v2 design (proposal)
+
+### 2026-06-04
+- **Decision (user):** Runtime architecture = **Option A** (four separate in-process services, each binding its own port). Stack = **FastAPI + Jinja2 + pydantic** (+ uvicorn, pydantic-settings, python-multipart, pytest/httpx, ruff).
+- **Process note:** architecture designed **inline in the main Opus thread** rather than spawning the `architect` subagent — this thread is already Opus 4.8 (the approved strong model) and holds the full Phase 1 context, so a separate Opus agent would only re-derive it at extra cost.
+- **Created** `docs/phase2-architecture.md`: package layout (src layout, `core/` shared infra, four `services/`), the ThreadedUvicorn-per-port mechanism (`install_signal_handlers=False` + `should_exit` graceful stop, fixes v1 quit-race), OBS/SSE handling, reusable `core/ranges.py` (audio + map binaries), pydantic-settings config + rotating file logging, structured editable content models per service (flag-gated upload/editor APIs as the extensibility seam), an 8-step migration plan, dependency table, risks, and 7 open-question assumptions.
+- **Plan:** on approval, build step 1 (scaffold + core) then the **Soundboard service end-to-end as the reference implementation**, stop and review before porting Terminal/Vibe/Map.
+- **NO production code written yet.** Stopped for consultation before implementation (per phase gate). Awaiting confirmation on open questions #4 (platform = macOS arm64 only?), #5 (persist Vibe scene?), #6 (multi-map support?).
