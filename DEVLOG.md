@@ -34,3 +34,16 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - **Commit:** `0720f0c` "Phase 0: initialize Mission Control v2 repo".
 - **GitHub:** created public repo `pavelklus630/alien-mission-control-v2` via `gh repo create … --public --source=. --remote=origin --push`; `main` tracks `origin/main`. URL: https://github.com/pavelklus630/alien-mission-control-v2
 - **Phase 0 complete.** Stopped for consultation before Phase 1 (analysis).
+
+---
+
+## Phase 1 — Systemic analysis of v1
+
+### 2026-06-04
+- **Ran** read-only legacy analysis (legacy-analyst charter, on Sonnet via a general-purpose subagent since the named agent isn't registered to the v1-rooted session). No v1 files modified.
+- **Preserved** the full report to `docs/phase1-analysis.md`.
+- **Decision (user):** Opus audio bitrate stays at **96 kbps** (transparent for ambient/SFX/music over speakers/OBS) but must become a **config value, not a hardcoded constant**, with an optional higher tier (e.g. 128 kbps) for music-heavy cues. Logged as a Phase 2 design requirement.
+- **Key findings:** v1 is clean, **zero third-party runtime deps** (pure stdlib `http.server.ThreadingHTTPServer`, daemon-thread per service). Biggest debt = ~200 KB HTML/CSS/JS baked into Python string literals in Terminal/Vibe/Map (Soundboard already uses external `.html`). No tests in canonical clone (dev V_1.6/V_1.7 have a pytest suite + test-then-build `build.sh`). Range streaming only on Soundboard audio; Map reads whole binary into RAM. Path-traversal guards present on Soundboard/Map (explicit `resolve().relative_to`), Terminal uses `.name` trick. All ports bind `0.0.0.0`, no auth (intentional LAN sharing). Inconsistent live-update (poll vs SSE). Config = magic numbers; no structured logging.
+- **Architecture recommendation (analyst):** **Option A** — keep four separate in-process services, add shared `config.py` + `server_utils.py` + restore tests. Option B (unified) still needs 4 socket binds for OBS; only B3 (full asyncio rewrite) truly unifies and costs the most. Tension to resolve in Phase 2: analyst's zero-dep stdlib leaning vs. the user's stated want for mature libs (FastAPI/Jinja2/pydantic/pytest) that make uploads + future editors cleaner. **This is the central Phase 2 decision — flagged for the architect (Opus) and user consultation.**
+- **7 open questions** recorded for the user at the end of `docs/phase1-analysis.md`.
+- **Phase 1 complete.** Stopped for consultation before Phase 2 (design).
