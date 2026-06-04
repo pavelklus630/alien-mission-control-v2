@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Erebos Station — Map</title>
+  <link rel="icon" type="image/png" href="/ludicrpg.png" />
+  <link rel="preload" href="/fonts/VT323-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="modulepreload" href="/assets/engine-BJF_wIsr.js">
+  <script type="module" crossorigin src="/assets/viewer-k1yej0yn.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/config-55vNLYS3.js">
+  <link rel="modulepreload" crossorigin href="/assets/authors-DGq_EyrO.js">
+  <link rel="modulepreload" crossorigin href="/assets/three-Bu_pujX6.js">
+  <link rel="modulepreload" crossorigin href="/assets/engine-wbUSwKCw.js">
+  <link rel="modulepreload" crossorigin href="/assets/welcome-C3KYXmd4.js">
+  <link rel="stylesheet" crossorigin href="/assets/authors-c6dVqhtq.css">
+  <link rel="stylesheet" crossorigin href="/assets/engine-DWOUmScU.css">
+  <style>
+    /* GM title-hide */
+    body.title-hidden #map-title,
+    body.title-hidden .menu-header-title,
+    body.title-hidden .header-title { visibility: hidden !important; }
+
+    /* Panel collapse */
+    #menu { transition: transform 0.3s ease, opacity 0.2s ease; }
+    body.menu-hidden #menu {
+      transform: translateX(calc(-100% - 20px));
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* Collapse button inside panel header */
+    #menu-collapse-btn {
+      position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: inherit;
+      font-family: VT323, monospace; font-size: 22px;
+      cursor: pointer; padding: 2px 8px; opacity: 0.5; line-height: 1;
+    }
+    #menu-collapse-btn:hover { opacity: 1; }
+    /* Restore tab shown at left edge when panel is hidden */
+    #menu-restore-tab {
+      position: fixed; left: 0; top: 50%; transform: translateY(-50%);
+      z-index: 10001; cursor: pointer;
+      background: var(--theme-bg-primary, #001300);
+      border: 1px solid var(--theme-border-base, rgba(0,255,51,.25));
+      border-left: none; border-radius: 0 6px 6px 0;
+      padding: 14px 7px; color: var(--theme-text-primary, #7cff7c);
+      font-family: VT323, monospace; font-size: 22px; line-height: 1;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    body.menu-hidden #menu-restore-tab { opacity: 1; pointer-events: auto; }
+  </style>
+</head>
+<body class="theme-green">
+
+  <!-- Loading splash (auto-dismissed once map is ready) -->
+  <div id="themeSelector" class="selector-container">
+    <header class="selector-header">
+      <a href="#" class="header-logo">Alien RPG Maps</a>
+      <h1 class="header-title" id="map-title">Loading...</h1>
+      <div class="header-author" id="map-author"></div>
+    </header>
+    <section class="description-section">
+      <p class="description-text" id="map-description">Please wait while the map loads</p>
+    </section>
+    <section class="loader-section">
+      <div class="loader-content">
+        <div class="map-info-frame">
+          <div class="map-thumbnail-container">
+            <img id="map-thumbnail" class="map-thumbnail-large" src="" alt="Map preview" />
+            <span class="progress-ready" id="map-progress-ready">READY</span>
+          </div>
+          <div class="loading-progress">
+            <div class="progress-bar-container">
+              <div class="progress-row">
+                <span class="progress-blocks" id="map-progress-blocks"></span>
+              </div>
+              <span class="progress-percentage" id="map-progress-text">0%</span>
+            </div>
+          </div>
+        </div>
+        <button id="start-button" class="start-button" style="display: none;">
+          <span class="start-icon">&#x25BA;</span> START EXPLORING
+        </button>
+      </div>
+    </section>
+    <footer class="credits-footer">
+      <div class="credits-card">
+        <a href="https://ludicrpg.com" target="_blank" rel="noopener noreferrer" class="credits-brand">
+          <img src="/ludicrpg.png" alt="Ludic RPG Logo" class="credits-logo" width="32" height="32" />
+          <span class="credits-text">actively developed by Ludic RPG</span>
+        </a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Error fallback -->
+  <div id="error-container" style="display: none;"></div>
+
+  <!-- Map viewer — full DOM required by engine JS -->
+  <div id="app">
+    <nav id="menu" aria-label="Levels">
+      <div class="menu-content">
+        <div class="menu-header">
+          <h1 class="menu-header-title">MAP NAME</h1>
+        </div>
+        <ul id="levels"></ul>
+        <h2 class="section-title">VIEWPORT</h2>
+        <div id="viewport-controls">
+          <button id="btn-frame" class="viewport-btn themed-btn"><span class="icon-frame">&#x29C6;</span> FRAME</button>
+          <button id="btn-recenter" class="viewport-btn themed-btn"><span class="icon-center">&#x2295;</span> RECENTER</button>
+        </div>
+        <div id="view-mode-toggle">
+          <button id="btn-view-2d" class="view-mode-btn themed-btn active"><span class="icon-2d">&#x25AD;</span> 2D FLAT</button>
+          <button id="btn-view-3d" class="view-mode-btn themed-btn"><span class="icon-3d">&#x25B1;</span> 3D DEPTH</button>
+        </div>
+        <button id="btn-toggle-icons" class="menu-toggle-icons-btn themed-btn">
+          <span class="icon-info">&#x24D8;</span> <span id="toggle-icons-text">SHOW ICONS</span>
+        </button>
+        <div class="menu-branding">
+          <div class="menu-action-buttons">
+            <a href="#" class="menu-back-btn themed-btn">
+              <span class="back-icon">&#x2190;</span> BACK
+            </a>
+            <button id="menu-settings-btn" class="menu-settings-btn themed-btn">
+              <span class="settings-icon">&#x2699;</span> SETTINGS
+            </button>
+          </div>
+          <a href="https://ludicrpg.com" target="_blank" rel="noopener noreferrer" class="menu-branding-link">
+            <img src="/ludicrpg.png" alt="" class="menu-logo" width="16" height="16" />
+            <span>made by Ludic RPG</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <canvas id="c"></canvas>
+
+    <aside id="settings-panel" aria-label="Settings">
+      <div class="settings-panel-content">
+        <h2 class="settings-panel-title">
+          <span class="settings-icon">&#x2699;</span> SETTINGS
+          <button id="settings-close-btn" class="settings-close-btn" aria-label="Close settings">&#x2715;</button>
+        </h2>
+        <div class="settings-section">
+          <h3 class="settings-section-title">CURSOR</h3>
+          <div id="cursor-toggle-container">
+            <button id="btn-pointer" class="pointer-btn themed-btn"><span class="pointer-icon">&#x279E;</span> POINTER</button>
+            <button id="btn-crosshair" class="pointer-btn themed-btn active"><span class="crosshair-icon">&#x271B;</span> CROSSHAIR</button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3 class="settings-section-title">BACKGROUND</h3>
+          <div id="background-toggle-container">
+            <button id="btn-bg-black" class="background-btn themed-btn active" title="Pure black"><span class="icon-black">&#x25CF;</span></button>
+            <button id="btn-bg-soft-dark" class="background-btn themed-btn" title="Soft dark"><span class="icon-soft-dark">&#x25D0;</span></button>
+            <button id="btn-bg-soft-light" class="background-btn themed-btn" title="Soft light"><span class="icon-soft-light">&#x25D1;</span></button>
+            <button id="btn-bg-white" class="background-btn themed-btn" title="Pure white"><span class="icon-white">&#x25CB;</span></button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3 class="settings-section-title">GLOW</h3>
+          <div id="bloom-control">
+            <label class="bloom-label">INTENSITY</label>
+            <div class="bloom-slider-container">
+              <input type="range" id="bloom-slider" min="0" max="3" step="0.1" />
+            </div>
+            <label class="bloom-label">THRESHOLD</label>
+            <div class="bloom-slider-container">
+              <input type="range" id="bloom-threshold-slider" min="0" max="1" step="0.05" />
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3 class="settings-section-title">THEME</h3>
+          <div id="settings-theme-toggle">
+            <button class="settings-theme-btn themed-btn" data-theme="original">ORIGINAL</button>
+            <button class="settings-theme-btn themed-btn" data-theme="white">WHITE</button>
+            <button class="settings-theme-btn themed-btn active" data-theme="green">GREEN</button>
+            <button class="settings-theme-btn themed-btn" data-theme="blue">BLUE</button>
+            <button class="settings-theme-btn themed-btn" data-theme="amber">AMBER</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div id="crosshair-x"></div>
+    <div id="crosshair-y"></div>
+  </div>
+
+<script>
+/* Auto-start: dismiss loading splash as soon as map is ready */
+(function () {
+  var t = setInterval(function () {
+    var btn = document.getElementById('start-button');
+    if (btn && btn.style.display !== 'none') {
+      try { btn.click(); } catch(e) {}
+      clearInterval(t);
+    }
+  }, 100);
+})();
+
+/* GM state sync: title-hide + menu-hide, poll /api/state every 2 s */
+(function () {
+  function sync() {
+    fetch('/api/state').then(function(r){ return r.json(); })
+      .then(function(d){
+        document.body.classList.toggle('title-hidden', !!d.title_hidden);
+        document.body.classList.toggle('menu-hidden',  !!d.menu_hidden);
+      })
+      .catch(function(){});
+  }
+  setInterval(sync, 2000); sync();
+})();
+
+/* Panel collapse: collapse button in header + restore tab at left edge */
+(function () {
+  /* Restore tab */
+  var tab = document.createElement('button');
+  tab.id = 'menu-restore-tab';
+  tab.textContent = '›'; /* › */
+  tab.title = 'Show panel';
+  document.body.appendChild(tab);
+  tab.addEventListener('click', function () {
+    fetch('/api/toggle-menu', {method: 'POST'}).catch(function(){});
+  });
+
+  /* Collapse button — wait for engine to finish building the menu header (max 30 tries ≈ 9 s) */
+  function addCollapseBtn(tries) {
+    tries = (tries || 0) + 1;
+    if (tries > 30) return;
+    var header = document.querySelector('#menu .menu-header');
+    if (!header) { setTimeout(function(){ addCollapseBtn(tries); }, 300); return; }
+    if (document.getElementById('menu-collapse-btn')) return;
+    header.style.position = 'relative';
+    var btn = document.createElement('button');
+    btn.id = 'menu-collapse-btn';
+    btn.textContent = '‹'; /* ‹ */
+    btn.title = 'Hide panel';
+    header.appendChild(btn);
+    btn.addEventListener('click', function () {
+      fetch('/api/toggle-menu', {method: 'POST'}).catch(function(){});
+    });
+  }
+  addCollapseBtn();
+})();
+</script>
+
+</body>
+</html>
