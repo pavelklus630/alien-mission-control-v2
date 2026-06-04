@@ -58,4 +58,23 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - **Created** `docs/phase2-architecture.md`: package layout (src layout, `core/` shared infra, four `services/`), the ThreadedUvicorn-per-port mechanism (`install_signal_handlers=False` + `should_exit` graceful stop, fixes v1 quit-race), OBS/SSE handling, reusable `core/ranges.py` (audio + map binaries), pydantic-settings config + rotating file logging, structured editable content models per service (flag-gated upload/editor APIs as the extensibility seam), an 8-step migration plan, dependency table, risks, and 7 open-question assumptions.
 - **Plan:** on approval, build step 1 (scaffold + core) then the **Soundboard service end-to-end as the reference implementation**, stop and review before porting Terminal/Vibe/Map.
 - **Open questions confirmed (user):** #4 platform = **macOS arm64 only**; #5 Vibe scene = **persist** last scene to `data/vibe/scenes.json`; #6 map = **Erebos-only for now** (keep upload seam clean, defer multi-map UI). Architecture doc assumptions table updated to match.
-- **NO production code written yet.** Stopped for consultation before implementation (per phase gate). Awaiting explicit go-ahead to start the build (step 1 scaffold + core, then Soundboard reference service).
+- **Open questions confirmed (user):** #4 platform = **macOS arm64 only**; #5 Vibe scene = **persist**; #6 map = **Erebos-only for now**.
+
+---
+
+## Phase 2 — Implementation: scaffold + core + Soundboard reference
+
+### 2026-06-04 — build step 1 & 2 (user gave go-ahead; "change the model and let's build")
+- **Note on model:** I cannot change the active session model from my side (`/model` is user-only); flagged that the user can run `/model sonnet` anytime for the routine build work.
+- **Scaffolded** `src/` layout package `mission_control` + `pyproject.toml` (setuptools, deps: fastapi, uvicorn[standard], jinja2, pydantic, pydantic-settings, python-multipart; dev: pytest, httpx, ruff). Created venv at `.venv` (gitignored), `pip install -e ".[dev]"`.
+- **Core modules:**
+  - `config.py` — pydantic-settings `Settings` (four ports as defaults, `MC_` env prefix, nested `MC_AUDIO__BITRATE_KBPS`, `resolved_sounds_dir`, `enable_uploads`/`enable_editors` flags). Kills v1 magic numbers.
+  - `logging_conf.py` — rotating file log (`~/Library/Logs/MissionControl/`) + stderr. `paths.py` — frozen/dev + macOS dir resolution.
+  - `core/ranges.py` — reusable HTTP Range helper (206/`Content-Range`/`Accept-Ranges`/416/404), registers `audio/ogg`. Fixes v1's Soundboard-only Range + Map-whole-file-in-RAM debt.
+  - `core/uploads.py` — `safe_join` (traversal-proof) + `validate_upload` (ext/size/content-type). The upload seam; routes stay gated.
+  - `core/app_factory.py` (CORS `*` + `NoCacheMiddleware`), `core/middleware.py`, `core/templating.py` (Jinja2Templates), `core/server.py` (`ThreadedUvicorn`: `install_signal_handlers=False` + `should_exit`).
+- **Soundboard service** (port 8765) — full v1 contract preserved: `GET / /control /output /state /sounds.json /audio/<path>` + `POST /` actions (play/stop/stop_all/volume/voice_on/voice_off), plus new `GET /api/sounds` (flat structured list = editor/upload seam). HTML moved from external files to Jinja `templates/` (verified no Jinja-token collisions). `repository.SoundLibrary` ports v1 `scan_sounds`/`clean_name` but **caches** the scan (fixes debt 3.13) and **skips hidden dirs/files** (improvement over v1, which leaked hidden dirs as bogus categories). `state.PlaybackState` ports the shared play/voice state behind a lock.
+- **Tests (29, all green):** `test_config` (defaults/env/resolved dir), `test_ranges` (full/partial/open-ended/416/404), `test_uploads` (traversal + validation matrix), `test_soundboard` (pages render w/ no-store, sounds.json grouping+order, hidden/non-audio skip, api/sounds, play/stop/volume/voice cycle, real Range streaming, traversal 403/404, missing 404). conftest builds a tmp sounds tree — no real assets, no real port.
+- **Two test bugs found & fixed during the run:** (1) wrong `clean_name` expectation (`Weap__X` → `Weap X`, not `X`); (2) wrong category-order expectation (CATEGORY_ORDER has Doors before Weapons). Both were test errors, not code errors — except the hidden-dir case, which exposed a real v1 latent bug now improved in v2.
+- **Live smoke test** vs the **real v1 sound library** (100 .ogg, port 8765): `/sounds.json` returned all 6 categories in correct order; `/control` served (72157 B, `cache-control: no-store`); **real Opus Range** `bytes=0-99` → `206 content-range: bytes 0-99/128845`, partial byte-exact vs file head; traversal → 404 (no leak). Server started/stopped cleanly via the standalone runner.
+- **Pattern validated.** Stopped before porting Terminal/Vibe/Map — awaiting user review of the Soundboard reference implementation.
