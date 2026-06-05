@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mission-control"
-version = "2.0.0a0"
+version = "2.0.1"
 description = "ALIEN RPG GM toolkit — Mission Control v2 (Soundboard, MU/TH/UR Terminal, Vibe, Erebos Map)"
 requires-python = ">=3.11"
 dependencies = [

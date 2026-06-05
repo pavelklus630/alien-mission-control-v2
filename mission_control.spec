@@ -98,8 +98,8 @@ app = BUNDLE(
     info_plist={
         "CFBundleName":              "Mission Control",
         "CFBundleDisplayName":       "Mission Control",
-        "CFBundleShortVersionString": "2.0.0a0",
-        "CFBundleVersion":           "2.0.0a0",
+        "CFBundleShortVersionString": "2.0.1",
+        "CFBundleVersion":           "2.0.1",
         "NSHighResolutionCapable":   True,
         "LSMinimumSystemVersion":    "11.0",
     },
