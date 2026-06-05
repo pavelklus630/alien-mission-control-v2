@@ -1002,13 +1002,14 @@ async function voiceOn(deviceId) {
   voice.starting = true;
   let ctx = null, stream = null;
   try {
-    ctx = new AudioContext();
+    ctx = new AudioContext({ latencyHint: 'interactive' });
     stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         deviceId: deviceId ? { exact: deviceId } : undefined,
         // echoCancellation ON suppresses speaker feedback at game-table volumes
         echoCancellation: true, noiseSuppression: false, autoGainControl: false,
         channelCount: 1,
+        latency: 0,
       }
     });
     const src = ctx.createMediaStreamSource(stream);
@@ -1038,15 +1039,23 @@ async function voiceOn(deviceId) {
     const clip2 = ctx.createWaveShaper(); clip2.curve = makeGritCurve(); clip2.oversample = '2x';
 
     // ── Bit-crush: quantise to ~8 bits — gritty but speech stays intelligible ─
-    const crush = ctx.createScriptProcessor(2048, 1, 1);
-    const crushSteps = 256; // 8-bit
-    crush.onaudioprocess = function(e) {
-      const inp = e.inputBuffer.getChannelData(0);
-      const out = e.outputBuffer.getChannelData(0);
-      for (let i = 0; i < inp.length; i++) {
-        out[i] = Math.round(inp[i] * crushSteps) / crushSteps;
-      }
-    };
+    // AudioWorklet runs at 128-sample quanta (~3 ms) vs ScriptProcessor's 2048 (46 ms).
+    // Loaded from an inline Blob URL so no separate file is needed.
+    let crush;
+    try {
+      const _src = `class BC extends AudioWorkletProcessor{process(i,o){const a=i[0][0],b=o[0][0];if(a)for(let j=0;j<a.length;j++)b[j]=Math.round(a[j]*256)/256;return true;}}registerProcessor('mc-bc',BC);`;
+      const _url = URL.createObjectURL(new Blob([_src], { type: 'application/javascript' }));
+      await ctx.audioWorklet.addModule(_url);
+      URL.revokeObjectURL(_url);
+      crush = new AudioWorkletNode(ctx, 'mc-bc');
+    } catch(_e) {
+      // Fallback: ScriptProcessor (deprecated but universal)
+      crush = ctx.createScriptProcessor(512, 1, 1);
+      crush.onaudioprocess = e => {
+        const i = e.inputBuffer.getChannelData(0), o = e.outputBuffer.getChannelData(0);
+        for (let j = 0; j < i.length; j++) o[j] = Math.round(i[j] * 256) / 256;
+      };
+    }
 
     // ── Dropout squelch: randomly silences for 20-80 ms ──────────────────────
     const squelch = ctx.createGain(); squelch.gain.value = 1;
