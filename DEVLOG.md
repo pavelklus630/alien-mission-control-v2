@@ -146,4 +146,6 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - **Decorative sine wave removed:** `#stwv` canvas (status bar ornament) deleted — CSS rule, HTML element, and `initWave()` call all removed.
 - **AUDIO STATUS now reflects real AudioContext state:** amber dot + SUSPENDED on page load (browser autoplay policy); green dot + SYSTEMS NOMINAL once AudioContext is running (after first user gesture); red dot + DISCONNECTED if server unreachable; red dot + NO AUDIO if AudioContext cannot be created. `statechange` listener fires the update immediately on user click without waiting for the next poll cycle.
 - **54/54 tests pass** (frontend-only changes; no Python modified).
+- **Dead code removed:** `initWave()` (animated decorative sine generator) was left in the file when its call-site (`initWave('stwv', …)`) was deleted; caught in review and removed in follow-up.
+- **54/54 tests pass** (frontend-only changes; no Python modified).
 - **GitHub release `v2.0.2`** published (no new .app build — HTML/JS only change; existing bundled app unaffected until next PyInstaller build).

@@ -455,40 +455,7 @@ function tick() {
 setInterval(tick, 1000); tick();
 
 // ── Waveform ───────────────────────────────────────────────────────────────────
-function initWave(id, nLines, color) {
-  const c = document.getElementById(id);
-  if (!c) return;
-  const ctx = c.getContext('2d');
-  let t = 0;
-  function resize() {
-    const dpr = window.devicePixelRatio || 1;
-    c.width = c.offsetWidth * dpr;
-    c.height = c.offsetHeight * dpr;
-  }
-  new ResizeObserver(resize).observe(c);
-  resize();
-  (function draw() {
-    const w = c.width, h = c.height;
-    ctx.clearRect(0, 0, w, h);
-    for (let l = 0; l < nLines; l++) {
-      ctx.beginPath();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = window.devicePixelRatio || 1;
-      ctx.globalAlpha = l === 0 ? 0.7 : 0.3;
-      for (let x = 0; x <= w; x++) {
-        const nx = x / w;
-        const y = h / 2
-          + Math.sin(nx * 10 + t * (0.035 + l * 0.015) + l * 1.8) * h * 0.28
-          + Math.sin(nx * 6  + t * (0.055 + l * 0.01) + l + 1)    * h * 0.10;
-        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-    t++;
-    requestAnimationFrame(draw);
-  })();
-}
+
 
 // ── Real waveform via Web Audio API ───────────────────────────────────────────
 let _wvCtx = null, _wvAn = null;
