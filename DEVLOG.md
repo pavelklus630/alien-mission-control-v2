@@ -128,3 +128,22 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - **Menu bar label:** "Mission Control" — set by patching `CFBundleName`/`CFBundleDisplayName` into `NSBundle.mainBundle().infoDictionary()` before Tkinter renders.
 - **Dock hover tooltip:** still reads "Python" in dev mode — known macOS limitation. The WindowServer registers the tooltip from `Python.app`'s bundle at process launch, before any runtime AppKit calls. This cannot be overridden without a stub `.app` wrapper. **Not a concern for production:** the PyInstaller `.app` bundle has its own `Info.plist` so the dock will show "Mission Control" correctly for real users.
 - **54/54 tests still pass.**
+
+---
+
+### 2026-06-05 — v2.0.1 mic latency fix (previous session)
+
+- **Microphone voice effect:** replaced deprecated `ScriptProcessor(2048)` (~46 ms delay) with inline `AudioWorklet` (~3 ms). Falls back to `ScriptProcessor(512)` on older browsers.
+- **AudioContext:** `latencyHint: 'interactive'` + `getUserMedia { latency: 0 }` for lowest pipeline latency.
+- **Versioning:** switched from alpha strings (`2.0.0a0`) to standard semver (`MAJOR.MINOR.PATCH`).
+- **54/54 tests pass.** GitHub release `v2.0.1` published with `MissionControl-v2.0.1-arm64.zip`.
+
+---
+
+### 2026-06-07 — v2.0.2 soundboard waveform + AUDIO STATUS
+
+- **Waveform reworked:** replaced continuous-stroke oscilloscope line with pixelated phosphor approach — one small rectangle (2×3 px logical) per column placed at the exact signal position. No vertical spread, no bars. Canvas taller (48 px, opacity 0.85). Idle state shows sparse scattered dots along centre line.
+- **Decorative sine wave removed:** `#stwv` canvas (status bar ornament) deleted — CSS rule, HTML element, and `initWave()` call all removed.
+- **AUDIO STATUS now reflects real AudioContext state:** amber dot + SUSPENDED on page load (browser autoplay policy); green dot + SYSTEMS NOMINAL once AudioContext is running (after first user gesture); red dot + DISCONNECTED if server unreachable; red dot + NO AUDIO if AudioContext cannot be created. `statechange` listener fires the update immediately on user click without waiting for the next poll cycle.
+- **54/54 tests pass** (frontend-only changes; no Python modified).
+- **GitHub release `v2.0.2`** published (no new .app build — HTML/JS only change; existing bundled app unaffected until next PyInstaller build).
