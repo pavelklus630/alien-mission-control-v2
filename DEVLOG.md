@@ -137,6 +137,7 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - **AudioContext:** `latencyHint: 'interactive'` + `getUserMedia { latency: 0 }` for lowest pipeline latency.
 - **Versioning:** switched from alpha strings (`2.0.0a0`) to standard semver (`MAJOR.MINOR.PATCH`).
 - **54/54 tests pass.** GitHub release `v2.0.1` published with `MissionControl-v2.0.1-arm64.zip`.
+- **Note:** `CURRENT_VERSION` in `launcher/app.py` was bumped to `"2.0.1"` and a `.zip` asset was attached to the release. The auto-updater code (`_check_update()` / banner / download flow) exists but has **not been end-to-end tested** against a real version transition — verifying the full update path (API check → banner → zip download → `.app` swap → relaunch) is a future task.
 
 ---
 
@@ -145,7 +146,9 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - **Waveform reworked:** replaced continuous-stroke oscilloscope line with pixelated phosphor approach — one small rectangle (2×3 px logical) per column placed at the exact signal position. No vertical spread, no bars. Canvas taller (48 px, opacity 0.85). Idle state shows sparse scattered dots along centre line.
 - **Decorative sine wave removed:** `#stwv` canvas (status bar ornament) deleted — CSS rule, HTML element, and `initWave()` call all removed.
 - **AUDIO STATUS now reflects real AudioContext state:** amber dot + SUSPENDED on page load (browser autoplay policy); green dot + SYSTEMS NOMINAL once AudioContext is running (after first user gesture); red dot + DISCONNECTED if server unreachable; red dot + NO AUDIO if AudioContext cannot be created. `statechange` listener fires the update immediately on user click without waiting for the next poll cycle.
-- **54/54 tests pass** (frontend-only changes; no Python modified).
 - **Dead code removed:** `initWave()` (animated decorative sine generator) was left in the file when its call-site (`initWave('stwv', …)`) was deleted; caught in review and removed in follow-up.
 - **54/54 tests pass** (frontend-only changes; no Python modified).
-- **GitHub release `v2.0.2`** published (no new .app build — HTML/JS only change; existing bundled app unaffected until next PyInstaller build).
+- **Release gaps (caught after the fact):** `CURRENT_VERSION` in `launcher/app.py` was NOT bumped to `"2.0.2"` — the launcher header still shows v2.0.1. No `.zip` asset was attached to the v2.0.2 GitHub release — so `_check_update()` returns `None` and no update is offered to v2.0.1 users. Skipping the build was incorrect even for frontend-only changes: without a new `.app` zip, the version string is wrong and the auto-updater cannot deliver the change.
+- **Required for every release going forward:** bump `CURRENT_VERSION` in `launcher/app.py`, run `build.sh`, attach the resulting zip to the GitHub release.
+- **Auto-updater status:** the full update flow (API check → banner → zip download → `.app` swap → relaunch) has never been end-to-end tested. To be verified in a future version.
+- **GitHub release `v2.0.2`** published (tag only, no zip asset — acknowledged deficiency above).
