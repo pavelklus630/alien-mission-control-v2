@@ -34,7 +34,7 @@ body::before{content:'';position:fixed;inset:0;z-index:9000;pointer-events:none;
 .wy-name{font-size:14px;color:var(--ac2);letter-spacing:.14em;text-shadow:0 0 8px var(--ac);line-height:1.2}
 .wy-sub{font-size:9px;color:var(--dim);letter-spacing:.2em;margin-top:2px}
 #top-wave{flex:1;display:flex;align-items:center;padding:0 16px;overflow:hidden;min-width:0}
-canvas#wvcnv{height:36px;width:100%;opacity:.65}
+canvas#wvcnv{height:48px;width:100%;opacity:.85}
 .tstat{
   display:flex;flex-direction:column;justify-content:center;
   padding:0 18px;border-left:1px solid var(--border);text-align:right;flex-shrink:0;
@@ -50,6 +50,7 @@ canvas#wvcnv{height:36px;width:100%;opacity:.65}
   background:var(--ac);box-shadow:0 0 8px var(--ac);margin-right:6px;vertical-align:middle;
   transition:background .3s,box-shadow .3s}
 .sdot.off{background:#e0392b;box-shadow:0 0 8px #e0392b}
+.sdot.warn{background:#c07a10;box-shadow:0 0 8px #c07a10}
 
 /* ═══ SIDEBAR ═══ */
 #sidebar{
@@ -285,7 +286,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   border-radius:2px;vertical-align:middle;margin:0 6px;overflow:hidden}
 .mem-fill{height:100%;width:43%;background:var(--ac);border-radius:2px}
 .st-spacer{flex:1}
-canvas#stwv{height:28px;width:140px;opacity:.45}
 </style>
 </head>
 <body>
@@ -418,7 +418,6 @@ canvas#stwv{height:28px;width:140px;opacity:.45}
   <div class="st-seg">CHANNELS ACTIVE <span class="hi" id="ch-active">0</span> / 16</div>
   <div class="st-seg">OUTPUT DEVICE <span class="hi">PRIMARY MIX</span></div>
   <div class="st-spacer"></div>
-  <canvas id="stwv"></canvas>
 </div>
 
 <script>
@@ -490,7 +489,6 @@ function initWave(id, nLines, color) {
     requestAnimationFrame(draw);
   })();
 }
-initWave('stwv', 2, '#33dd55'); // status bar stays decorative
 
 // ── Real waveform via Web Audio API ───────────────────────────────────────────
 let _wvCtx = null, _wvAn = null;
@@ -506,7 +504,7 @@ const _wvSrc = {}, _wvBuf = {}, _wvPend = new Set();
   _wvAn.connect(g);
   g.connect(_wvCtx.destination);
 
-  // resume on first user gesture (browser autoplay policy)
+  _wvCtx.addEventListener('statechange', () => setOnline(true));
   document.addEventListener('click', () => {
     if (_wvCtx.state === 'suspended') _wvCtx.resume();
   });
@@ -528,6 +526,7 @@ const _wvSrc = {}, _wvBuf = {}, _wvPend = new Set();
     requestAnimationFrame(draw);
     _wvAn.getByteTimeDomainData(td);
     const w = c.width, h = c.height;
+    const dpr = window.devicePixelRatio || 1;
     ctx2.clearRect(0, 0, w, h);
 
     // detect silence (flat line at 128)
@@ -537,33 +536,39 @@ const _wvSrc = {}, _wvBuf = {}, _wvPend = new Set();
     }
 
     if (!active) {
-      // idle: faint flat line
-      ctx2.beginPath();
-      ctx2.strokeStyle = '#33dd55';
-      ctx2.lineWidth = window.devicePixelRatio || 1;
-      ctx2.globalAlpha = 0.18;
-      ctx2.moveTo(0, h / 2);
-      ctx2.lineTo(w, h / 2);
-      ctx2.stroke();
+      // idle: sparse faint dots scattered along the centre line
+      ctx2.fillStyle = '#1a5a28';
+      const step = Math.ceil(w / 80);
+      for (let xi = 0; xi < w; xi += step) {
+        if (Math.random() < 0.3) {
+          ctx2.globalAlpha = 0.18 + Math.random() * 0.18;
+          ctx2.fillRect(xi, h / 2 - dpr, dpr, 2 * dpr);
+        }
+      }
       ctx2.globalAlpha = 1;
       return;
     }
 
-    const dpr = window.devicePixelRatio || 1;
-    ctx2.beginPath();
-    ctx2.strokeStyle = '#33dd55';
-    ctx2.lineWidth = dpr;
-    ctx2.globalAlpha = 0.85;
+    // Pixelated phosphor oscilloscope: one small rectangle per column,
+    // placed at the exact signal position — no spread, no bars.
+    const PIX_W    = Math.max(2, Math.round(2 * dpr));
+    const PIX_H    = Math.max(3, Math.round(3 * dpr));
+    const COL_STEP = Math.max(2, Math.round(2 * dpr));
+    const numCols  = Math.floor(w / COL_STEP);
+
     ctx2.shadowColor = '#33dd55';
-    ctx2.shadowBlur = 4 * dpr;
-    const sw = w / td.length;
-    for (let i = 0; i < td.length; i++) {
-      const y = (td[i] / 128.0) * h / 2;
-      i === 0 ? ctx2.moveTo(0, y) : ctx2.lineTo(i * sw, y);
+    ctx2.shadowBlur  = 4 * dpr;
+    ctx2.fillStyle   = '#8dffae';
+    ctx2.globalAlpha = 0.88;
+
+    for (let i = 0; i < numCols; i++) {
+      const si = Math.floor(i * td.length / numCols);
+      const y  = (td[si] / 128.0) * (h / 2) - PIX_H / 2;
+      ctx2.fillRect(i * COL_STEP, y, PIX_W, PIX_H);
     }
-    ctx2.stroke();
+
     ctx2.globalAlpha = 1;
-    ctx2.shadowBlur = 0;
+    ctx2.shadowBlur  = 0;
   })();
 })();
 
@@ -606,8 +611,18 @@ async function syncAudioSources(st) {
 
 // ── Online/offline status ──────────────────────────────────────────────────────
 function setOnline(v) {
-  document.getElementById('sdot').className = 'sdot' + (v ? '' : ' off');
-  document.getElementById('stxt').textContent = v ? 'SYSTEMS NOMINAL' : 'DISCONNECTED';
+  let txt, dotCls;
+  if (!v) {
+    txt = 'DISCONNECTED'; dotCls = 'sdot off';
+  } else if (!_wvCtx) {
+    txt = 'NO AUDIO'; dotCls = 'sdot off';
+  } else if (_wvCtx.state === 'suspended') {
+    txt = 'SUSPENDED'; dotCls = 'sdot warn';
+  } else {
+    txt = 'SYSTEMS NOMINAL'; dotCls = 'sdot';
+  }
+  document.getElementById('sdot').className = dotCls;
+  document.getElementById('stxt').textContent = txt;
   const d = document.getElementById('st-dot');
   d.className = v ? '' : 'off';
   document.getElementById('st-online').textContent =
