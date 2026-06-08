@@ -13,130 +13,89 @@
   "layers": [
     {
       "id": "hs_bg",
-      "name": "Deep blue-black space",
+      "name": "Cryogenic void",
       "type": "solid_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": { "color": "#00000e" }
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "color": "#000610" }
     },
     {
-      "id": "hs_planet_glow",
-      "name": "Distant planet glow (upper-right)",
+      "id": "hs_pod_glow",
+      "name": "Cryo-pod inner glow",
       "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
         "type": "radial",
-        "cx": 0.88,
-        "cy": 0.15,
+        "cx": 0.50, "cy": 0.50,
         "stops": [
-          { "pos": 0.0, "color": "rgba(40,80,180,0.18)" },
-          { "pos": 0.4, "color": "rgba(20,50,140,0.08)" },
-          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+          { "pos": 0.00, "color": "rgba(70,140,230,0.26)" },
+          { "pos": 0.35, "color": "rgba(30,80,170,0.13)" },
+          { "pos": 0.70, "color": "rgba(10,30,80,0.05)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
         ]
       }
     },
     {
       "id": "hs_stars",
-      "name": "Drifting parallax stars",
+      "name": "Frozen stars (barely drifting)",
       "type": "particle_field",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 0.85, "blend": "screen",
       "params": {
-        "count": 320,
-        "hue_min": 210,
-        "hue_max": 240,
-        "size_min": 0.4,
-        "size_max": 2.2,
-        "speed": 0.038,
-        "spread": "full",
-        "alpha_min": 0.22,
-        "alpha_max": 0.80
+        "count": 240,
+        "hue_min": 200, "hue_max": 235,
+        "size_min": 0.3, "size_max": 1.6,
+        "speed": 0.006,
+        "alpha_min": 0.14, "alpha_max": 0.70
       }
     },
     {
-      "id": "hs_frost_vignette",
-      "name": "Blue frost edge vignette",
-      "type": "vignette",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "id": "hs_ice_motes",
+      "name": "Suspended ice crystals",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.50, "blend": "screen",
       "params": {
-        "type": "radial",
-        "strength": 0.08,
-        "color": "#5082ff"
+        "count": 26,
+        "hue_min": 188, "hue_max": 208,
+        "size_min": 3.0, "size_max": 8.5,
+        "speed": 0.010,
+        "alpha_min": 0.05, "alpha_max": 0.20
       }
     },
     {
-      "id": "hs_reticle",
-      "name": "Ice crystal cryo-pod reticle rings",
+      "id": "hs_reticle_rings",
+      "name": "Pod reticle rings",
       "type": "geometric",
-      "visible": true,
-      "locked": false,
-      "opacity": 0.06,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 0.07, "blend": "screen",
       "params": {
         "type": "rings",
-        "color": "#3c6edc",
-        "alpha": 0.06,
-        "ring_count": 5
+        "color": "#3a6edc",
+        "alpha": 0.07,
+        "ring_count": 6
       }
     },
     {
-      "id": "hs_radial_lines",
-      "name": "12 radial spoke lines (cryo pod)",
+      "id": "hs_spokes",
+      "name": "Pod spoke lines",
       "type": "geometric",
-      "visible": true,
-      "locked": false,
-      "opacity": 0.06,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 0.045, "blend": "screen",
       "params": {
         "type": "crosshair",
-        "color": "#3c6edc",
-        "alpha": 0.06,
-        "spoke_count": 12
+        "color": "#3a6edc",
+        "alpha": 0.045
       }
     },
     {
-      "id": "hs_top_glow",
-      "name": "Top scan-line glow",
-      "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "type": "linear",
-        "angle": 90,
-        "stops": [
-          { "pos": 0.0, "color": "rgba(40,80,200,0.06)" },
-          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
-        ]
-      }
+      "id": "hs_frost_edge",
+      "name": "Frost edge bloom",
+      "type": "vignette",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
+      "params": { "type": "radial", "strength": 0.12, "color": "#4a7cff" }
     },
     {
-      "id": "hs_bottom_glow",
-      "name": "Bottom scan-line glow",
-      "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "type": "linear",
-        "angle": 270,
-        "stops": [
-          { "pos": 0.0, "color": "rgba(0,0,0,0)" },
-          { "pos": 1.0, "color": "rgba(40,80,200,0.06)" }
-        ]
-      }
+      "id": "hs_dark_vignette",
+      "name": "Cold dark vignette",
+      "type": "vignette",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "radial", "strength": 0.78, "color": "#00040c" }
     }
   ]
 }

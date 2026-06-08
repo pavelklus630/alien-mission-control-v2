@@ -13,106 +13,107 @@
   "layers": [
     {
       "id": "sing_bg",
-      "name": "Deep space indigo-black",
+      "name": "Indigo void",
       "type": "solid_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": { "color": "#010008" }
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "color": "#02000a" }
     },
     {
-      "id": "sing_warped_stars",
-      "name": "Gravitationally warped stars",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "id": "sing_stars",
+      "name": "Lensed starfield (slow)",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.75, "blend": "screen",
       "params": {
-        "note": "160 stars with per-star alpha reduced by gravitational warp factor within MR*0.45 radius of center. Not a standard particle_field.",
-        "count": 160,
-        "color": "#aabbff",
-        "r_min": 0.3,
-        "r_max": 1.5,
-        "warp_radius_factor": 0.45,
-        "warp_strength": 0.35
-      },
-      "motion": {
-        "alpha": "(0.20 + 0.14 * sin(t * 0.001 + star_ph)) * (1 - warp * 0.60)"
+        "count": 200,
+        "hue_min": 215, "hue_max": 255,
+        "size_min": 0.3, "size_max": 1.6,
+        "speed": 0.006,
+        "alpha_min": 0.12, "alpha_max": 0.72
       }
     },
     {
-      "id": "sing_accretion_disk",
-      "name": "Accretion disk particles",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
-      "params": {
-        "note": "260 particles in polar orbit (ang, dist). Angular speed = 0.00009 + (1-dist/MR)*0.00026. Elliptical projection y*0.34. Brightness inversely proportional to distance.",
-        "count": 260,
-        "hue_min": 0,
-        "hue_max": 42,
-        "dist_min_factor": 0.10,
-        "dist_max_factor": 0.43,
-        "base_angular_speed": 0.00009,
-        "y_squish": 0.34
-      },
-      "motion": {
-        "wobble": "sin(ang * 3 + ph) * 0.052",
-        "brightness": "max(0, 1 - dist / (MR * 0.44))"
-      }
-    },
-    {
-      "id": "sing_event_horizon",
-      "name": "Event horizon black disc",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "note": "Radial gradient: solid black at 0–0.44 fading to transparent at r=2.8*ehR, where ehR=min(W,H)*0.5*0.12.",
-        "radius_factor": 0.12,
-        "gradient_outer_factor": 2.8
-      }
-    },
-    {
-      "id": "sing_disk_glow",
-      "name": "Accretion disk ambient glow",
+      "id": "sing_distortion",
+      "name": "Gravitational distortion halo",
       "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
         "type": "radial",
-        "cx": 0.5,
-        "cy": 0.5,
+        "cx": 0.50, "cy": 0.50,
         "stops": [
-          { "pos": 0.0, "color": "rgba(255,140,0,0.28)" },
-          { "pos": 0.3, "color": "rgba(220,80,0,0.14)" },
-          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+          { "pos": 0.00, "color": "rgba(0,0,0,0)" },
+          { "pos": 0.22, "color": "rgba(70,0,140,0.16)" },
+          { "pos": 0.40, "color": "rgba(40,0,90,0.09)" },
+          { "pos": 0.80, "color": "rgba(0,0,0,0)" }
         ]
       }
     },
     {
-      "id": "sing_photon_ring",
-      "name": "Photon ring",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "id": "sing_disk_swirl",
+      "name": "Accretion disk swirl",
+      "type": "vortex",
+      "visible": true, "locked": false, "opacity": 0.85, "blend": "screen",
       "params": {
-        "note": "Ellipse stroke (rx=ehR*3.2, ry=ehR*1.1), rgba(255,180,60,0.35), lineWidth=MR*0.018. Flattened — not a circular geometric ring.",
-        "rx_factor": 3.2,
-        "ry_factor": 1.1,
-        "color": "rgba(255,180,60,0.35)",
-        "line_width_factor": 0.018
+        "cx": 0.50, "cy": 0.50,
+        "tilt": 0.0,
+        "hue_start": 6, "hue_end": 50,
+        "layer_count": 8,
+        "base_alpha": 0.48,
+        "rotation_speed": 0.000040
       }
+    },
+    {
+      "id": "sing_disk_hot",
+      "name": "Inner accretion blaze",
+      "type": "gradient_bg",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
+      "params": {
+        "type": "radial",
+        "cx": 0.50, "cy": 0.50,
+        "stops": [
+          { "pos": 0.00, "color": "rgba(0,0,0,0)" },
+          { "pos": 0.10, "color": "rgba(255,200,60,0.55)" },
+          { "pos": 0.20, "color": "rgba(230,110,0,0.34)" },
+          { "pos": 0.40, "color": "rgba(90,24,0,0.10)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "sing_disk_particles",
+      "name": "Infalling material",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.88, "blend": "screen",
+      "params": {
+        "count": 170,
+        "hue_min": 10, "hue_max": 48,
+        "size_min": 0.5, "size_max": 2.4,
+        "speed": 0.14,
+        "alpha_min": 0.20, "alpha_max": 0.82
+      }
+    },
+    {
+      "id": "sing_event_horizon",
+      "name": "Event horizon disc",
+      "type": "custom",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": {
+        "cx": 0.50, "cy": 0.50,
+        "radius_factor": 0.15,
+        "light_offset_x": 0.0,
+        "light_offset_y": 0.0,
+        "color_lit": "rgba(0,0,0,1.0)",
+        "color_mid": "rgba(0,0,0,1.0)",
+        "color_dark": "rgba(0,0,0,1.0)",
+        "limb_color": "rgba(255,170,50,0.45)",
+        "limb_width": 0.006
+      }
+    },
+    {
+      "id": "sing_vignette",
+      "name": "Void vignette",
+      "type": "vignette",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "radial", "strength": 0.74, "color": "#02000a" }
     }
   ]
 }

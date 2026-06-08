@@ -3,100 +3,125 @@
   "name": "NEURAL MAP",
   "class": "ANOMALY",
   "sym": "◌",
-  "desc": "The network is alive. It has been watching.",
+  "desc": "The network remembers everything. You are just a new signal.",
   "code": "AV-NM-10",
   "life": "NOMINAL",
   "comms": "ACTIVE",
-  "crew": "UNKNOWN",
+  "crew": "NOMINAL",
   "ship": "NOMINAL",
-  "msg": "NEURAL LINK ACTIVE — SIGNAL INTEGRITY 34%",
+  "msg": "NEURAL PATHWAY SCAN ACTIVE — 847 NODES MAPPED",
   "layers": [
     {
       "id": "nm_bg",
-      "name": "Near-black background",
+      "name": "Bio-dark field",
       "type": "solid_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": { "color": "#020000" }
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "color": "#001003" }
     },
     {
-      "id": "nm_center_glow",
-      "name": "Subtle center radial glow",
+      "id": "nm_core_glow",
+      "name": "Neural core glow",
       "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
         "type": "radial",
-        "cx": 0.5,
-        "cy": 0.5,
+        "cx": 0.50, "cy": 0.50,
         "stops": [
-          { "pos": 0.0, "color": "rgba(12,0,2,0.22)" },
-          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+          { "pos": 0.00, "color": "rgba(0,200,80,0.30)" },
+          { "pos": 0.28, "color": "rgba(0,110,40,0.15)" },
+          { "pos": 0.62, "color": "rgba(0,40,14,0.05)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
         ]
       }
     },
     {
-      "id": "nm_edges",
-      "name": "Neural network edges",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "id": "nm_rings",
+      "name": "Topology rings",
+      "type": "geometric",
+      "visible": true, "locked": false, "opacity": 0.09, "blend": "screen",
       "params": {
-        "note": "Edges between nodes within min(W,H)*0.16 distance. Lines rgba(120,0,20,0.8) with pulsing alpha. Topology from init (graph structure, not bezier paths).",
-        "max_connect_dist_factor": 0.16,
-        "color": "rgba(120,0,20,0.8)",
-        "line_width": 0.6
-      },
-      "motion": {
-        "alpha": "(0.28 + 0.15 * sin(t * 0.0008 + edge_ph)) * distFactor * 0.55"
+        "type": "rings",
+        "color": "#00ff55",
+        "alpha": 0.09,
+        "ring_count": 6
       }
     },
     {
-      "id": "nm_tracers",
-      "name": "Signal tracers",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 0.85,
-      "blend": "screen",
+      "id": "nm_paths_radial",
+      "name": "Radial signal paths",
+      "type": "path_flow",
+      "visible": true, "locked": false, "opacity": 0.82, "blend": "screen",
       "params": {
-        "note": "14 tracers interpolating along randomly-picked graph edges. Radial gradient glow dot (r=10). Occasionally hop to a new edge. Graph topology, not smooth bezier paths.",
-        "count": 14,
-        "glow_radius": 10,
-        "color_inner": "rgba(255,30,50,0.9)",
-        "color_mid": "rgba(180,0,20,0.35)",
-        "speed_min": 0.002,
-        "speed_max": 0.007
+        "paths": [
+          [[0.50, 0.50], [0.50, 0.30], [0.50, 0.08]],
+          [[0.50, 0.50], [0.68, 0.40], [0.86, 0.28]],
+          [[0.50, 0.50], [0.74, 0.54], [0.96, 0.56]],
+          [[0.50, 0.50], [0.66, 0.68], [0.82, 0.88]],
+          [[0.50, 0.50], [0.50, 0.72], [0.50, 0.94]],
+          [[0.50, 0.50], [0.34, 0.66], [0.18, 0.86]],
+          [[0.50, 0.50], [0.26, 0.54], [0.04, 0.52]],
+          [[0.50, 0.50], [0.32, 0.38], [0.14, 0.22]]
+        ],
+        "color": "#00ff66",
+        "line_width": 0.7,
+        "speed_min": 0.0007, "speed_max": 0.0020,
+        "hue_min": 110, "hue_max": 150,
+        "particle_count": 34
+      }
+    },
+    {
+      "id": "nm_paths_ring",
+      "name": "Ring cross-links",
+      "type": "path_flow",
+      "visible": true, "locked": false, "opacity": 0.55, "blend": "screen",
+      "params": {
+        "paths": [
+          [[0.68, 0.40], [0.74, 0.54], [0.66, 0.68]],
+          [[0.66, 0.68], [0.50, 0.72], [0.34, 0.66]],
+          [[0.34, 0.66], [0.26, 0.54], [0.32, 0.38]],
+          [[0.32, 0.38], [0.50, 0.30], [0.68, 0.40]]
+        ],
+        "color": "#44ffaa",
+        "line_width": 0.5,
+        "speed_min": 0.0010, "speed_max": 0.0026,
+        "hue_min": 130, "hue_max": 165,
+        "particle_count": 22
       }
     },
     {
       "id": "nm_nodes",
-      "name": "Neural nodes (4 concentric rings)",
+      "name": "Neural nodes",
       "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
-        "note": "41 nodes in 4 concentric rings. Each: outer glow (r*3 radial gradient) + filled core (r*0.7). Deterministic ring layout, not random particle positions.",
-        "rings": [
-          { "count": 1,  "r": 0.00 },
-          { "count": 8,  "r": 0.18 },
-          { "count": 14, "r": 0.32 },
-          { "count": 18, "r": 0.44 }
-        ],
-        "node_r_min": 3,
-        "node_r_max": 8
-      },
-      "motion": {
-        "pulse": "0.55 + 0.45 * sin(t * 0.0012 * pulseDir + node_ph)"
+        "cx": 0.50, "cy": 0.50,
+        "count": 38,
+        "radial_range": 0.44,
+        "color": "rgba(0,255,90,0.85)",
+        "color_inner": "rgba(120,255,180,0.95)",
+        "dot_radius": 2.6,
+        "glow_radius": 8
       }
+    },
+    {
+      "id": "nm_noise",
+      "name": "Data noise (faint drift)",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.34, "blend": "screen",
+      "params": {
+        "count": 150,
+        "hue_min": 110, "hue_max": 155,
+        "size_min": 0.3, "size_max": 1.0,
+        "speed": 0.04,
+        "alpha_min": 0.05, "alpha_max": 0.24
+      }
+    },
+    {
+      "id": "nm_vignette",
+      "name": "Edge vignette",
+      "type": "vignette",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "radial", "strength": 0.80, "color": "#000a02" }
     }
   ]
 }

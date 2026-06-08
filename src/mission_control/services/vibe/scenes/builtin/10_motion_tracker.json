@@ -13,30 +13,24 @@
   "layers": [
     {
       "id": "mt_bg",
-      "name": "Dark amber background",
+      "name": "Scope dark",
       "type": "solid_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": { "color": "#040200" }
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "color": "#000800" }
     },
     {
-      "id": "mt_radial_glow",
-      "name": "Radial background glow",
+      "id": "mt_scope_glow",
+      "name": "Phosphor scope glow",
       "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
         "type": "radial",
-        "cx": 0.5,
-        "cy": 0.5,
+        "cx": 0.50, "cy": 0.50,
         "stops": [
-          { "pos": 0.0, "color": "rgba(60,18,0,0.5)" },
-          { "pos": 0.6, "color": "rgba(30,8,0,0.22)" },
-          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+          { "pos": 0.00, "color": "rgba(0,80,20,0.45)" },
+          { "pos": 0.45, "color": "rgba(0,44,10,0.20)" },
+          { "pos": 0.80, "color": "rgba(0,16,4,0.06)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
         ]
       }
     },
@@ -44,14 +38,11 @@
       "id": "mt_range_rings",
       "name": "Concentric range rings",
       "type": "geometric",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
         "type": "rings",
-        "color": "#ff8c1e",
-        "alpha": 0.18,
+        "color": "#33ff66",
+        "alpha": 0.22,
         "ring_count": 4
       }
     },
@@ -59,28 +50,22 @@
       "id": "mt_crosshair",
       "name": "Crosshair axes",
       "type": "geometric",
-      "visible": true,
-      "locked": false,
-      "opacity": 0.10,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 0.14, "blend": "screen",
       "params": {
         "type": "crosshair",
-        "color": "#ff8c1e",
-        "alpha": 0.10
+        "color": "#33ff66",
+        "alpha": 0.14
       }
     },
     {
       "id": "mt_bearing_ticks",
-      "name": "Bearing ticks (72 around rim)",
+      "name": "Bearing ticks",
       "type": "geometric",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
         "type": "bearing_ticks",
-        "color": "#ff8c1e",
-        "alpha": 0.20,
+        "color": "#33ff66",
+        "alpha": 0.24,
         "tick_count": 72
       }
     },
@@ -88,67 +73,51 @@
       "id": "mt_sweep",
       "name": "Rotating sweep arm",
       "type": "geometric",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
         "type": "radar_sweep",
-        "color": "#ff9628",
+        "color": "#5bff88",
         "trail_segments": 26,
-        "trail_span": 0.95,
-        "sweep_speed": 0.012
+        "trail_span": 0.5,
+        "sweep_speed": 0.0016
       },
       "motion": {
-        "sweep_angle": "(t * 0.012) % TAU"
+        "sweep_angle": "(t * 0.0016) % TAU"
       }
     },
     {
       "id": "mt_contacts",
-      "name": "Radar contacts / blips",
+      "name": "Radar contacts",
       "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
-        "note": "7 contact blips in polar coords, slowly drifting. Flare (seen=1→fade at rate 0.006) when sweep arm passes within 0.11 rad. State-machine logic not expressible as a primitive layer.",
+        "cx": 0.50, "cy": 0.50,
         "count": 7,
-        "drift_range": 0.00020,
-        "radial_range": 0.000035,
-        "flare_decay": 0.006,
-        "glow_radius": 13,
-        "dot_radius": 2.3
+        "radial_range": 0.36,
+        "color": "rgba(90,255,130,0.95)",
+        "color_inner": "rgba(160,255,190,1.0)",
+        "dot_radius": 2.8,
+        "glow_radius": 13
       }
     },
     {
       "id": "mt_center_hub",
-      "name": "Center hub dot and ring",
+      "name": "Center hub",
       "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
-        "note": "Filled circle r=3 + stroked ring r=7 at exact canvas center. Static.",
+        "cx": 0.50, "cy": 0.50,
+        "color": "rgba(120,255,150,0.9)",
         "dot_r": 3,
-        "ring_r": 7,
-        "color": "rgba(255,150,40,0.9)"
+        "ring_r": 8
       }
     },
     {
       "id": "mt_vignette",
-      "name": "Edge vignette to black",
+      "name": "Scope edge vignette",
       "type": "vignette",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "type": "radial",
-        "strength": 0.85,
-        "color": "#000000"
-      }
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "radial", "strength": 0.88, "color": "#000000" }
     }
   ]
 }

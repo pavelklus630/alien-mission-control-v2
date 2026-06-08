@@ -3,162 +3,114 @@
   "name": "DERELICT",
   "class": "ASTRONOMICAL",
   "sym": "⌖",
-  "desc": "On the surface of LV-426. Ancient. Warning unheeded.",
+  "desc": "A billion years dead. Still breathing. It was waiting for us.",
   "code": "AV-DR-08",
   "life": "NOMINAL",
   "comms": "OFFLINE",
   "crew": "NOMINAL",
   "ship": "NOMINAL",
-  "msg": "ATMOSPHERIC INTERFERENCE — COMM RELAY DEGRADED",
+  "msg": "UNKNOWN VESSEL DETECTED — PREDATES HUMAN SPACEFLIGHT — CAUTION",
   "layers": [
     {
-      "id": "der_bg",
-      "name": "Murky planet atmosphere",
-      "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "id": "dr_bg",
+      "name": "Storm dark",
+      "type": "solid_bg",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "color": "#04030a" }
+    },
+    {
+      "id": "dr_stars",
+      "name": "Stars through the murk",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.40, "blend": "source-over",
       "params": {
-        "type": "linear",
-        "angle": 90,
+        "count": 90,
+        "hue_min": 30, "hue_max": 55,
+        "size_min": 0.3, "size_max": 1.2,
+        "speed": 0.004,
+        "alpha_min": 0.06, "alpha_max": 0.30
+      }
+    },
+    {
+      "id": "dr_atmosphere",
+      "name": "Toxic atmosphere (from below)",
+      "type": "gradient_bg",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
+      "params": {
+        "type": "radial",
+        "cx": 0.50, "cy": 1.05,
         "stops": [
-          { "pos": 0.00, "color": "#000000" },
-          { "pos": 0.30, "color": "#010100" },
-          { "pos": 0.65, "color": "#080601" },
-          { "pos": 1.00, "color": "#000000" }
+          { "pos": 0.00, "color": "rgba(70,56,18,0.55)" },
+          { "pos": 0.22, "color": "rgba(46,34,10,0.30)" },
+          { "pos": 0.50, "color": "rgba(22,16,4,0.12)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
         ]
       }
     },
     {
-      "id": "der_stars",
-      "name": "Faint stars through atmosphere",
-      "type": "particle_field",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "count": 80,
-        "hue_min": 40,
-        "hue_max": 50,
-        "size_min": 0.3,
-        "size_max": 1.4,
-        "speed": 0.0,
-        "spread": "full",
-        "alpha_min": 0.08,
-        "alpha_max": 0.38
-      },
-      "motion": {
-        "alpha": "star_a * (0.5 + 0.5 * sin(t * 0.0009 + star_ph))"
-      }
-    },
-    {
-      "id": "der_atm_wisps",
-      "name": "Atmospheric murk wisps",
+      "id": "dr_murk",
+      "name": "Drifting murk (slow)",
       "type": "nebula_wisps",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 0.62, "blend": "screen",
       "params": {
         "count": 18,
-        "hue_min": 30,
-        "hue_max": 42,
-        "alpha_min": 0.012,
-        "alpha_max": 0.040,
-        "size_min": 80,
-        "size_max": 280,
-        "drift_speed": 0.00004
+        "hue_min": 34, "hue_max": 56,
+        "size_min": 140, "size_max": 480,
+        "alpha_min": 0.010, "alpha_max": 0.038,
+        "drift_speed": 0.000024
       }
     },
     {
-      "id": "der_interior_glow",
-      "name": "Amber interior glow",
+      "id": "dr_planet",
+      "name": "LV-426 surface below",
+      "type": "custom",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": {
+        "cx": 0.50, "cy": 1.18,
+        "radius_factor": 0.78,
+        "light_offset_x": 0.02,
+        "light_offset_y": -0.12,
+        "color_lit": "rgba(78,64,34,0.98)",
+        "color_mid": "rgba(40,32,14,0.97)",
+        "color_dark": "rgba(6,5,2,0.98)"
+      }
+    },
+    {
+      "id": "dr_interior_glow",
+      "name": "Ancient interior glow",
       "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
         "type": "radial",
-        "cx": 0.50,
-        "cy": 0.40,
+        "cx": 0.50, "cy": 0.46,
         "stops": [
-          { "pos": 0.0, "color": "rgba(255,140,0,0.22)" },
-          { "pos": 0.4, "color": "rgba(180,70,0,0.10)" },
-          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+          { "pos": 0.00, "color": "rgba(150,92,8,0.26)" },
+          { "pos": 0.22, "color": "rgba(84,50,4,0.13)" },
+          { "pos": 0.55, "color": "rgba(30,18,2,0.05)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
         ]
       }
     },
     {
-      "id": "der_ground_fog",
-      "name": "Ground fog",
-      "type": "vignette",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "type": "linear",
-        "direction": "bottom",
-        "strength": 0.82,
-        "color": "#05030a"
-      }
-    },
-    {
-      "id": "der_ship",
-      "name": "Derelict horseshoe ship",
+      "id": "dr_hull",
+      "name": "Derelict horseshoe hull",
       "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
       "params": {
-        "note": "Horseshoe arc (outer r=200*sc, inner r=108*sc, arc 0.20π–1.80π), 14 structural ribs, inner dark disc r=82*sc, amber glow pulse (screen), amber rim stroke, 6 surface ellipse lumps. sc=min(W,H)*0.42/200.",
-        "cx": 0.50,
-        "cy": 0.40,
-        "ship_r_factor": 0.42,
-        "outer_r": 200,
-        "inner_r": 108,
-        "rib_count": 14,
-        "shimmer_speed": 0.00085
+        "cx": 0.50, "cy": 0.45,
+        "rx": 300, "ry": 84,
+        "rotation": -0.12
       },
       "motion": {
-        "x": "W * 0.50 + sin(t * 0.00014) * 4",
-        "y": "H * 0.40 + cos(t * 0.00010) * 2",
-        "rotation": "sin(t * 0.00010) * 0.008",
-        "shimmer": "0.4 + 0.28 * sin(t * 0.00085)"
+        "y_offset": "sin(t * 0.00008) * 3"
       }
     },
     {
-      "id": "der_ground",
-      "name": "Planet surface silhouette",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "note": "36-segment sinusoidal rocky ground polygon at y≈H*0.72, filled black.",
-        "base_y": 0.72,
-        "color": "#000000",
-        "segments": 36
-      }
-    },
-    {
-      "id": "der_haze",
-      "name": "Overall atmospheric haze vignette",
+      "id": "dr_haze_vignette",
+      "name": "Atmospheric haze vignette",
       "type": "vignette",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "type": "radial",
-        "strength": 0.65,
-        "color": "#000000"
-      }
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "radial", "strength": 0.82, "color": "#080604" }
     }
   ]
 }

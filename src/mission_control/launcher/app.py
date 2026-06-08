@@ -29,7 +29,7 @@ from ..config import Settings, get_settings
 from ..logging_conf import configure as configure_logging
 from .supervisor import ServiceDescriptor, make_services
 
-CURRENT_VERSION = "2.1.1"
+CURRENT_VERSION = "2.2.0"
 GITHUB_REPO     = "pavelklus630/alien-mission-control-v2"
 
 # ── palette (identical to v1) ─────────────────────────────────────────────────

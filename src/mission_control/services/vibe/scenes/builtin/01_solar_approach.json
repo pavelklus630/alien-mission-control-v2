@@ -2,145 +2,139 @@
   "id": "solar_approach",
   "name": "SOLAR APPROACH",
   "class": "ASTRONOMICAL",
-  "sym": "◎",
-  "desc": "Final orbital burn. The star does not care.",
+  "sym": "☀",
+  "desc": "She burns ahead. Navigation offline. Eyes on instruments only.",
   "code": "AV-SA-02",
   "life": "NOMINAL",
-  "comms": "ACTIVE",
+  "comms": "DEGRADED",
   "crew": "NOMINAL",
   "ship": "NOMINAL",
-  "msg": "SOLAR WIND INTENSITY: 94% — RADIATION SHIELDS OPTIMAL",
+  "msg": "CAUTION: SOLAR RADIATION EXCEEDING TOLERANCE — SHIELDS AT MAXIMUM",
   "layers": [
     {
       "id": "sa_bg",
-      "name": "Solar atmosphere gradient",
+      "name": "Furnace fill",
+      "type": "solid_bg",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "color": "#3a1500" }
+    },
+    {
+      "id": "sa_wash",
+      "name": "Heat wash gradient",
       "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
       "params": {
         "type": "linear",
-        "angle": 90,
+        "angle": 60,
         "stops": [
-          { "pos": 0.00, "color": "#8a1500" },
-          { "pos": 0.28, "color": "#3a0600" },
-          { "pos": 0.55, "color": "#150200" },
-          { "pos": 1.00, "color": "#000000" }
+          { "pos": 0.00, "color": "#5a2400" },
+          { "pos": 0.45, "color": "#7a3500" },
+          { "pos": 0.75, "color": "#4a1c00" },
+          { "pos": 1.00, "color": "#2a0e00" }
         ]
       }
     },
     {
-      "id": "sa_plasma_blobs",
-      "name": "Drifting plasma blobs",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "id": "sa_corona",
+      "name": "Corona engulfing the frame",
+      "type": "gradient_bg",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
-        "note": "65 elliptical radial-gradient blobs with individual hue/size/drift physics.",
-        "count": 65,
-        "hue_min": 6,
-        "hue_max": 44,
-        "rx_min": 55,
-        "rx_max": 300,
-        "ry_min": 35,
-        "ry_max": 170,
-        "alpha_min": 0.06,
-        "alpha_max": 0.22
-      },
-      "motion": {
-        "pulse": "0.65 + 0.35 * sin(t * blob_spd * 3 + blob_ph)"
+        "type": "radial",
+        "cx": 0.50, "cy": 0.50,
+        "stops": [
+          { "pos": 0.00, "color": "rgba(255,240,180,0.95)" },
+          { "pos": 0.26, "color": "rgba(255,175,40,0.66)" },
+          { "pos": 0.55, "color": "rgba(245,110,0,0.40)" },
+          { "pos": 0.85, "color": "rgba(190,55,0,0.20)" },
+          { "pos": 1.00, "color": "rgba(120,30,0,0.10)" }
+        ]
       }
     },
     {
-      "id": "sa_hot_core",
-      "name": "Hot stellar core glow",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "id": "sa_plasma",
+      "name": "Churning plasma surface",
+      "type": "vortex",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
-        "note": "Single large drifting radial gradient (r=min(W,H)*0.26). Stops: rgba(255,248,200,0.52) → rgba(255,75,0,0.14) → transparent.",
-        "cx_base": 0.36,
-        "cy_base": 0.21,
-        "radius_factor": 0.26
-      },
-      "motion": {
-        "cx": "W * 0.36 + sin(t * 0.00019) * W * 0.07",
-        "cy": "H * 0.21 + cos(t * 0.00015) * H * 0.05"
+        "cx": 0.50, "cy": 0.50,
+        "tilt": 0.0,
+        "hue_start": 20, "hue_end": 56,
+        "layer_count": 11,
+        "base_alpha": 0.55,
+        "rotation_speed": 0.000032
       }
     },
     {
-      "id": "sa_flares",
-      "name": "Solar flare particles",
+      "id": "sa_plasma_counter",
+      "name": "Counter-convection cells",
+      "type": "vortex",
+      "visible": true, "locked": false, "opacity": 0.65, "blend": "screen",
+      "params": {
+        "cx": 0.50, "cy": 0.50,
+        "tilt": 1.3,
+        "hue_start": 36, "hue_end": 60,
+        "layer_count": 7,
+        "base_alpha": 0.40,
+        "rotation_speed": -0.000048
+      }
+    },
+    {
+      "id": "sa_prominences",
+      "name": "Solar prominences (erupting arcs)",
+      "type": "path_flow",
+      "visible": true, "locked": false, "opacity": 0.80, "blend": "screen",
+      "params": {
+        "paths": [
+          [[0.50, 0.40], [0.60, 0.30], [0.70, 0.28], [0.76, 0.36]],
+          [[0.58, 0.50], [0.72, 0.50], [0.84, 0.55], [0.90, 0.64]],
+          [[0.50, 0.58], [0.42, 0.70], [0.32, 0.74], [0.26, 0.66]],
+          [[0.42, 0.48], [0.28, 0.46], [0.16, 0.40], [0.12, 0.30]],
+          [[0.52, 0.42], [0.50, 0.28], [0.46, 0.16], [0.40, 0.08]]
+        ],
+        "color": "#ffcc44",
+        "line_width": 1.2,
+        "speed_min": 0.0008, "speed_max": 0.0020,
+        "hue_min": 30, "hue_max": 56,
+        "particle_count": 30
+      }
+    },
+    {
+      "id": "sa_core",
+      "name": "White-hot core",
+      "type": "gradient_bg",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
+      "params": {
+        "type": "radial",
+        "cx": 0.50, "cy": 0.50,
+        "stops": [
+          { "pos": 0.00, "color": "rgba(255,255,255,1.0)" },
+          { "pos": 0.08, "color": "rgba(255,248,190,0.85)" },
+          { "pos": 0.20, "color": "rgba(255,190,50,0.42)" },
+          { "pos": 0.46, "color": "rgba(210,90,0,0.12)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "sa_embers",
+      "name": "Ember updraft",
       "type": "particle_field",
-      "visible": true,
-      "locked": false,
-      "opacity": 0.55,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 0.90, "blend": "screen",
       "params": {
-        "count": 220,
-        "hue_min": 10,
-        "hue_max": 50,
-        "size_min": 0.4,
-        "size_max": 3.2,
-        "speed": 0.45,
-        "spread": "full",
-        "alpha_min": 0.0,
-        "alpha_max": 1.0
+        "count": 200,
+        "hue_min": 26, "hue_max": 56,
+        "size_min": 0.5, "size_max": 3.0,
+        "speed": 0.18,
+        "alpha_min": 0.22, "alpha_max": 0.78
       }
     },
     {
-      "id": "sa_bottom_vignette",
-      "name": "Bottom fade to black",
+      "id": "sa_vignette",
+      "name": "Scorched edge vignette",
       "type": "vignette",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "type": "linear",
-        "direction": "bottom",
-        "strength": 0.92,
-        "color": "#000000"
-      }
-    },
-    {
-      "id": "sa_right_vignette",
-      "name": "Right-edge fade to black",
-      "type": "vignette",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "type": "linear",
-        "direction": "right",
-        "strength": 0.55,
-        "color": "#000000"
-      }
-    },
-    {
-      "id": "sa_station",
-      "name": "Space station silhouette",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "note": "drawStation() — complex multi-rect/arc silhouette with engine glow ellipses. No sprite asset.",
-        "cx": 0.76,
-        "cy": 0.48,
-        "scale_factor": 0.0019
-      },
-      "motion": {
-        "y_offset": "sin(t * 0.00024) * 4",
-        "rotation": "sin(t * 0.00018) * 0.012"
-      }
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "radial", "strength": 0.45, "color": "#1c0700" }
     }
   ]
 }

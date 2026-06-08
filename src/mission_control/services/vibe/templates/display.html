@@ -321,21 +321,29 @@ function renderGeometric(ctx, W, H, p, t) {
       break;
     }
     case 'radar_sweep': {
-      const sweepAngle = p.sweep_angle ?? ((t * (p.sweep_speed ?? 0.012)) % (Math.PI * 2));
-      const trailSegs = Math.max(1, p.trail_segments ?? 20);
-      const trailSpan = (p.trail_span ?? 0.95) * Math.PI * 2;
-      for (let i = trailSegs; i >= 0; i--) {
+      const sweepAngle = (t * (p.sweep_speed ?? 0.0016)) % (Math.PI * 2);
+      const trailSegs = Math.max(1, p.trail_segments ?? 24);
+      const trailSpan = (p.trail_span ?? 0.5) * Math.PI * 2;
+      const maxA = p.trail_alpha ?? 0.30;
+      // Fading wedge trail behind the leading edge.
+      for (let i = trailSegs; i >= 1; i--) {
         const frac = i / trailSegs;
         const segAngle = sweepAngle - frac * trailSpan;
-        ctx.globalAlpha = (1 - frac) * 0.18;
+        ctx.globalAlpha = (1 - frac) * maxA;
         ctx.beginPath(); ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, MR, segAngle - trailSpan/trailSegs, segAngle);
+        ctx.arc(cx, cy, MR, segAngle, segAngle + trailSpan / trailSegs);
         ctx.closePath(); ctx.fillStyle = color; ctx.fill();
       }
-      ctx.globalAlpha = 0.85; ctx.strokeStyle = color; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(sweepAngle)*MR, cy + Math.sin(sweepAngle)*MR);
-      ctx.stroke();
+      // Bold glowing leading edge, scaled to the canvas so it reads on a projector.
+      const hx = cx + Math.cos(sweepAngle) * MR, hy = cy + Math.sin(sweepAngle) * MR;
+      ctx.globalAlpha = 0.95; ctx.strokeStyle = color;
+      ctx.lineWidth = Math.max(2.5, MR * 0.012);
+      ctx.shadowColor = color; ctx.shadowBlur = 14;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(hx, hy); ctx.stroke();
+      // Bright tip blip.
+      ctx.beginPath(); ctx.arc(hx, hy, Math.max(2, MR * 0.01), 0, Math.PI * 2);
+      ctx.fillStyle = color; ctx.fill();
+      ctx.shadowBlur = 0;
       break;
     }
   }
@@ -405,16 +413,27 @@ function renderCustom(ctx, W, H, layer, p) {
     ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, rot, 0, Math.PI * 2); ctx.fill();
 
   } else if (p.radius_factor !== undefined || p.outer_r !== undefined) {
-    // Planet disc / event horizon disc
+    // Planet disc — a shaded sphere lit from an offset light point.
+    // Colours are configurable so each scene's planet/star reads differently.
     const r = (p.radius_factor ?? (p.outer_r ?? 0.25)) * Math.min(W, H);
     const lx = cx + (p.light_offset_x ?? 0.05) * W;
     const ly = cy + (p.light_offset_y ?? -0.05) * H;
-    const grad = ctx.createRadialGradient(lx, ly, 0, cx, cy, r);
-    grad.addColorStop(0,   'rgba(100,65,40,0.95)');
-    grad.addColorStop(0.6, 'rgba(55,35,20,0.9)');
-    grad.addColorStop(1,   'rgba(10,5,3,0)');
+    const cLit  = p.color_lit  || 'rgba(100,65,40,0.98)';
+    const cMid  = p.color_mid  || 'rgba(55,35,20,0.96)';
+    const cDark = p.color_dark || 'rgba(8,4,2,0.95)';
+    // Light gradient runs from the lit point across to the dark terminator.
+    const grad = ctx.createRadialGradient(lx, ly, r * 0.04, cx, cy, r * 1.25);
+    grad.addColorStop(0.0,  cLit);
+    grad.addColorStop(0.45, cMid);
+    grad.addColorStop(1.0,  cDark);
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    // Thin atmospheric limb on the lit side.
+    if (p.limb_color) {
+      ctx.lineWidth = (p.limb_width ?? 0.012) * Math.min(W, H);
+      ctx.strokeStyle = p.limb_color;
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.995, 0, Math.PI * 2); ctx.stroke();
+    }
 
   } else if (p.count !== undefined) {
     // Scattered blips / particles (radar contacts, nodes, etc.)

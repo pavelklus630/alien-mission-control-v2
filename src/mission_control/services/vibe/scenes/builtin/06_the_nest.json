@@ -3,139 +3,118 @@
   "name": "THE NEST",
   "class": "BIOLOGICAL",
   "sym": "⬢",
-  "desc": "Amber light, broken shells. Something already hatched.",
+  "desc": "Her chamber. The eggs. The silence before everything ends.",
   "code": "AV-TN-07",
-  "life": "DEGRADED",
-  "comms": "DEGRADED",
+  "life": "COMPROMISED",
+  "comms": "OFFLINE",
   "crew": "UNKNOWN",
-  "ship": "NOMINAL",
-  "msg": "WARNING: NON-TERRESTRIAL BIOSIGNATURE — DECK G",
+  "ship": "CRITICAL",
+  "msg": "EXTREME DANGER: QUEEN PROXIMATE — DO NOT ENGAGE",
   "layers": [
     {
-      "id": "nest_bg",
-      "name": "Cave radial gradient",
+      "id": "tn_bg",
+      "name": "Queen's dark",
+      "type": "solid_bg",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "color": "#06000a" }
+    },
+    {
+      "id": "tn_throne_glow",
+      "name": "Blood throne glow (from below)",
       "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
         "type": "radial",
-        "cx": 0.5,
-        "cy": 0.4,
+        "cx": 0.50, "cy": 0.82,
         "stops": [
-          { "pos": 0.00, "color": "#030601" },
-          { "pos": 0.45, "color": "#010300" },
-          { "pos": 1.00, "color": "#000000" }
+          { "pos": 0.00, "color": "rgba(190,8,24,0.52)" },
+          { "pos": 0.24, "color": "rgba(110,0,12,0.28)" },
+          { "pos": 0.55, "color": "rgba(44,0,6,0.10)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
         ]
       }
     },
     {
-      "id": "nest_cave_walls",
-      "name": "Breathing cave ceiling and walls",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "note": "Canvas-scaled sinusoidal polygon ceiling (32 segments) + left/right cave walls, color #010802. Uses ctx.scale(1, breathe).",
-        "breathe_speed": 0.00042,
-        "breathe_amplitude": 0.018,
-        "color": "#010802"
-      },
-      "motion": {
-        "breathe": "1 + sin(t * 0.00042) * 0.018"
-      }
-    },
-    {
-      "id": "nest_resin_webs",
-      "name": "Resin web strands",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 0.45,
-      "blend": "source-over",
-      "params": {
-        "note": "14 bezier-curve strands top-to-h*0.82, color rgba(4,20,3,0.45), lineWidth 1.5.",
-        "count": 14,
-        "color": "rgba(4,20,3,0.45)",
-        "line_width": 1.5
-      }
-    },
-    {
-      "id": "nest_drips",
-      "name": "Resin drips from ceiling",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "note": "28 animated teardrop shapes falling from ceiling, color #0d2a08, alpha modulated by sin.",
-        "count": 28,
-        "color": "#0d2a08",
-        "speed_min": 0.4,
-        "speed_max": 1.5,
-        "len_min": 30,
-        "len_max": 110,
-        "alpha_min": 0.15,
-        "alpha_max": 0.45
-      },
-      "motion": {
-        "alpha": "drip_a * (0.65 + 0.35 * sin(t * 0.0012 + drip_ph))"
-      }
-    },
-    {
-      "id": "nest_floor_mist",
-      "name": "Ambient floor mist",
-      "type": "vignette",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
-      "params": {
-        "type": "linear",
-        "direction": "bottom",
-        "strength": 0.22,
-        "color": "#00030a"
-      }
-    },
-    {
-      "id": "nest_eggs",
-      "name": "Amber glowing eggs (9)",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
-      "params": {
-        "note": "9 eggs at fixed positions. Each: outer radial glow (screen) + dark body ellipse (source-over) + inner amber seep (screen) + 4 petal arcs (screen).",
-        "count": 9,
-        "positions": [[0.12,0.72],[0.24,0.82],[0.38,0.76],[0.50,0.86],[0.62,0.74],[0.74,0.80],[0.88,0.70],[0.18,0.94],[0.55,0.96]],
-        "rx_min": 18,
-        "rx_max": 30,
-        "ry_min": 28,
-        "ry_max": 46
-      },
-      "motion": {
-        "glow": "0.35 + 0.22 * sin(t * 0.0008 * egg_spd + egg_gph)",
-        "petal_open": "0.20 + 0.14 * sin(t * 0.00068 * egg_spd + egg_ph)"
-      }
-    },
-    {
-      "id": "nest_vignette",
-      "name": "Deep shadow vignette",
-      "type": "vignette",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "id": "tn_canopy",
+      "name": "Purple canopy (from above)",
+      "type": "gradient_bg",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
         "type": "radial",
-        "strength": 0.80,
-        "color": "#000000"
+        "cx": 0.50, "cy": 0.10,
+        "stops": [
+          { "pos": 0.00, "color": "rgba(74,0,120,0.34)" },
+          { "pos": 0.35, "color": "rgba(36,0,58,0.16)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
+        ]
       }
+    },
+    {
+      "id": "tn_biomass",
+      "name": "Biomass haze (slow)",
+      "type": "nebula_wisps",
+      "visible": true, "locked": false, "opacity": 0.66, "blend": "screen",
+      "params": {
+        "count": 12,
+        "hue_min": 320, "hue_max": 352,
+        "size_min": 160, "size_max": 480,
+        "alpha_min": 0.014, "alpha_max": 0.056,
+        "drift_speed": 0.000022
+      }
+    },
+    {
+      "id": "tn_spores",
+      "name": "Crimson spores (drift up)",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.78, "blend": "screen",
+      "params": {
+        "count": 55,
+        "hue_min": 326, "hue_max": 12,
+        "size_min": 0.8, "size_max": 3.2,
+        "speed": 0.028,
+        "alpha_min": 0.16, "alpha_max": 0.56
+      }
+    },
+    {
+      "id": "tn_eggs",
+      "name": "Egg cluster (glowing)",
+      "type": "custom",
+      "visible": true, "locked": false, "opacity": 0.88, "blend": "screen",
+      "params": {
+        "cx": 0.50, "cy": 0.76,
+        "count": 16,
+        "radial_range": 0.26,
+        "color": "rgba(170,90,0,0.90)",
+        "color_inner": "rgba(200,120,10,1.0)",
+        "dot_radius": 5,
+        "glow_radius": 15
+      }
+    },
+    {
+      "id": "tn_chamber_rings",
+      "name": "Chamber wall rings",
+      "type": "geometric",
+      "visible": true, "locked": false, "opacity": 0.04, "blend": "screen",
+      "params": {
+        "type": "rings",
+        "color": "#aa0022",
+        "alpha": 0.04,
+        "ring_count": 4
+      }
+    },
+    {
+      "id": "tn_deep_shadow",
+      "name": "Deep shadow vignette",
+      "type": "vignette",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "radial", "strength": 0.92, "color": "#000000" }
+    },
+    {
+      "id": "tn_purple_rim",
+      "name": "Purple rim light",
+      "type": "vignette",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
+      "params": { "type": "radial", "strength": 0.07, "color": "#5a0088" }
     }
   ]
 }

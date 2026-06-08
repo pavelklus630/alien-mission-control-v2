@@ -3,148 +3,113 @@
   "name": "BLOOD ORBIT",
   "class": "ASTRONOMICAL",
   "sym": "◎",
-  "desc": "LV-426 from orbit. The derelict is a speck below.",
+  "desc": "LV-426. The beacon was not a distress signal. It was a warning.",
   "code": "AV-BO-12",
   "life": "NOMINAL",
-  "comms": "ACTIVE",
+  "comms": "DEGRADED",
   "crew": "NOMINAL",
   "ship": "NOMINAL",
-  "msg": "ORBITAL ALTITUDE: 847km — DERELICT VESSEL VISIBLE",
+  "msg": "ORBITAL INSERTION COMPLETE — LV-426 BELOW — ATMOSPHERE HOSTILE",
   "layers": [
     {
       "id": "bo_bg",
-      "name": "Black space",
+      "name": "Cold black space",
       "type": "solid_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": { "color": "#000000" }
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "color": "#000004" }
     },
     {
-      "id": "bo_stars",
-      "name": "Background starfield",
-      "type": "particle_field",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "id": "bo_galaxy",
+      "name": "Faint galactic band (upper)",
+      "type": "nebula_wisps",
+      "visible": true, "locked": false, "opacity": 0.40, "blend": "screen",
       "params": {
-        "count": 240,
-        "hue_min": 35,
-        "hue_max": 45,
-        "size_min": 0.3,
-        "size_max": 1.6,
-        "speed": 0.0,
-        "spread": "full",
-        "alpha_min": 0.12,
-        "alpha_max": 0.5
-      },
-      "motion": {
-        "alpha": "star_b * (0.5 + 0.4 * sin(t * 0.001 + star_ph))"
+        "count": 9,
+        "hue_min": 210, "hue_max": 268,
+        "size_min": 180, "size_max": 520,
+        "alpha_min": 0.008, "alpha_max": 0.030,
+        "drift_speed": 0.000012
       }
     },
     {
-      "id": "bo_atm_halo",
-      "name": "Atmospheric limb halo",
+      "id": "bo_stars_far",
+      "name": "Far stars (dense, still)",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.85, "blend": "screen",
+      "params": {
+        "count": 340,
+        "hue_min": 205, "hue_max": 245,
+        "size_min": 0.2, "size_max": 1.1,
+        "speed": 0.003,
+        "alpha_min": 0.12, "alpha_max": 0.62
+      }
+    },
+    {
+      "id": "bo_stars_near",
+      "name": "Near stars (slow parallax)",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.95, "blend": "screen",
+      "params": {
+        "count": 55,
+        "hue_min": 198, "hue_max": 235,
+        "size_min": 1.0, "size_max": 2.6,
+        "speed": 0.015,
+        "alpha_min": 0.28, "alpha_max": 0.95
+      }
+    },
+    {
+      "id": "bo_planet",
+      "name": "LV-426 horizon (curved bulk below)",
+      "type": "custom",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": {
+        "cx": 0.50, "cy": 1.16,
+        "radius_factor": 0.78,
+        "light_offset_x": -0.06,
+        "light_offset_y": -0.66,
+        "color_lit": "rgba(150,40,16,1.0)",
+        "color_mid": "rgba(60,14,5,1.0)",
+        "color_dark": "rgba(5,1,1,1.0)",
+        "limb_color": "rgba(255,120,45,0.55)",
+        "limb_width": 0.009
+      }
+    },
+    {
+      "id": "bo_atm_scatter",
+      "name": "Atmospheric scatter (above horizon)",
       "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
         "type": "radial",
-        "cx": 0.5,
-        "cy": 0.5,
+        "cx": 0.50, "cy": 1.16,
         "stops": [
-          { "pos": 0.00, "color": "rgba(150,40,0,0)" },
-          { "pos": 0.35, "color": "rgba(170,46,4,0.30)" },
-          { "pos": 0.70, "color": "rgba(90,18,0,0.12)" },
-          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
+          { "pos": 0.00, "color": "rgba(0,0,0,0)" },
+          { "pos": 0.30, "color": "rgba(0,0,0,0)" },
+          { "pos": 0.40, "color": "rgba(200,70,24,0.20)" },
+          { "pos": 0.46, "color": "rgba(120,30,6,0.07)" },
+          { "pos": 0.55, "color": "rgba(0,0,0,0)" }
         ]
       }
     },
     {
-      "id": "bo_planet_disc",
-      "name": "Planet disc (clipped sphere shading)",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "id": "bo_storm_bands",
+      "name": "Surface storm bands",
+      "type": "nebula_wisps",
+      "visible": true, "locked": false, "opacity": 0.34, "blend": "overlay",
       "params": {
-        "note": "Circular clip (r=min(W,H)*0.34) then radial gradient lit from upper-right. Base stops: #8a1e02 → #5a1000 → #330700 → #140200 → #050000. Requires clip path — not a plain gradient_bg.",
-        "radius_factor": 0.34,
-        "light_offset_x": 0.42,
-        "light_offset_y": -0.18
-      }
-    },
-    {
-      "id": "bo_surface_features",
-      "name": "Rotating surface features",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
-      "params": {
-        "note": "48 features in spherical projection (lat/lon). lon drifts at t*0.00006. px=cx+sin(lon)*PR*cosLat, py=cy+sin(lat)*PR. Far hemisphere culled (cosLon<=0.02). Radial gradient ellipse per feature with illumination factor.",
-        "count": 48,
-        "hue_min": 4,
-        "hue_max": 26,
-        "rotation_speed": 0.00006,
-        "alpha_min": 0.10,
-        "alpha_max": 0.34
-      },
-      "motion": {
-        "lon_drift": "lon + t * 0.00006"
-      }
-    },
-    {
-      "id": "bo_terminator",
-      "name": "Terminator shadow",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "note": "Horizontal linear gradient (cx-PR to cx+PR*0.35) inside clip: rgba(0,0,0,0.88) → rgba(0,0,0,0.40) → transparent. Night-side shadow.",
-        "shadow_start_x": -1.0,
-        "shadow_end_x": 0.35,
-        "alpha_dark": 0.88,
-        "alpha_mid": 0.40
-      }
-    },
-    {
-      "id": "bo_crescent_rim",
-      "name": "Warm crescent rim light",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
-      "params": {
-        "note": "Radial gradient centered at cx+PR*0.62, cy-PR*0.16 (inner r=PR*0.15, outer r=PR*1.15) inside clip. rgba(255,140,50,0.42) → rgba(200,60,0,0.12) → transparent.",
-        "center_offset_x": 0.62,
-        "center_offset_y": -0.16,
-        "inner_r_factor": 0.15,
-        "outer_r_factor": 1.15
+        "count": 9,
+        "hue_min": 4, "hue_max": 26,
+        "size_min": 90, "size_max": 260,
+        "alpha_min": 0.018, "alpha_max": 0.060,
+        "drift_speed": 0.000028
       }
     },
     {
       "id": "bo_vignette",
-      "name": "Corner vignette to black",
+      "name": "Deep space vignette",
       "type": "vignette",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "type": "radial",
-        "strength": 0.90,
-        "color": "#000000"
-      }
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "radial", "strength": 0.80, "color": "#000004" }
     }
   ]
 }

@@ -3,100 +3,96 @@
   "name": "DEEP TRANSIT",
   "class": "TRANSIT",
   "sym": "✦",
-  "desc": "32 days out. Stars streak. The ship barely moves.",
+  "desc": "Seven weeks of dark between the stars. The ship hums. No one answers.",
   "code": "AV-DT-04",
   "life": "NOMINAL",
-  "comms": "ACTIVE",
-  "crew": "NOMINAL",
+  "comms": "OFFLINE",
+  "crew": "STASIS",
   "ship": "NOMINAL",
-  "msg": "FTL DRIVE: STANDBY — LONG RANGE NAVIGATION ENGAGED",
+  "msg": "DEEP SPACE TRANSIT — NEAREST RELAY 41 LIGHT-HOURS",
   "layers": [
     {
       "id": "dt_bg",
-      "name": "Near-black space",
+      "name": "Interstellar void",
       "type": "solid_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": { "color": "#010000" }
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "color": "#01010a" }
     },
     {
-      "id": "dt_red_mist",
-      "name": "Red ambient mist",
+      "id": "dt_galaxy_band",
+      "name": "Distant galactic band",
       "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
-        "type": "radial",
-        "cx": 0.5,
-        "cy": 0.475,
+        "type": "linear",
+        "angle": 28,
         "stops": [
-          { "pos": 0.0, "color": "rgba(26,4,0,0.18)" },
-          { "pos": 0.5, "color": "rgba(10,1,0,0.08)" },
-          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+          { "pos": 0.00, "color": "rgba(0,0,0,0)" },
+          { "pos": 0.42, "color": "rgba(40,40,110,0.10)" },
+          { "pos": 0.52, "color": "rgba(70,60,140,0.16)" },
+          { "pos": 0.62, "color": "rgba(40,40,110,0.10)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
         ]
       }
     },
     {
-      "id": "dt_nebula_wisps",
-      "name": "Red nebula wisps",
+      "id": "dt_nebula",
+      "name": "Cold nebula (deep, slow)",
       "type": "nebula_wisps",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 0.55, "blend": "screen",
       "params": {
-        "count": 16,
-        "hue_min": 348,
-        "hue_max": 382,
-        "alpha_min": 0.012,
-        "alpha_max": 0.040,
-        "size_min": 100,
-        "size_max": 340,
-        "drift_speed": 0.006
+        "count": 12,
+        "hue_min": 200, "hue_max": 270,
+        "size_min": 160, "size_max": 520,
+        "alpha_min": 0.010, "alpha_max": 0.040,
+        "drift_speed": 0.000020
       }
     },
     {
-      "id": "dt_stars",
-      "name": "Dense bright star dots",
+      "id": "dt_stars_far",
+      "name": "Far stars (tiny, near-still)",
       "type": "particle_field",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 0.80, "blend": "screen",
       "params": {
-        "count": 460,
-        "hue_min": 200,
-        "hue_max": 230,
-        "size_min": 0.9,
-        "size_max": 3.0,
-        "speed": 0.06,
-        "spread": "full",
-        "alpha_min": 0.6,
-        "alpha_max": 1.0
+        "count": 260,
+        "hue_min": 205, "hue_max": 245,
+        "size_min": 0.2, "size_max": 0.9,
+        "speed": 0.012,
+        "alpha_min": 0.10, "alpha_max": 0.55
       }
     },
     {
-      "id": "dt_approach_stars",
-      "name": "Approach streaks (zoom stars)",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "id": "dt_stars_mid",
+      "name": "Mid stars (parallax)",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.90, "blend": "screen",
       "params": {
-        "note": "9 stars accelerating radially from center W*0.5,H*0.5 outward along random angles, drawn as gradient streaks with bright heads. Eased by t*t.",
-        "count": 9,
-        "speed_min": 0.009,
-        "speed_max": 0.018,
-        "streak_base_len": 3,
-        "streak_max_len": 95,
-        "line_width_min": 1.2,
-        "line_width_max": 4.6
+        "count": 130,
+        "hue_min": 195, "hue_max": 235,
+        "size_min": 0.6, "size_max": 1.6,
+        "speed": 0.035,
+        "alpha_min": 0.20, "alpha_max": 0.78
       }
+    },
+    {
+      "id": "dt_stars_near",
+      "name": "Near stars (drift past)",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
+      "params": {
+        "count": 45,
+        "hue_min": 190, "hue_max": 230,
+        "size_min": 1.2, "size_max": 2.8,
+        "speed": 0.075,
+        "alpha_min": 0.35, "alpha_max": 0.95
+      }
+    },
+    {
+      "id": "dt_vignette",
+      "name": "Deep-space vignette",
+      "type": "vignette",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "radial", "strength": 0.80, "color": "#000005" }
     }
   ]
 }

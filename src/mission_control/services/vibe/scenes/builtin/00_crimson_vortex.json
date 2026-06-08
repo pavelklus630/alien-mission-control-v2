@@ -15,93 +15,119 @@
       "id": "cv_bg",
       "name": "Deep black space",
       "type": "solid_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
       "params": { "color": "#000000" }
     },
     {
-      "id": "cv_vortex",
-      "name": "Vortex swirl",
+      "id": "cv_ambient",
+      "name": "Bruised red ambience",
+      "type": "gradient_bg",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
+      "params": {
+        "type": "radial",
+        "cx": 0.50, "cy": 0.48,
+        "stops": [
+          { "pos": 0.00, "color": "rgba(70,0,28,0.42)" },
+          { "pos": 0.38, "color": "rgba(36,0,14,0.18)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "cv_stars_far",
+      "name": "Far stars (parallax, still)",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.55, "blend": "screen",
+      "params": {
+        "count": 130,
+        "hue_min": 350, "hue_max": 18,
+        "size_min": 0.3, "size_max": 1.0,
+        "speed": 0.004,
+        "alpha_min": 0.10, "alpha_max": 0.42
+      }
+    },
+    {
+      "id": "cv_vortex_outer",
+      "name": "Outer vortex arms (slow)",
       "type": "vortex",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 0.66, "blend": "screen",
       "params": {
-        "cx": 0.50,
-        "cy": 0.46,
-        "tilt": -0.40,
-        "hue_start": 0,
-        "hue_end": 58,
-        "layer_count": 6,
-        "base_alpha": 0.55,
-        "rotation_speed": 0.000095
-      },
-      "motion": {
-        "pulse": "1 + 0.06 * sin(t * 0.00042)"
+        "cx": 0.50, "cy": 0.48,
+        "tilt": -0.35,
+        "hue_start": 344, "hue_end": 22,
+        "layer_count": 8,
+        "base_alpha": 0.40,
+        "rotation_speed": 0.000020
       }
     },
     {
-      "id": "cv_ship1",
-      "name": "Cross-shape ship (upper-left)",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "id": "cv_vortex_inner",
+      "name": "Inner vortex core (counter-rotating)",
+      "type": "vortex",
+      "visible": true, "locked": false, "opacity": 0.82, "blend": "screen",
       "params": {
-        "note": "drawCrossShip() — cross silhouette from fillRect calls. No sprite asset.",
-        "cx": 0.30,
-        "cy": 0.22,
-        "size_factor": 0.052
-      },
-      "motion": {
-        "y_offset": "sin(t * 0.00022) * 3.5",
-        "rotation": "sin(t * 0.00015) * 0.028"
+        "cx": 0.50, "cy": 0.48,
+        "tilt": 0.55,
+        "hue_start": 2, "hue_end": 44,
+        "layer_count": 5,
+        "base_alpha": 0.52,
+        "rotation_speed": -0.000034
       }
     },
     {
-      "id": "cv_ship2",
-      "name": "Small elongated ship near core",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "id": "cv_wisps",
+      "name": "Blood-red gas (drift)",
+      "type": "nebula_wisps",
+      "visible": true, "locked": false, "opacity": 0.46, "blend": "screen",
       "params": {
-        "note": "Tiny ellipse (19x6) ship with engine glow. No sprite asset.",
-        "cx": 0.54,
-        "cy": 0.57,
-        "rx": 19,
-        "ry": 6,
-        "rotation": 0.18
-      },
-      "motion": {
-        "x_offset": "sin(t * 0.00028 + 1) * 5",
-        "y_offset": "cos(t * 0.00020 + 0.5) * 3"
+        "count": 12,
+        "hue_min": 345, "hue_max": 14,
+        "size_min": 140, "size_max": 420,
+        "alpha_min": 0.012, "alpha_max": 0.046,
+        "drift_speed": 0.000030
       }
     },
     {
       "id": "cv_embers",
-      "name": "Ember / spark particles",
+      "name": "Embers spiralling in",
       "type": "particle_field",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "visible": true, "locked": false, "opacity": 0.85, "blend": "screen",
       "params": {
-        "count": 380,
-        "hue_min": 5,
-        "hue_max": 42,
-        "size_min": 0.5,
-        "size_max": 3.0,
-        "speed": 0.35,
-        "spread": "full",
-        "alpha_min": 0.2,
-        "alpha_max": 0.85
+        "count": 150,
+        "hue_min": 4, "hue_max": 40,
+        "size_min": 0.6, "size_max": 2.6,
+        "speed": 0.10,
+        "alpha_min": 0.20, "alpha_max": 0.78
       }
+    },
+    {
+      "id": "cv_ship1",
+      "name": "Derelict caught in the pull",
+      "type": "custom",
+      "visible": true, "locked": false, "opacity": 0.92, "blend": "source-over",
+      "params": { "cx": 0.32, "cy": 0.26, "size_factor": 0.05 },
+      "motion": {
+        "y_offset": "sin(t * 0.00012) * 5",
+        "rotation": "t * 0.00003"
+      }
+    },
+    {
+      "id": "cv_ship2",
+      "name": "Second hull near the core",
+      "type": "custom",
+      "visible": true, "locked": false, "opacity": 0.85, "blend": "source-over",
+      "params": { "cx": 0.66, "cy": 0.60, "rx": 20, "ry": 6, "rotation": 0.3 },
+      "motion": {
+        "x_offset": "sin(t * 0.00015 + 1.0) * 7",
+        "y_offset": "cos(t * 0.00011 + 0.4) * 5"
+      }
+    },
+    {
+      "id": "cv_vignette",
+      "name": "Black edge vignette",
+      "type": "vignette",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "radial", "strength": 0.82, "color": "#000000" }
     }
   ]
 }

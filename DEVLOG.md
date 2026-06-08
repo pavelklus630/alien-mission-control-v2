@@ -221,3 +221,25 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - Fixed: `width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;` — buttons are now stable regardless of status text length.
 
 **Tests:** all 54 existing tests pass.
+
+---
+
+### 2026-06-09 — v2.2.0 Vibe scene redesign + renderer fixes
+
+**Version bump:** `2.1.1` → `2.2.0` in `pyproject.toml` and `CURRENT_VERSION` in `launcher/app.py`.
+
+**All 12 builtin scenes redesigned** for table projection (top-down RPG background):
+- Reworked around slow parallax motion and radial/centred compositions that read from any seat.
+- Each scene given a distinct colour identity and structure — no two share the "warm glow on black" gestalt.
+- THE HIVE (acid-green biolum, resin downflows) and THE NEST (blood-red throne + purple canopy, egg cluster) fully differentiated — previously near-identical.
+- SOLAR APPROACH rebuilt as a concentric, full-frame churning white-hot star (twin plasma vortices, prominence arcs, white core, no stars/no black).
+- BLOOD ORBIT rebuilt as an orbital horizon — cold star-filled black space with the curved dark-red bulk of LV-426 rising across the bottom and a glowing atmospheric limb. Structurally opposite to Solar.
+- MOTION TRACKER cleaned to the iconic green scope (range rings, bearing ticks, sweep, contacts); removed the messy circuit traces.
+
+**Renderer enhancements (display.html + editor.html):**
+- `custom` planet disc now accepts `color_lit` / `color_mid` / `color_dark` and an optional atmospheric `limb_color` / `limb_width`, so each scene's planet/star reads with its own palette.
+- `radar_sweep` reworked: angle driven directly from `t` × `sweep_speed` (no longer dependent on a motion expression resolving), shorter default trail, bold glowing leading edge scaled to canvas size + bright tip blip, brighter fading wedge. Fixes the sweep appearing frozen on a projector.
+
+**Scene-shadow gotcha documented:** `SceneStore.get()` reads the custom data-dir copy before the builtin source. The editor's OBS auto-save had written shadow copies of crimson_vortex / solar_approach / derelict / blood_orbit to `~/Library/Application Support/MissionControl/vibe/scenes/`, which silently overrode builtin edits. Stale shadows cleared. Previewing from the GM Control panel never writes shadows; the editor's OBS ▶ only shadows a scene with unsaved edits.
+
+**Tests:** all 54 pass.

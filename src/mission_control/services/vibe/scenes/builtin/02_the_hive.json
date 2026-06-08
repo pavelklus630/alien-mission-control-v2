@@ -3,120 +3,138 @@
   "name": "THE HIVE",
   "class": "BIOLOGICAL",
   "sym": "⬡",
-  "desc": "Every surface breathes. You are not alone.",
+  "desc": "Perfect organic architecture. The walls breathe. Something watches.",
   "code": "AV-TH-03",
-  "life": "DEGRADED",
-  "comms": "DEGRADED",
+  "life": "COMPROMISED",
+  "comms": "OFFLINE",
   "crew": "UNKNOWN",
   "ship": "NOMINAL",
-  "msg": "WARNING: BIOHAZARD LOCKDOWN ACTIVE — DECK C",
+  "msg": "WARNING: MULTIPLE LIFE FORMS DETECTED — COLONY SIGNAL LOST",
   "layers": [
     {
-      "id": "hive_bg",
-      "name": "Deep atmospheric gradient",
+      "id": "hv_bg",
+      "name": "Resin dark",
+      "type": "solid_bg",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "color": "#020600" }
+    },
+    {
+      "id": "hv_biolum_pool",
+      "name": "Bioluminescent floor pool",
       "type": "gradient_bg",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
-        "type": "linear",
-        "angle": 90,
+        "type": "radial",
+        "cx": 0.50, "cy": 0.55,
         "stops": [
-          { "pos": 0.00, "color": "#000200" },
-          { "pos": 0.55, "color": "#010400" },
-          { "pos": 1.00, "color": "#000000" }
+          { "pos": 0.00, "color": "rgba(40,150,20,0.34)" },
+          { "pos": 0.28, "color": "rgba(20,84,8,0.18)" },
+          { "pos": 0.62, "color": "rgba(8,40,2,0.07)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
         ]
       }
     },
     {
-      "id": "hive_cave",
-      "name": "Breathing cave walls and ceiling",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "id": "hv_amber_node",
+      "name": "Amber organism (off-centre)",
+      "type": "gradient_bg",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "screen",
       "params": {
-        "note": "Canvas-scaled sinusoidal polygon ceiling + two side walls, color #010b01. Uses ctx.scale(1, breathe).",
-        "breathe_speed": 0.00048,
-        "breathe_amplitude": 0.028,
-        "ceiling_color": "#010b01"
-      },
-      "motion": {
-        "breathe": "1 + sin(t * 0.00048) * 0.028"
+        "type": "radial",
+        "cx": 0.24, "cy": 0.38,
+        "stops": [
+          { "pos": 0.00, "color": "rgba(150,96,0,0.26)" },
+          { "pos": 0.30, "color": "rgba(72,42,0,0.12)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
+        ]
       }
     },
     {
-      "id": "hive_resin_strands",
-      "name": "Resin strands",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 0.40,
-      "blend": "source-over",
+      "id": "hv_mist",
+      "name": "Organic mist (drift)",
+      "type": "nebula_wisps",
+      "visible": true, "locked": false, "opacity": 0.62, "blend": "screen",
       "params": {
-        "note": "12 bezier-curve strands top-to-bottom, color rgba(6,28,3,0.40), lineWidth 2.",
-        "count": 12,
-        "color": "rgba(6,28,3,0.40)",
-        "line_width": 2
+        "count": 16,
+        "hue_min": 88, "hue_max": 128,
+        "size_min": 100, "size_max": 360,
+        "alpha_min": 0.012, "alpha_max": 0.044,
+        "drift_speed": 0.000034
       }
     },
     {
-      "id": "hive_drips",
-      "name": "Resin drips",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
+      "id": "hv_spores_far",
+      "name": "Drifting spores (far)",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.60, "blend": "screen",
       "params": {
-        "note": "22 teardrop path shapes (quadraticCurveTo) falling downward, color #0a2412.",
-        "count": 22,
-        "color": "#0a2412",
-        "speed_min": 0.3,
-        "speed_max": 1.2,
-        "len_min": 28,
-        "len_max": 100,
-        "alpha_min": 0.18,
-        "alpha_max": 0.5
+        "count": 90,
+        "hue_min": 70, "hue_max": 120,
+        "size_min": 0.4, "size_max": 1.4,
+        "speed": 0.030,
+        "alpha_min": 0.10, "alpha_max": 0.42
       }
     },
     {
-      "id": "hive_eggs",
-      "name": "Amber glowing eggs (9)",
-      "type": "custom",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "screen",
+      "id": "hv_spores_near",
+      "name": "Bioluminescent motes (near)",
+      "type": "particle_field",
+      "visible": true, "locked": false, "opacity": 0.92, "blend": "screen",
       "params": {
-        "note": "9 eggs: outer radial glow (screen) + dark body (source-over) + inner amber glow (screen) + 4 petal arcs (screen).",
-        "count": 9,
-        "glow_speed": 0.0009,
-        "petal_speed": 0.00072,
-        "petal_open_min": 0.22,
-        "petal_open_max": 0.36
-      },
-      "motion": {
-        "glow": "0.30 + 0.20 * sin(t * 0.0009 + egg_gph)",
-        "petal_open": "0.22 + 0.14 * sin(t * 0.00072 + egg_ph)"
+        "count": 40,
+        "hue_min": 95, "hue_max": 145,
+        "size_min": 1.8, "size_max": 5.0,
+        "speed": 0.055,
+        "alpha_min": 0.24, "alpha_max": 0.74
       }
     },
     {
-      "id": "hive_floor_mist",
-      "name": "Floor mist",
+      "id": "hv_resin_drips",
+      "name": "Resin seep (slow downflow)",
+      "type": "path_flow",
+      "visible": true, "locked": false, "opacity": 0.62, "blend": "screen",
+      "params": {
+        "paths": [
+          [[0.16, 0.00], [0.15, 0.30], [0.18, 0.58], [0.15, 1.00]],
+          [[0.42, 0.00], [0.44, 0.26], [0.40, 0.54], [0.43, 1.00]],
+          [[0.66, 0.00], [0.64, 0.32], [0.68, 0.60], [0.65, 1.00]],
+          [[0.86, 0.00], [0.84, 0.34], [0.88, 1.00]]
+        ],
+        "color": "#3faa00",
+        "line_width": 0.7,
+        "speed_min": 0.00025, "speed_max": 0.00065,
+        "hue_min": 82, "hue_max": 128,
+        "particle_count": 26
+      }
+    },
+    {
+      "id": "hv_eggs",
+      "name": "Egg glow cluster",
+      "type": "custom",
+      "visible": true, "locked": false, "opacity": 0.85, "blend": "screen",
+      "params": {
+        "cx": 0.50, "cy": 0.58,
+        "count": 11,
+        "radial_range": 0.30,
+        "color": "rgba(150,110,0,0.85)",
+        "color_inner": "rgba(180,130,10,0.95)",
+        "dot_radius": 4,
+        "glow_radius": 12
+      }
+    },
+    {
+      "id": "hv_floor_mist",
+      "name": "Floor shadow",
       "type": "vignette",
-      "visible": true,
-      "locked": false,
-      "opacity": 1.0,
-      "blend": "source-over",
-      "params": {
-        "type": "linear",
-        "direction": "bottom",
-        "strength": 0.65,
-        "color": "#000401"
-      }
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "linear", "direction": "bottom", "strength": 0.60, "color": "#000200" }
+    },
+    {
+      "id": "hv_vignette",
+      "name": "Tunnel vignette",
+      "type": "vignette",
+      "visible": true, "locked": false, "opacity": 1.0, "blend": "source-over",
+      "params": { "type": "radial", "strength": 0.88, "color": "#000300" }
     }
   ]
 }
