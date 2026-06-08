@@ -83,4 +83,16 @@ def build_router(settings: Settings, state: VibeState) -> APIRouter:
             return JSONResponse({"error": "invalid scene"}, status_code=400)
         return JSONResponse(state.get())
 
+    @router.post("/api/scene-by-id")
+    async def set_scene_by_id(request: Request) -> JSONResponse:
+        """Switch to any scene by string ID (builtin or custom).
+        Broadcasts scene_id via SSE — display.html loads the JSON directly."""
+        try:
+            data = await request.json()
+            scene_id = str(data["scene_id"])
+        except Exception:
+            return JSONResponse({"error": "bad request"}, status_code=400)
+        state.set_scene_by_id(scene_id)
+        return JSONResponse(state.get())
+
     return router

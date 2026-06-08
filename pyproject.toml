@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mission-control"
-version = "2.0.1"
+version = "2.1.1"
 description = "ALIEN RPG GM toolkit — Mission Control v2 (Soundboard, MU/TH/UR Terminal, Vibe, Erebos Map)"
 requires-python = ">=3.11"
 dependencies = [
@@ -30,7 +30,7 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-"mission_control" = ["services/**/templates/*", "services/**/static/**/*", "shared_static/**/*"]
+"mission_control" = ["services/**/templates/*", "services/**/static/**/*", "services/**/scenes/**/*", "shared_static/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

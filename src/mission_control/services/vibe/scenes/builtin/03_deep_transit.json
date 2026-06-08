@@ -1,0 +1,102 @@
+{
+  "id": "deep_transit",
+  "name": "DEEP TRANSIT",
+  "class": "TRANSIT",
+  "sym": "✦",
+  "desc": "32 days out. Stars streak. The ship barely moves.",
+  "code": "AV-DT-04",
+  "life": "NOMINAL",
+  "comms": "ACTIVE",
+  "crew": "NOMINAL",
+  "ship": "NOMINAL",
+  "msg": "FTL DRIVE: STANDBY — LONG RANGE NAVIGATION ENGAGED",
+  "layers": [
+    {
+      "id": "dt_bg",
+      "name": "Near-black space",
+      "type": "solid_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": { "color": "#010000" }
+    },
+    {
+      "id": "dt_red_mist",
+      "name": "Red ambient mist",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "radial",
+        "cx": 0.5,
+        "cy": 0.475,
+        "stops": [
+          { "pos": 0.0, "color": "rgba(26,4,0,0.18)" },
+          { "pos": 0.5, "color": "rgba(10,1,0,0.08)" },
+          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "dt_nebula_wisps",
+      "name": "Red nebula wisps",
+      "type": "nebula_wisps",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "count": 16,
+        "hue_min": 348,
+        "hue_max": 382,
+        "alpha_min": 0.012,
+        "alpha_max": 0.040,
+        "size_min": 100,
+        "size_max": 340,
+        "drift_speed": 0.006
+      }
+    },
+    {
+      "id": "dt_stars",
+      "name": "Dense bright star dots",
+      "type": "particle_field",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "count": 460,
+        "hue_min": 200,
+        "hue_max": 230,
+        "size_min": 0.9,
+        "size_max": 3.0,
+        "speed": 0.06,
+        "spread": "full",
+        "alpha_min": 0.6,
+        "alpha_max": 1.0
+      }
+    },
+    {
+      "id": "dt_approach_stars",
+      "name": "Approach streaks (zoom stars)",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "9 stars accelerating radially from center W*0.5,H*0.5 outward along random angles, drawn as gradient streaks with bright heads. Eased by t*t.",
+        "count": 9,
+        "speed_min": 0.009,
+        "speed_max": 0.018,
+        "streak_base_len": 3,
+        "streak_max_len": 95,
+        "line_width_min": 1.2,
+        "line_width_max": 4.6
+      }
+    }
+  ]
+}

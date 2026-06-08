@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIBE EDITOR — MISSION CONTROL</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:     #020602;
+  --panel:  #050d06;
+  --border: #0e2a14;
+  --amber:  #7ab88a;
+  --dim:    #3a6a48;
+  --accent: #33dd55;
+  --green:  #1a5a2a;
+  --red:    #e03030;
+  --sel-bg: #0b2e14;
+  --sel-bd: #33dd55;
+  --text:   #7ab88a;
+  --small:  10px;
+}
+
+body {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+/* ── Top bar ── */
+#topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: #030802;
+  flex-shrink: 0;
+}
+#topbar .title { color: var(--accent); font-size: 13px; font-weight: bold; letter-spacing: 2px; margin-right: 6px; }
+#topbar select {
+  background: var(--panel); color: var(--amber); border: 1px solid var(--border);
+  padding: 3px 6px; font-family: inherit; font-size: 11px; flex: 1; max-width: 320px;
+  cursor: pointer;
+}
+#topbar select option { background: #030a04; }
+.spacer { flex: 1; }
+.btn {
+  background: #030a04; color: var(--amber); border: 1px solid var(--border);
+  padding: 3px 9px; font-family: inherit; font-size: 11px; cursor: pointer;
+  letter-spacing: 1px;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { border-color: var(--accent); color: var(--accent); }
+.btn.primary:hover { background: #0b2e14; }
+.btn.danger { border-color: var(--red); color: var(--red); }
+.btn.danger:hover { background: #1a0000; }
+.btn.accent { border-color: var(--g2); color: var(--g2); }
+.btn.accent:hover { background: #0b2e14; }
+.btn.icon-only { padding: 3px 6px; }
+#status {
+  font-size: 10px; color: var(--dim); width: 200px; flex-shrink: 0;
+  text-align: right; letter-spacing: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Main layout ── */
+#main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Left panel ── */
+#left-panel {
+  width: 220px;
+  min-width: 180px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.panel-head {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  background: #030802;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--dim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.panel-head .panel-btns { display: flex; gap: 4px; }
+.icon-btn {
+  background: none; border: 1px solid var(--border); color: var(--dim);
+  width: 20px; height: 20px; font-size: 11px; cursor: pointer; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+#scene-meta {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  color: var(--dim);
+  flex-shrink: 0;
+  min-height: 56px;
+}
+#scene-meta .meta-name { color: var(--amber); font-size: 12px; margin-bottom: 2px; }
+#scene-meta .meta-row { display: flex; gap: 6px; flex-wrap: wrap; }
+#scene-meta .meta-tag {
+  border: 1px solid var(--border); padding: 1px 4px; font-size: 9px; color: var(--dim);
+}
+
+#layer-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #0a1e0c;
+  cursor: pointer;
+}
+.layer-item:hover { background: #050d06; }
+.layer-item.selected { background: var(--sel-bg); border-left: 2px solid var(--sel-bd); }
+.layer-vis { font-size: 11px; cursor: pointer; color: var(--dim); width: 14px; flex-shrink: 0; }
+.layer-vis.on { color: var(--accent); }
+.layer-type-badge {
+  font-size: 9px; color: var(--dim); border: 1px solid var(--border);
+  padding: 1px 3px; flex-shrink: 0; min-width: 54px; text-align: center;
+}
+.layer-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.layer-item.hidden-layer .layer-name { opacity: 0.4; }
+
+/* ── Canvas panel ── */
+#canvas-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+  padding: 10px;
+  background: #020602;
+}
+#canvas-wrap {
+  border: 1px solid var(--border);
+  position: relative;
+}
+canvas#preview {
+  display: block;
+  background: #000;
+}
+#canvas-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+#time-display {
+  font-size: 10px; color: var(--dim); min-width: 80px;
+}
+
+/* ── Right panel ── */
+#right-panel {
+  width: 280px;
+  min-width: 220px;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+#props-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.prop-section { margin-bottom: 10px; }
+.prop-section-head {
+  font-size: 9px; color: var(--dim); letter-spacing: 2px;
+  border-bottom: 1px solid var(--border); margin-bottom: 6px; padding-bottom: 2px;
+}
+.prop-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.prop-label { font-size: 10px; color: var(--dim); }
+.prop-input {
+  background: var(--panel); color: var(--amber); border: 1px solid var(--border);
+  padding: 2px 4px; font-family: inherit; font-size: 11px; width: 100%;
+}
+.prop-input:focus { outline: none; border-color: var(--accent); }
+.prop-range-wrap { display: flex; gap: 4px; align-items: center; }
+.prop-range-wrap input[type=range] {
+  flex: 1; accent-color: var(--accent); height: 14px;
+}
+.prop-range-wrap .range-val { font-size: 10px; color: var(--amber); min-width: 42px; text-align: right; }
+input[type=color] {
+  width: 100%; height: 22px; border: 1px solid var(--border); padding: 1px;
+  background: var(--panel); cursor: pointer;
+}
+select.prop-input { cursor: pointer; }
+
+.motion-section { margin-top: 10px; }
+.motion-expr-row {
+  display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px;
+}
+.motion-key { font-size: 9px; color: var(--dim); letter-spacing: 1px; }
+.motion-textarea {
+  background: #020602; color: #7ab88a; border: 1px solid var(--border);
+  font-family: 'Courier New', monospace; font-size: 10px;
+  padding: 3px; width: 100%; resize: vertical; min-height: 36px;
+}
+.motion-textarea:focus { outline: none; border-color: var(--accent); }
+
+.custom-note {
+  font-size: 10px; color: var(--dim); border: 1px solid var(--border);
+  padding: 6px; margin-bottom: 8px; line-height: 1.4;
+}
+.custom-json-row { display: flex; flex-direction: column; gap: 2px; }
+.custom-json-ta {
+  background: #020602; color: #3a6a48; border: 1px solid var(--border);
+  font-family: 'Courier New', monospace; font-size: 9px;
+  padding: 4px; width: 100%; resize: vertical; min-height: 80px;
+}
+.custom-json-ta:focus { outline: none; border-color: var(--accent); }
+
+.layer-base-row {
+  display: grid; grid-template-columns: 90px 1fr; gap: 4px;
+  align-items: center; margin-bottom: 4px;
+}
+
+/* ── Stops editor ── */
+.stops-editor { display: flex; flex-direction: column; gap: 3px; }
+.stop-row { display: flex; gap: 4px; align-items: center; }
+.stop-row input[type=number] {
+  width: 44px; background: var(--panel); color: var(--amber);
+  border: 1px solid var(--border); padding: 2px; font-family: inherit; font-size: 10px;
+}
+.stop-row input[type=text] {
+  flex: 1; background: var(--panel); color: var(--amber);
+  border: 1px solid var(--border); padding: 2px 4px; font-family: inherit; font-size: 10px;
+}
+.stop-del { background: none; border: 1px solid var(--border); color: var(--dim); cursor: pointer; padding: 1px 5px; font-size: 10px; }
+.stop-del:hover { border-color: var(--red); color: var(--red); }
+.stops-add { margin-top: 2px; font-size: 10px; }
+
+/* ── Modals ── */
+#overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 100;
+  align-items: center; justify-content: center;
+}
+#overlay.visible { display: flex; }
+.modal {
+  background: #050d06; border: 1px solid var(--accent);
+  padding: 16px; min-width: 320px; max-width: 480px;
+}
+.modal-title { color: var(--accent); letter-spacing: 2px; margin-bottom: 12px; font-size: 13px; }
+.modal-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.modal-label { font-size: 10px; color: var(--dim); }
+.modal-input {
+  background: var(--panel); color: var(--amber); border: 1px solid var(--border);
+  padding: 4px 6px; font-family: inherit; font-size: 12px; width: 100%;
+}
+.modal-input:focus { outline: none; border-color: var(--accent); }
+.modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div id="topbar">
+  <span class="title">◈ VIBE EDITOR</span>
+  <select id="scene-select" title="Switch scene"></select>
+  <button class="btn" id="btn-new" title="Create new scene">NEW</button>
+  <div class="spacer"></div>
+  <button class="btn" id="btn-import" title="Import .json or .vibe">IMPORT</button>
+  <button class="btn" id="btn-export" title="Export as .vibe">EXPORT</button>
+  <button class="btn primary" id="btn-save" title="Save scene (Ctrl+S)">SAVE</button>
+  <button class="btn accent" id="btn-test" title="Auto-save and send scene to OBS display">OBS ▶</button>
+  <button class="btn icon-only" id="btn-open-display" title="Open OBS display in new tab">↗</button>
+  <span id="status">READY</span>
+</div>
+
+<div id="main">
+  <!-- Left: scene meta + layer list -->
+  <div id="left-panel">
+    <div class="panel-head">
+      <span>LAYERS</span>
+      <div class="panel-btns">
+        <button class="icon-btn" id="btn-layer-up" title="Move layer up">▲</button>
+        <button class="icon-btn" id="btn-layer-dn" title="Move layer down">▼</button>
+        <button class="icon-btn" id="btn-layer-add" title="Add layer">+</button>
+        <button class="icon-btn" id="btn-layer-del" title="Delete layer" style="color:var(--red)">×</button>
+      </div>
+    </div>
+    <div id="scene-meta">
+      <div class="meta-name" id="meta-name">—</div>
+      <div class="meta-row" id="meta-tags"></div>
+    </div>
+    <div id="layer-list"></div>
+  </div>
+
+  <!-- Center: canvas -->
+  <div id="canvas-panel">
+    <div id="canvas-wrap">
+      <canvas id="preview" width="480" height="480"></canvas>
+    </div>
+    <div id="canvas-controls">
+      <button class="btn" id="btn-play">▶ PLAY</button>
+      <button class="btn" id="btn-pause">⏸ PAUSE</button>
+      <button class="btn" id="btn-reset">↺ RESET</button>
+      <span id="time-display">t = 0.0s</span>
+      <label style="font-size:10px;color:var(--dim);">ASSETS:
+        <input type="file" id="asset-upload" accept="image/*" style="display:none">
+        <button class="btn" id="btn-asset-upload">UPLOAD IMAGE</button>
+      </label>
+    </div>
+  </div>
+
+  <!-- Right: properties -->
+  <div id="right-panel">
+    <div class="panel-head"><span>PROPERTIES</span></div>
+    <div id="props-scroll">
+      <div id="props-content" style="color:var(--dim);font-size:11px;padding:8px;">Select a layer to edit its properties.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal overlay -->
+<div id="overlay">
+  <div class="modal" id="modal-new">
+    <div class="modal-title">NEW SCENE</div>
+    <div class="modal-row">
+      <label class="modal-label">SCENE NAME</label>
+      <input class="modal-input" id="new-scene-name" placeholder="e.g. MY SCENE">
+    </div>
+    <div class="modal-row">
+      <label class="modal-label">SCENE ID (slug)</label>
+      <input class="modal-input" id="new-scene-id" placeholder="e.g. my_scene">
+    </div>
+    <div class="modal-btns">
+      <button class="btn" id="modal-cancel">CANCEL</button>
+      <button class="btn primary" id="modal-create">CREATE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden import file input -->
+<input type="file" id="import-file" accept=".json,.vibe" style="display:none">
+
+<script>
+// ===================================================================
+// STATE
+// ===================================================================
+let scene = null;           // current full scene JSON
+let selectedIdx = -1;       // selected layer index
+let dirty = false;
+let allScenes = [];         // summary list from API
+let assets = [];            // [{filename, size}]
+let assetImages = {};       // {filename: HTMLImageElement}
+
+// Canvas / animation
+const canvas = document.getElementById('preview');
+const ctx = canvas.getContext('2d');
+let W = canvas.width, H = canvas.height;
+let playing = true;
+let startTime = performance.now();
+let pauseOffset = 0;
+let pausedAt = 0;
+let animId = null;
+
+// Per-layer particle/wisp state (keyed by layer.id)
+const particleState = new Map();
+
+// ===================================================================
+// UTILITY
+// ===================================================================
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
+
+function rgba(hex, a) {
+  const {r,g,b} = hexToRgb(hex || '#000000');
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function setStatus(msg, warn) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.style.color = warn ? 'var(--accent)' : 'var(--dim)';
+}
+
+function markDirty() {
+  dirty = true;
+  setStatus('UNSAVED ●', true);
+}
+
+function markClean() {
+  dirty = false;
+  setStatus('SAVED', false);
+  setTimeout(() => setStatus('READY', false), 2000);
+}
+
+// ===================================================================
+// MOTION EVALUATOR
+// ===================================================================
+const motionFnCache = new Map();
+
+function evalMotion(expr, t, W, H) {
+  if (!motionFnCache.has(expr)) {
+    const safe = expr
+      .replace(/\bsin\b/g, 'Math.sin')
+      .replace(/\bcos\b/g, 'Math.cos')
+      .replace(/\btan\b/g, 'Math.tan')
+      .replace(/\babs\b/g, 'Math.abs')
+      .replace(/\bfloor\b/g, 'Math.floor')
+      .replace(/\bceil\b/g, 'Math.ceil')
+      .replace(/\bsqrt\b/g, 'Math.sqrt')
+      .replace(/\bpow\b/g, 'Math.pow')
+      .replace(/\bmax\b/g, 'Math.max')
+      .replace(/\bmin\b/g, 'Math.min')
+      .replace(/\bTAU\b/g, '(Math.PI*2)')
+      .replace(/\bPI\b/g, 'Math.PI');
+    let fn;
+    try {
+      fn = new Function('t','W','H', `"use strict";try{return(${safe});}catch(e){return 0;}`);
+    } catch(_) {
+      fn = () => 0;
+    }
+    motionFnCache.set(expr, fn);
+  }
+  try { return motionFnCache.get(expr)(t, W, H); }
+  catch(_) { return 0; }
+}
+
+function resolveMotion(layer, t, W, H) {
+  const p = Object.assign({}, layer.params);
+  if (layer.motion) {
+    for (const [k, expr] of Object.entries(layer.motion)) {
+      if (typeof expr === 'string') {
+        const v = evalMotion(expr, t, W, H);
+        if (v !== null && !isNaN(v)) p[k] = v;
+      }
+    }
+  }
+  return p;
+}
+
+// ===================================================================
+// RENDERERS
+// ===================================================================
+
+function renderSolidBg(ctx, W, H, p) {
+  ctx.fillStyle = p.color || '#000';
+  ctx.fillRect(0, 0, W, H);
+}
+
+function renderGradientBg(ctx, W, H, p) {
+  const type = p.type || 'radial';
+  const stops = p.stops || [{pos:0,color:'#000'},{pos:1,color:'#111'}];
+  let grad;
+  if (type === 'linear') {
+    const angle = (p.angle || 0) * Math.PI / 180;
+    const dx = Math.cos(angle), dy = Math.sin(angle);
+    const mag = Math.max(W, H);
+    const cx = W/2, cy = H/2;
+    grad = ctx.createLinearGradient(cx-dx*mag, cy-dy*mag, cx+dx*mag, cy+dy*mag);
+  } else {
+    const cx = (p.cx ?? 0.5) * W;
+    const cy = (p.cy ?? 0.5) * H;
+    const r = Math.sqrt(
+      Math.max(cx*cx+cy*cy, (W-cx)*(W-cx)+cy*cy,
+               cx*cx+(H-cy)*(H-cy), (W-cx)*(W-cx)+(H-cy)*(H-cy))
+    );
+    grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  }
+  for (const s of stops) {
+    grad.addColorStop(Math.max(0,Math.min(1,s.pos)), s.color);
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function renderVignette(ctx, W, H, p) {
+  const type = p.type || 'radial';
+  const strength = p.strength ?? 0.8;
+  const color = p.color || '#000000';
+
+  if (type === 'radial') {
+    const cx = W/2, cy = H/2;
+    const r = Math.sqrt(cx*cx + cy*cy) * 1.1;
+    const grad = ctx.createRadialGradient(cx, cy, r*0.1, cx, cy, r);
+    grad.addColorStop(0, rgba(color, 0));
+    grad.addColorStop(0.5, rgba(color, strength * 0.4));
+    grad.addColorStop(1, rgba(color, strength));
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    const dir = p.direction || 'bottom';
+    let x0,y0,x1,y1;
+    if (dir === 'bottom') { x0=0;y0=0;x1=0;y1=H; }
+    else if (dir === 'top') { x0=0;y0=H;x1=0;y1=0; }
+    else if (dir === 'right') { x0=0;y0=0;x1=W;y1=0; }
+    else { x0=W;y0=0;x1=0;y1=0; }
+    const grad = ctx.createLinearGradient(x0,y0,x1,y1);
+    grad.addColorStop(0, rgba(color, 0));
+    grad.addColorStop(1-strength*0.4, rgba(color, 0));
+    grad.addColorStop(1, rgba(color, strength));
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+// --- Particle field ---
+function initParticles(layer, W, H) {
+  const p = layer.params;
+  const count = p.count || 80;
+  const arr = [];
+  for (let i = 0; i < count; i++) {
+    const speed = p.speed || 0;
+    const angle = Math.random() * Math.PI * 2;
+    arr.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: Math.cos(angle) * speed * (0.5 + Math.random()),
+      vy: Math.sin(angle) * speed * (0.5 + Math.random()),
+      size: lerp(p.size_min ?? 1, p.size_max ?? 3, Math.random()),
+      hue: lerp(p.hue_min ?? 0, p.hue_max ?? 360, Math.random()),
+      alpha: lerp(p.alpha_min ?? 0.3, p.alpha_max ?? 0.9, Math.random()),
+      phase: Math.random() * Math.PI * 2,
+    });
+  }
+  return arr;
+}
+
+function renderParticleField(ctx, W, H, layer, t) {
+  const p = layer.params;
+  if (!particleState.has(layer.id)) {
+    particleState.set(layer.id, initParticles(layer, W, H));
+  }
+  const particles = particleState.get(layer.id);
+  const speed = p.speed || 0;
+  for (const pt of particles) {
+    pt.x += pt.vx;
+    pt.y += pt.vy;
+    if (pt.x < 0) pt.x += W;
+    if (pt.x > W) pt.x -= W;
+    if (pt.y < 0) pt.y += H;
+    if (pt.y > H) pt.y -= H;
+    const a = pt.alpha * (0.5 + 0.5 * Math.sin(t * 0.001 + pt.phase));
+    ctx.fillStyle = `hsla(${pt.hue},70%,70%,${a})`;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, pt.size * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// --- Vortex ---
+function renderVortex(ctx, W, H, p, t) {
+  const cx = (p.cx ?? 0.5) * W;
+  const cy = (p.cy ?? 0.5) * H;
+  const layerCount = Math.max(1, p.layer_count ?? 5);
+  const hueStart = p.hue_start ?? 0;
+  const hueEnd = p.hue_end ?? 60;
+  const tilt = p.tilt ?? 0;
+  const rotSpeed = p.rotation_speed ?? 0.0001;
+  const baseAlpha = p.base_alpha ?? 0.65;
+  const MR = Math.min(W, H) * 0.48;
+  const angle = t * rotSpeed;
+
+  for (let i = 0; i < layerCount; i++) {
+    const frac = i / Math.max(1, layerCount - 1);
+    const hue = hueStart + (hueEnd - hueStart) * frac;
+    const armAngle = angle + frac * Math.PI * 2;
+    const scl = 0.35 + frac * 0.65;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(armAngle + tilt);
+
+    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, MR * scl);
+    grad.addColorStop(0, `hsla(${hue},100%,65%,${baseAlpha})`);
+    grad.addColorStop(0.4, `hsla(${hue},80%,42%,${baseAlpha * 0.55})`);
+    grad.addColorStop(1, `hsla(${hue},60%,18%,0)`);
+
+    ctx.scale(1, 0.32);
+    ctx.beginPath();
+    ctx.arc(0, 0, MR * scl, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// --- Nebula wisps ---
+function initWisps(layer, W, H) {
+  const p = layer.params;
+  const count = p.count ?? 10;
+  const arr = [];
+  for (let i = 0; i < count; i++) {
+    arr.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: lerp(p.size_min ?? 60, p.size_max ?? 300, Math.random()),
+      hue: lerp(p.hue_min ?? 0, p.hue_max ?? 360, Math.random()),
+      alpha: lerp(p.alpha_min ?? 0.01, p.alpha_max ?? 0.05, Math.random()),
+      dx: (Math.random() - 0.5) * (p.drift_speed ?? 0.0001) * 50,
+      dy: (Math.random() - 0.5) * (p.drift_speed ?? 0.0001) * 50,
+      phase: Math.random() * Math.PI * 2,
+    });
+  }
+  return arr;
+}
+
+function renderNebula(ctx, W, H, layer, t) {
+  if (!particleState.has(layer.id)) {
+    particleState.set(layer.id, initWisps(layer, W, H));
+  }
+  const wisps = particleState.get(layer.id);
+  for (const w of wisps) {
+    w.x += w.dx;
+    w.y += w.dy;
+    if (w.x < -w.r) w.x = W + w.r;
+    if (w.x > W + w.r) w.x = -w.r;
+    if (w.y < -w.r) w.y = H + w.r;
+    if (w.y > H + w.r) w.y = -w.r;
+    const a = w.alpha * (0.7 + 0.3 * Math.sin(t * 0.0005 + w.phase));
+    const grad = ctx.createRadialGradient(w.x, w.y, 0, w.x, w.y, w.r);
+    grad.addColorStop(0, `hsla(${w.hue},60%,40%,${a})`);
+    grad.addColorStop(1, `hsla(${w.hue},40%,15%,0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// --- Path flow ---
+function renderPathFlow(ctx, W, H, layer, t) {
+  const p = layer.params;
+  const rawPaths = p.paths || [];
+  const color = p.color || '#8b0000';
+  const lineWidth = p.line_width || 1.2;
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 5;
+  ctx.globalAlpha = 0.55;
+
+  for (const rawPath of rawPaths) {
+    const pts = rawPath.map(([nx,ny]) => [nx * W, ny * H]);
+    if (pts.length < 2) continue;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length - 1; i++) {
+      const mx = (pts[i][0] + pts[i+1][0]) / 2;
+      const my = (pts[i][1] + pts[i+1][1]) / 2;
+      ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+    }
+    ctx.lineTo(pts[pts.length-1][0], pts[pts.length-1][1]);
+    ctx.stroke();
+  }
+
+  // Flow particles
+  const speedMin = p.speed_min ?? 0.0006;
+  const speedMax = p.speed_max ?? 0.0018;
+  const hueMin = p.hue_min ?? 340;
+  const hueMax = p.hue_max ?? 362;
+  const particleCount = p.particle_count ?? 30;
+
+  if (!particleState.has(layer.id)) {
+    const fp = [];
+    for (let i = 0; i < particleCount; i++) {
+      const pi = Math.floor(Math.random() * rawPaths.length);
+      fp.push({
+        pathIdx: pi,
+        pos: Math.random(),
+        speed: lerp(speedMin, speedMax, Math.random()),
+        hue: lerp(hueMin, hueMax, Math.random()),
+      });
+    }
+    particleState.set(layer.id, fp);
+  }
+
+  const flowParticles = particleState.get(layer.id);
+  ctx.shadowBlur = 8;
+  for (const fp of flowParticles) {
+    fp.pos += fp.speed;
+    if (fp.pos >= 1) { fp.pos = 0; fp.pathIdx = Math.floor(Math.random() * rawPaths.length); }
+    const rawPath = rawPaths[fp.pathIdx];
+    if (!rawPath) continue;
+    const segF = fp.pos * (rawPath.length - 1);
+    const seg = Math.floor(segF);
+    const segT = segF - seg;
+    const a = rawPath[Math.min(seg, rawPath.length-1)];
+    const b2 = rawPath[Math.min(seg+1, rawPath.length-1)];
+    const x = lerp(a[0], b2[0], segT) * W;
+    const y = lerp(a[1], b2[1], segT) * H;
+
+    const alpha = 0.6 + 0.4 * Math.sin(fp.pos * Math.PI);
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, 5);
+    grad.addColorStop(0, `hsla(${fp.hue},100%,70%,${alpha})`);
+    grad.addColorStop(1, `hsla(${fp.hue},80%,40%,0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// --- Geometric ---
+function renderGeometric(ctx, W, H, p, t) {
+  const type = p.type || 'rings';
+  const cx = W/2, cy = H/2;
+  const MR = Math.min(W, H) * 0.42;
+  const color = p.color || '#ff8c1e';
+  const alpha = p.alpha ?? 0.2;
+
+  ctx.save();
+
+  switch (type) {
+    case 'rings': {
+      const count = p.ring_count ?? 4;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 0.8;
+      ctx.globalAlpha = alpha;
+      for (let i = 1; i <= count; i++) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, MR * i / count, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      break;
+    }
+    case 'crosshair': {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 0.5;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.moveTo(0, cy); ctx.lineTo(W, cy);
+      ctx.moveTo(cx, 0); ctx.lineTo(cx, H);
+      ctx.stroke();
+      break;
+    }
+    case 'bearing_ticks': {
+      const tickCount = p.tick_count ?? 72;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 0.5;
+      ctx.globalAlpha = alpha;
+      const outerR = MR;
+      const innerR = MR * 0.925;
+      for (let i = 0; i < tickCount; i++) {
+        const a = (i / tickCount) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * outerR, cy + Math.sin(a) * outerR);
+        ctx.lineTo(cx + Math.cos(a) * innerR, cy + Math.sin(a) * innerR);
+        ctx.stroke();
+      }
+      break;
+    }
+    case 'radar_sweep': {
+      const sweepAngle = p.sweep_angle ?? ((t * (p.sweep_speed ?? 0.012)) % (Math.PI * 2));
+      const trailSegs = Math.max(1, p.trail_segments ?? 20);
+      const trailSpan = (p.trail_span ?? 0.95) * Math.PI * 2;
+
+      for (let i = trailSegs; i >= 0; i--) {
+        const frac = i / trailSegs;
+        const segAngle = sweepAngle - frac * trailSpan;
+        const segAlpha = (1 - frac) * 0.18;
+        ctx.globalAlpha = segAlpha;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, MR, segAngle - trailSpan/trailSegs, segAngle);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+      // Bright sweep line
+      ctx.globalAlpha = 0.85;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(sweepAngle)*MR, cy + Math.sin(sweepAngle)*MR);
+      ctx.stroke();
+      break;
+    }
+  }
+  ctx.restore();
+}
+
+// --- Image / Sprite ---
+function renderImage(ctx, W, H, p) {
+  const src = p.src || p.asset;
+  if (!src || !assetImages[src] || !assetImages[src].complete) return;
+  const img = assetImages[src];
+  const fit = p.fit || 'contain';
+  const scale = p.scale || 1;
+  const cx = (p.cx ?? 0.5) * W;
+  const cy = (p.cy ?? 0.5) * H;
+
+  let dw = img.naturalWidth * scale;
+  let dh = img.naturalHeight * scale;
+  if (fit === 'cover' || fit === 'contain') {
+    const scaleX = W / img.naturalWidth;
+    const scaleY = H / img.naturalHeight;
+    const s = fit === 'cover' ? Math.max(scaleX,scaleY) : Math.min(scaleX,scaleY);
+    dw = img.naturalWidth * s * scale;
+    dh = img.naturalHeight * s * scale;
+  }
+  ctx.drawImage(img, cx-dw/2, cy-dh/2, dw, dh);
+}
+
+function renderSprite(ctx, W, H, layer, p, t) {
+  const src = p.src || p.asset;
+  if (!src || !assetImages[src] || !assetImages[src].complete) {
+    // placeholder
+    ctx.save();
+    ctx.strokeStyle = '#33dd55';
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.4;
+    const cx = (p.cx ?? 0.5) * W;
+    const cy = (p.cy ?? 0.5) * H;
+    const sz = (p.size_factor ?? 0.1) * Math.min(W,H);
+    ctx.strokeRect(cx-sz/2, cy-sz/2, sz, sz);
+    ctx.restore();
+    return;
+  }
+  const img = assetImages[src];
+  const cx = (p.cx ?? 0.5) * W;
+  const cy = (p.cy ?? 0.5) * H;
+  const sf = p.size_factor ?? 0.1;
+  const maxSz = sf * Math.min(W, H);
+  const aspect = img.naturalWidth / img.naturalHeight;
+  const dw = aspect >= 1 ? maxSz : maxSz * aspect;
+  const dh = aspect >= 1 ? maxSz / aspect : maxSz;
+  const rotation = p.rotation ?? 0;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+  ctx.drawImage(img, -dw/2, -dh/2, dw, dh);
+  ctx.restore();
+}
+
+// --- Custom (placeholder) ---
+function renderCustom(ctx, W, H, layer, p) {
+  const cx = ((p.cx_base ?? p.cx ?? 0.5) * W) + (p.x_offset ?? 0);
+  const cy = ((p.cy_base ?? p.cy ?? 0.5) * H) + (p.y_offset ?? 0);
+  ctx.save();
+
+  if (p.size_factor !== undefined) {
+    const sz = p.size_factor * Math.min(W, H);
+    const rot = p.rotation ?? 0;
+    ctx.translate(cx, cy); ctx.rotate(rot);
+    ctx.fillStyle = 'rgba(5,2,0,0.96)';
+    ctx.fillRect(-sz*0.07, -sz*0.46, sz*0.14, sz*0.92);
+    ctx.fillRect(-sz*0.38, -sz*0.065, sz*0.76, sz*0.13);
+    ctx.fillRect(-sz*0.055, -sz*0.50, sz*0.11, sz*0.09);
+    ctx.fillRect(-sz*0.055,  sz*0.41, sz*0.11, sz*0.09);
+    ctx.fillRect(-sz*0.42,  -sz*0.04, sz*0.06, sz*0.08);
+    ctx.fillRect( sz*0.36,  -sz*0.04, sz*0.06, sz*0.08);
+
+  } else if (p.rx !== undefined || p.ry !== undefined) {
+    const rx = p.rx ?? p.ry ?? 30;
+    const ry = p.ry ?? rx;
+    const rot = p.rotation ?? 0;
+    ctx.shadowColor = 'rgba(160,120,80,0.4)'; ctx.shadowBlur = 15;
+    ctx.fillStyle = 'rgba(8,4,2,0.95)';
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, rot, 0, Math.PI * 2); ctx.fill();
+
+  } else if (p.radius_factor !== undefined || p.outer_r !== undefined) {
+    const r = (p.radius_factor ?? (p.outer_r ?? 0.25)) * Math.min(W, H);
+    const lx = cx + (p.light_offset_x ?? 0.05) * W;
+    const ly = cy + (p.light_offset_y ?? -0.05) * H;
+    const grad = ctx.createRadialGradient(lx, ly, 0, cx, cy, r);
+    grad.addColorStop(0,   'rgba(100,65,40,0.95)');
+    grad.addColorStop(0.6, 'rgba(55,35,20,0.9)');
+    grad.addColorStop(1,   'rgba(10,5,3,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+
+  } else if (p.count !== undefined) {
+    const key = layer.id + '_c';
+    if (!particleState.has(key)) {
+      const range = (p.radial_range ?? p.drift_range ?? 0.4) * Math.min(W, H);
+      const pts = [];
+      for (let i = 0; i < Math.min(p.count, 300); i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.sqrt(Math.random()) * range;
+        pts.push({ x: cx + Math.cos(angle)*dist, y: cy + Math.sin(angle)*dist });
+      }
+      particleState.set(key, pts);
+    }
+    const pts = particleState.get(key);
+    const color = p.color_inner || p.color || '#33ff66';
+    const dr = p.dot_radius ?? p.glow_radius ?? 2;
+    ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = 10;
+    for (const pt of pts) {
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, dr, 0, Math.PI * 2); ctx.fill();
+    }
+
+  } else if (p.color !== undefined) {
+    const r = 40;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    grad.addColorStop(0, p.color);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+
+  } else {
+    // Unknown custom — show subtle label so user knows the layer is there
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#7ab88a';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`[custom] ${layer.name}`, W/2, H/2);
+  }
+
+  ctx.restore();
+}
+
+// ===================================================================
+// MAIN RENDER FRAME
+// ===================================================================
+function renderFrame(ts) {
+  if (!scene) { ctx.clearRect(0,0,W,H); return; }
+  const t = pauseOffset + (playing ? ts - startTime : 0);
+  ctx.clearRect(0,0,W,H);
+
+  for (const layer of scene.layers) {
+    if (!layer.visible) continue;
+    ctx.save();
+    ctx.globalAlpha = (layer.opacity ?? 1);
+    const blend = layer.blend || 'source-over';
+    ctx.globalCompositeOperation = blend;
+    renderLayer(ctx, W, H, layer, t);
+    ctx.restore();
+  }
+
+  // Time display
+  document.getElementById('time-display').textContent =
+    't = ' + (t/1000).toFixed(1) + 's';
+}
+
+function renderLayer(ctx, W, H, layer, t) {
+  const p = resolveMotion(layer, t, W, H);
+  switch (layer.type) {
+    case 'solid_bg':      renderSolidBg(ctx, W, H, p); break;
+    case 'gradient_bg':   renderGradientBg(ctx, W, H, p); break;
+    case 'vignette':      renderVignette(ctx, W, H, p); break;
+    case 'particle_field':renderParticleField(ctx, W, H, layer, t); break;
+    case 'vortex':        renderVortex(ctx, W, H, p, t); break;
+    case 'nebula_wisps':  renderNebula(ctx, W, H, layer, t); break;
+    case 'path_flow':     renderPathFlow(ctx, W, H, layer, t); break;
+    case 'geometric':     renderGeometric(ctx, W, H, p, t); break;
+    case 'image':         renderImage(ctx, W, H, p); break;
+    case 'sprite':        renderSprite(ctx, W, H, layer, p, t); break;
+    case 'custom':        renderCustom(ctx, W, H, layer, p); break;
+    default:              renderCustom(ctx, W, H, layer, p); break;
+  }
+}
+
+function startLoop() {
+  if (animId) cancelAnimationFrame(animId);
+  function frame(ts) {
+    animId = requestAnimationFrame(frame);
+    renderFrame(ts);
+  }
+  animId = requestAnimationFrame(frame);
+}
+
+// ===================================================================
+// API
+// ===================================================================
+async function apiGet(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`GET ${url} → ${r.status}`);
+  return r.json();
+}
+
+async function apiPost(url, body) {
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body),
+  });
+  return r.json();
+}
+
+async function apiDelete(url) {
+  const r = await fetch(url, {method:'DELETE'});
+  return r.json();
+}
+
+async function loadSceneList() {
+  allScenes = await apiGet('/api/editor/scenes');
+  const sel = document.getElementById('scene-select');
+  sel.innerHTML = '';
+  for (const s of allScenes) {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = (s.builtin ? '' : '★ ') + s.sym + ' ' + s.name;
+    sel.appendChild(opt);
+  }
+}
+
+async function loadScene(sceneId) {
+  particleState.clear();
+  motionFnCache.clear();
+  scene = await apiGet(`/api/editor/scenes/${sceneId}`);
+  selectedIdx = -1;
+  buildLayerList();
+  updateSceneMeta();
+  markClean();
+}
+
+async function loadAssets() {
+  assets = await apiGet('/api/editor/assets');
+  for (const a of assets) {
+    if (!assetImages[a.filename]) {
+      const img = new Image();
+      img.src = `/api/editor/assets/${encodeURIComponent(a.filename)}`;
+      assetImages[a.filename] = img;
+    }
+  }
+}
+
+async function saveCurrentScene() {
+  if (!scene) return false;
+  setStatus('SAVING…', true);
+  try {
+    const res = await apiPost(`/api/editor/scenes/${scene.id}`, scene);
+    if (res.ok) { markClean(); return true; }
+    else { setStatus('SAVE ERROR: ' + (res.error || '?'), true); return false; }
+  } catch(err) {
+    setStatus('SAVE ERROR: ' + err.message, true); return false;
+  }
+}
+
+// ===================================================================
+// LAYER LIST
+// ===================================================================
+function buildLayerList() {
+  const list = document.getElementById('layer-list');
+  list.innerHTML = '';
+  if (!scene) return;
+  scene.layers.forEach((layer, i) => {
+    const div = document.createElement('div');
+    div.className = 'layer-item' + (i === selectedIdx ? ' selected' : '') +
+                    (!layer.visible ? ' hidden-layer' : '');
+    div.dataset.idx = i;
+
+    const vis = document.createElement('span');
+    vis.className = 'layer-vis' + (layer.visible ? ' on' : '');
+    vis.textContent = layer.visible ? '◉' : '○';
+    vis.title = 'Toggle visibility';
+    vis.addEventListener('click', (e) => { e.stopPropagation(); toggleLayerVis(i); });
+
+    const badge = document.createElement('span');
+    badge.className = 'layer-type-badge';
+    badge.textContent = layer.type;
+
+    const name = document.createElement('span');
+    name.className = 'layer-name';
+    name.textContent = layer.name || layer.id;
+
+    div.appendChild(vis);
+    div.appendChild(badge);
+    div.appendChild(name);
+    div.addEventListener('click', () => selectLayer(i));
+    list.appendChild(div);
+  });
+}
+
+function selectLayer(idx) {
+  selectedIdx = idx;
+  buildLayerList();
+  buildPropsPanel();
+}
+
+function toggleLayerVis(idx) {
+  if (!scene) return;
+  scene.layers[idx].visible = !scene.layers[idx].visible;
+  buildLayerList();
+  markDirty();
+}
+
+// ===================================================================
+// SCENE META
+// ===================================================================
+function updateSceneMeta() {
+  if (!scene) return;
+  document.getElementById('meta-name').textContent = scene.name || '—';
+  const tags = document.getElementById('meta-tags');
+  tags.innerHTML = '';
+  const fields = [
+    ['CLASS', scene.class],
+    ['CODE', scene.code],
+    ['LIFE', scene.life],
+    ['COMMS', scene.comms],
+  ];
+  for (const [k,v] of fields) {
+    if (!v) continue;
+    const t = document.createElement('span');
+    t.className = 'meta-tag';
+    t.textContent = `${k}:${v}`;
+    tags.appendChild(t);
+  }
+}
+
+// ===================================================================
+// PROPERTY PANEL SCHEMAS
+// ===================================================================
+const LAYER_SCHEMAS = {
+  solid_bg: [
+    {key:'color', label:'Color', type:'color'},
+  ],
+  gradient_bg: [
+    {key:'type', label:'Type', type:'select', options:['linear','radial']},
+    {key:'angle', label:'Angle', type:'range', min:0, max:360, step:1, when:{type:'linear'}},
+    {key:'cx', label:'Center X', type:'range', min:0, max:1, step:0.01, when:{type:'radial'}},
+    {key:'cy', label:'Center Y', type:'range', min:0, max:1, step:0.01, when:{type:'radial'}},
+    {key:'_stops', label:'Stops', type:'stops'},
+  ],
+  particle_field: [
+    {key:'count', label:'Count', type:'number', min:1, max:3000},
+    {key:'hue_min', label:'Hue Min', type:'range', min:0, max:720, step:1},
+    {key:'hue_max', label:'Hue Max', type:'range', min:0, max:720, step:1},
+    {key:'size_min', label:'Size Min', type:'range', min:0.1, max:30, step:0.1},
+    {key:'size_max', label:'Size Max', type:'range', min:0.1, max:30, step:0.1},
+    {key:'speed', label:'Speed', type:'range', min:0, max:5, step:0.01},
+    {key:'alpha_min', label:'Alpha Min', type:'range', min:0, max:1, step:0.01},
+    {key:'alpha_max', label:'Alpha Max', type:'range', min:0, max:1, step:0.01},
+    {key:'spread', label:'Spread', type:'select', options:['full','radial']},
+  ],
+  vortex: [
+    {key:'cx', label:'Center X', type:'range', min:0, max:1, step:0.01},
+    {key:'cy', label:'Center Y', type:'range', min:0, max:1, step:0.01},
+    {key:'tilt', label:'Tilt', type:'range', min:-3.14, max:3.14, step:0.01},
+    {key:'hue_start', label:'Hue Start', type:'range', min:0, max:360, step:1},
+    {key:'hue_end', label:'Hue End', type:'range', min:0, max:720, step:1},
+    {key:'layer_count', label:'Arm Count', type:'number', min:1, max:12},
+    {key:'base_alpha', label:'Base Alpha', type:'range', min:0, max:1, step:0.01},
+    {key:'rotation_speed', label:'Rot Speed', type:'range', min:0, max:0.002, step:0.000001},
+  ],
+  nebula_wisps: [
+    {key:'count', label:'Count', type:'number', min:1, max:100},
+    {key:'hue_min', label:'Hue Min', type:'range', min:0, max:720, step:1},
+    {key:'hue_max', label:'Hue Max', type:'range', min:0, max:720, step:1},
+    {key:'alpha_min', label:'Alpha Min', type:'range', min:0, max:1, step:0.001},
+    {key:'alpha_max', label:'Alpha Max', type:'range', min:0, max:1, step:0.001},
+    {key:'size_min', label:'Size Min', type:'range', min:10, max:2000, step:1},
+    {key:'size_max', label:'Size Max', type:'range', min:10, max:2000, step:1},
+    {key:'drift_speed', label:'Drift Speed', type:'range', min:0, max:0.001, step:0.000001},
+  ],
+  path_flow: [
+    {key:'particle_count', label:'Particles', type:'number', min:0, max:500},
+    {key:'hue_min', label:'Hue Min', type:'range', min:0, max:720, step:1},
+    {key:'hue_max', label:'Hue Max', type:'range', min:0, max:720, step:1},
+    {key:'speed_min', label:'Speed Min', type:'range', min:0, max:0.01, step:0.0001},
+    {key:'speed_max', label:'Speed Max', type:'range', min:0, max:0.01, step:0.0001},
+    {key:'color', label:'Color', type:'color'},
+    {key:'line_width', label:'Line Width', type:'range', min:0.1, max:10, step:0.1},
+  ],
+  geometric: [
+    {key:'type', label:'Type', type:'select', options:['rings','crosshair','bearing_ticks','radar_sweep']},
+    {key:'color', label:'Color', type:'color'},
+    {key:'alpha', label:'Alpha', type:'range', min:0, max:1, step:0.01},
+    {key:'ring_count', label:'Ring Count', type:'number', min:1, max:20, when:{type:'rings'}},
+    {key:'tick_count', label:'Tick Count', type:'number', min:4, max:360, when:{type:'bearing_ticks'}},
+    {key:'trail_segments', label:'Trail Segs', type:'number', min:1, max:80, when:{type:'radar_sweep'}},
+    {key:'trail_span', label:'Trail Span', type:'range', min:0.1, max:6.28, step:0.01, when:{type:'radar_sweep'}},
+    {key:'sweep_speed', label:'Sweep Speed', type:'range', min:0.001, max:0.1, step:0.001, when:{type:'radar_sweep'}},
+  ],
+  vignette: [
+    {key:'type', label:'Type', type:'select', options:['radial','linear']},
+    {key:'strength', label:'Strength', type:'range', min:0, max:1, step:0.01},
+    {key:'color', label:'Color', type:'color'},
+    {key:'direction', label:'Direction', type:'select', options:['top','bottom','left','right'], when:{type:'linear'}},
+  ],
+  image: [
+    {key:'src', label:'Asset', type:'asset_select'},
+    {key:'fit', label:'Fit', type:'select', options:['contain','cover','fill','none']},
+    {key:'cx', label:'Center X', type:'range', min:0, max:1, step:0.01},
+    {key:'cy', label:'Center Y', type:'range', min:0, max:1, step:0.01},
+    {key:'scale', label:'Scale', type:'range', min:0.01, max:5, step:0.01},
+  ],
+  sprite: [
+    {key:'src', label:'Asset', type:'asset_select'},
+    {key:'cx', label:'Center X', type:'range', min:0, max:1, step:0.01},
+    {key:'cy', label:'Center Y', type:'range', min:0, max:1, step:0.01},
+    {key:'size_factor', label:'Size Factor', type:'range', min:0.01, max:1, step:0.001},
+  ],
+  noise_overlay: [
+    {key:'alpha', label:'Alpha', type:'range', min:0, max:1, step:0.01},
+    {key:'scale', label:'Scale', type:'range', min:1, max:500, step:1},
+  ],
+  custom: [],
+};
+
+const LAYER_TYPES = [
+  'solid_bg','gradient_bg','particle_field','vortex','nebula_wisps',
+  'path_flow','geometric','vignette','image','sprite','noise_overlay','custom',
+];
+
+// ===================================================================
+// PROPERTY PANEL
+// ===================================================================
+function buildPropsPanel() {
+  const content = document.getElementById('props-content');
+  if (selectedIdx < 0 || !scene || selectedIdx >= scene.layers.length) {
+    content.innerHTML = '<span style="color:var(--dim)">Select a layer.</span>';
+    return;
+  }
+  const layer = scene.layers[selectedIdx];
+  content.innerHTML = '';
+
+  // --- Base layer props ---
+  const baseSection = makeSection('LAYER');
+  baseSection.appendChild(makeTextRow('Name', layer.name || '', (v) => {
+    layer.name = v; buildLayerList(); markDirty();
+  }));
+  baseSection.appendChild(makeSelectRow('Type', layer.type, LAYER_TYPES, (v) => {
+    layer.type = v;
+    if (!layer.params) layer.params = {};
+    particleState.delete(layer.id);
+    buildPropsPanel(); buildLayerList(); markDirty();
+  }));
+  baseSection.appendChild(makeRangeRow('Opacity', layer.opacity ?? 1, 0, 1, 0.01, (v) => {
+    layer.opacity = v; markDirty();
+  }));
+  baseSection.appendChild(makeSelectRow('Blend', layer.blend || 'source-over', [
+    'source-over','screen','multiply','overlay','lighten','darken','color-dodge','color-burn','hard-light','soft-light','difference','exclusion'
+  ], (v) => { layer.blend = v; markDirty(); }));
+  content.appendChild(baseSection);
+
+  // --- Type-specific params ---
+  const schema = LAYER_SCHEMAS[layer.type] || [];
+  if (layer.type === 'custom') {
+    const customSection = makeSection('PARAMS (RAW JSON)');
+    const note = layer.params?.note;
+    if (note) {
+      const noteDiv = document.createElement('div');
+      noteDiv.className = 'custom-note';
+      noteDiv.textContent = note;
+      customSection.appendChild(noteDiv);
+    }
+    const jsonRow = document.createElement('div');
+    jsonRow.className = 'custom-json-row';
+    const ta = document.createElement('textarea');
+    ta.className = 'custom-json-ta';
+    ta.value = JSON.stringify(layer.params || {}, null, 2);
+    ta.rows = 10;
+    ta.addEventListener('change', () => {
+      try {
+        layer.params = JSON.parse(ta.value);
+        ta.style.borderColor = '';
+        markDirty();
+      } catch(_) {
+        ta.style.borderColor = 'var(--red)';
+      }
+    });
+    jsonRow.appendChild(ta);
+    customSection.appendChild(jsonRow);
+    content.appendChild(customSection);
+  } else if (schema.length) {
+    const paramSection = makeSection('PARAMS');
+    for (const field of schema) {
+      if (field.when) {
+        const condKey = Object.keys(field.when)[0];
+        if (layer.params[condKey] !== field.when[condKey]) continue;
+      }
+      if (field.key === '_stops') {
+        paramSection.appendChild(makeStopsEditor(layer));
+        continue;
+      }
+      const currentVal = layer.params[field.key];
+      const row = makeFieldRow(field, currentVal, (v) => {
+        layer.params[field.key] = v;
+        if (field.key === 'count') {
+          particleState.delete(layer.id);
+        }
+        if (field.when) {
+          // type changed — rebuild panel
+          buildPropsPanel();
+        }
+        markDirty();
+      });
+      if (row) paramSection.appendChild(row);
+    }
+    content.appendChild(paramSection);
+  }
+
+  // --- Motion expressions ---
+  const motionSection = makeSection('MOTION EXPRESSIONS');
+  const motion = layer.motion || {};
+  const motionKeys = Object.keys(motion);
+  for (const k of motionKeys) {
+    motionSection.appendChild(makeMotionRow(k, motion[k], (v) => {
+      if (!layer.motion) layer.motion = {};
+      layer.motion[k] = v;
+      motionFnCache.delete(v);
+      markDirty();
+    }, () => {
+      delete layer.motion[k];
+      buildPropsPanel(); markDirty();
+    }));
+  }
+  // Add new motion key
+  const addMotion = document.createElement('div');
+  addMotion.style.display = 'flex'; addMotion.style.gap = '4px'; addMotion.style.marginTop = '4px';
+  const motionKeyInput = document.createElement('input');
+  motionKeyInput.className = 'prop-input';
+  motionKeyInput.placeholder = 'param_key';
+  motionKeyInput.style.flex = '1';
+  const addMotionBtn = document.createElement('button');
+  addMotionBtn.className = 'btn';
+  addMotionBtn.textContent = '+';
+  addMotionBtn.addEventListener('click', () => {
+    const k = motionKeyInput.value.trim();
+    if (!k) return;
+    if (!layer.motion) layer.motion = {};
+    layer.motion[k] = '0';
+    buildPropsPanel(); markDirty();
+  });
+  addMotion.appendChild(motionKeyInput);
+  addMotion.appendChild(addMotionBtn);
+  motionSection.appendChild(addMotion);
+  content.appendChild(motionSection);
+}
+
+function makeSection(title) {
+  const sec = document.createElement('div');
+  sec.className = 'prop-section';
+  const head = document.createElement('div');
+  head.className = 'prop-section-head';
+  head.textContent = title;
+  sec.appendChild(head);
+  return sec;
+}
+
+function makeTextRow(label, value, onChange) {
+  const row = document.createElement('div');
+  row.className = 'prop-row';
+  const lbl = document.createElement('span');
+  lbl.className = 'prop-label'; lbl.textContent = label;
+  const inp = document.createElement('input');
+  inp.className = 'prop-input'; inp.type = 'text'; inp.value = value;
+  inp.addEventListener('change', () => onChange(inp.value));
+  row.appendChild(lbl); row.appendChild(inp);
+  return row;
+}
+
+function makeSelectRow(label, value, options, onChange) {
+  const row = document.createElement('div');
+  row.className = 'prop-row';
+  const lbl = document.createElement('span');
+  lbl.className = 'prop-label'; lbl.textContent = label;
+  const sel = document.createElement('select');
+  sel.className = 'prop-input';
+  for (const opt of options) {
+    const o = document.createElement('option');
+    o.value = opt; o.textContent = opt;
+    if (opt === value) o.selected = true;
+    sel.appendChild(o);
+  }
+  sel.addEventListener('change', () => onChange(sel.value));
+  row.appendChild(lbl); row.appendChild(sel);
+  return row;
+}
+
+function makeRangeRow(label, value, min, max, step, onChange) {
+  const row = document.createElement('div');
+  row.className = 'prop-row';
+  const lbl = document.createElement('span');
+  lbl.className = 'prop-label'; lbl.textContent = label;
+  const wrap = document.createElement('div');
+  wrap.className = 'prop-range-wrap';
+  const inp = document.createElement('input');
+  inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step;
+  inp.value = value ?? ((min + max) / 2);
+  const valSpan = document.createElement('span');
+  valSpan.className = 'range-val';
+  valSpan.textContent = (+inp.value).toFixed(step < 0.01 ? 6 : step < 0.1 ? 3 : 2);
+  inp.addEventListener('input', () => {
+    const v = parseFloat(inp.value);
+    valSpan.textContent = v.toFixed(step < 0.01 ? 6 : step < 0.1 ? 3 : 2);
+    onChange(v);
+  });
+  wrap.appendChild(inp); wrap.appendChild(valSpan);
+  row.appendChild(lbl); row.appendChild(wrap);
+  return row;
+}
+
+function makeColorRow(label, value, onChange) {
+  const row = document.createElement('div');
+  row.className = 'prop-row';
+  const lbl = document.createElement('span');
+  lbl.className = 'prop-label'; lbl.textContent = label;
+  const inp = document.createElement('input');
+  inp.type = 'color';
+  inp.value = (value && value.startsWith('#') && value.length === 7) ? value : '#000000';
+  inp.addEventListener('input', () => onChange(inp.value));
+  row.appendChild(lbl); row.appendChild(inp);
+  return row;
+}
+
+function makeNumberRow(label, value, min, max, onChange) {
+  const row = document.createElement('div');
+  row.className = 'prop-row';
+  const lbl = document.createElement('span');
+  lbl.className = 'prop-label'; lbl.textContent = label;
+  const inp = document.createElement('input');
+  inp.className = 'prop-input'; inp.type = 'number';
+  inp.min = min; inp.max = max; inp.value = value ?? 0; inp.step = 1;
+  inp.addEventListener('change', () => onChange(parseInt(inp.value)));
+  row.appendChild(lbl); row.appendChild(inp);
+  return row;
+}
+
+function makeAssetSelectRow(label, value, onChange) {
+  const row = document.createElement('div');
+  row.className = 'prop-row';
+  const lbl = document.createElement('span');
+  lbl.className = 'prop-label'; lbl.textContent = label;
+  const sel = document.createElement('select');
+  sel.className = 'prop-input';
+  const none = document.createElement('option');
+  none.value = ''; none.textContent = '(none)';
+  sel.appendChild(none);
+  for (const a of assets) {
+    const opt = document.createElement('option');
+    opt.value = a.filename; opt.textContent = a.filename;
+    if (a.filename === value) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener('change', () => onChange(sel.value || null));
+  row.appendChild(lbl); row.appendChild(sel);
+  return row;
+}
+
+function makeFieldRow(field, value, onChange) {
+  switch (field.type) {
+    case 'color':        return makeColorRow(field.label, value, onChange);
+    case 'range':        return makeRangeRow(field.label, value, field.min, field.max, field.step, onChange);
+    case 'number':       return makeNumberRow(field.label, value, field.min, field.max, onChange);
+    case 'select':       return makeSelectRow(field.label, value, field.options, onChange);
+    case 'asset_select': return makeAssetSelectRow(field.label, value, onChange);
+    default:             return null;
+  }
+}
+
+function makeStopsEditor(layer) {
+  const stops = layer.params.stops || [];
+  const wrapper = document.createElement('div');
+
+  const lbl = document.createElement('div');
+  lbl.className = 'prop-section-head'; lbl.textContent = 'COLOR STOPS';
+  wrapper.appendChild(lbl);
+
+  const stopsDiv = document.createElement('div');
+  stopsDiv.className = 'stops-editor';
+
+  function rebuildStops() {
+    stopsDiv.innerHTML = '';
+    stops.forEach((stop, i) => {
+      const row = document.createElement('div');
+      row.className = 'stop-row';
+
+      const posInp = document.createElement('input');
+      posInp.type = 'number'; posInp.min = 0; posInp.max = 1; posInp.step = 0.01;
+      posInp.value = stop.pos;
+      posInp.addEventListener('change', () => { stops[i].pos = parseFloat(posInp.value); markDirty(); });
+
+      const colorInp = document.createElement('input');
+      colorInp.type = 'text'; colorInp.value = stop.color;
+      colorInp.placeholder = 'rgba(…) or #hex';
+      colorInp.addEventListener('change', () => { stops[i].color = colorInp.value; markDirty(); });
+
+      const del = document.createElement('button');
+      del.className = 'stop-del'; del.textContent = '×';
+      del.addEventListener('click', () => { stops.splice(i, 1); rebuildStops(); markDirty(); });
+
+      row.appendChild(posInp); row.appendChild(colorInp); row.appendChild(del);
+      stopsDiv.appendChild(row);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn stops-add'; addBtn.textContent = '+ ADD STOP';
+    addBtn.addEventListener('click', () => {
+      stops.push({pos: 1.0, color: 'rgba(0,0,0,0)'});
+      layer.params.stops = stops;
+      rebuildStops(); markDirty();
+    });
+    stopsDiv.appendChild(addBtn);
+  }
+
+  rebuildStops();
+  wrapper.appendChild(stopsDiv);
+  return wrapper;
+}
+
+function makeMotionRow(key, expr, onChange, onDelete) {
+  const wrap = document.createElement('div');
+  wrap.className = 'motion-expr-row';
+
+  const header = document.createElement('div');
+  header.style.display = 'flex'; header.style.alignItems = 'center'; header.style.gap = '6px';
+  const keyEl = document.createElement('span');
+  keyEl.className = 'motion-key'; keyEl.textContent = key;
+  const delBtn = document.createElement('button');
+  delBtn.className = 'icon-btn'; delBtn.style.color = 'var(--red)'; delBtn.textContent = '×';
+  delBtn.addEventListener('click', onDelete);
+  header.appendChild(keyEl); header.appendChild(delBtn);
+
+  const ta = document.createElement('textarea');
+  ta.className = 'motion-textarea'; ta.value = expr;
+  ta.setAttribute('spellcheck', 'false');
+  ta.addEventListener('change', () => onChange(ta.value));
+
+  wrap.appendChild(header); wrap.appendChild(ta);
+  return wrap;
+}
+
+// ===================================================================
+// LAYER OPERATIONS
+// ===================================================================
+function makeNewLayer(type) {
+  const id = type + '_' + Date.now().toString(36);
+  const defaults = {
+    solid_bg:      {color:'#000000'},
+    gradient_bg:   {type:'radial',cx:0.5,cy:0.5,stops:[{pos:0,color:'rgba(30,0,0,0.5)'},{pos:1,color:'rgba(0,0,0,0)'}]},
+    particle_field:{count:100,hue_min:0,hue_max:60,size_min:0.5,size_max:2,speed:0,alpha_min:0.2,alpha_max:0.7,spread:'full'},
+    vortex:        {cx:0.5,cy:0.5,tilt:0,hue_start:0,hue_end:60,layer_count:5,base_alpha:0.7,rotation_speed:0.0001},
+    nebula_wisps:  {count:10,hue_min:340,hue_max:380,alpha_min:0.01,alpha_max:0.04,size_min:80,size_max:300,drift_speed:0.00005},
+    path_flow:     {paths:[[[0,0.5],[0.5,0.3],[1,0.5]]],particle_count:20,hue_min:0,hue_max:30,speed_min:0.001,speed_max:0.003},
+    geometric:     {type:'rings',color:'#ff8c1e',alpha:0.2,ring_count:4},
+    vignette:      {type:'radial',strength:0.8,color:'#000000'},
+    image:         {src:null,fit:'contain',cx:0.5,cy:0.5,scale:1},
+    sprite:        {src:null,cx:0.5,cy:0.5,size_factor:0.2},
+    noise_overlay: {alpha:0.05,scale:100},
+    custom:        {note:'Custom layer. Draw code goes here.'},
+  };
+  return {
+    id, name: type, type,
+    visible:true, locked:false, opacity:1.0, blend:'source-over',
+    params: defaults[type] || {},
+    motion: {},
+  };
+}
+
+function addLayer() {
+  if (!scene) return;
+  const types = LAYER_TYPES;
+  const sel = prompt('Layer type:\n' + types.join(', '), 'solid_bg');
+  if (!sel || !types.includes(sel.trim())) return;
+  const layer = makeNewLayer(sel.trim());
+  scene.layers.push(layer);
+  selectedIdx = scene.layers.length - 1;
+  buildLayerList();
+  buildPropsPanel();
+  markDirty();
+}
+
+function deleteLayer() {
+  if (!scene || selectedIdx < 0) return;
+  if (!confirm(`Delete layer "${scene.layers[selectedIdx].name}"?`)) return;
+  particleState.delete(scene.layers[selectedIdx].id);
+  scene.layers.splice(selectedIdx, 1);
+  selectedIdx = Math.min(selectedIdx, scene.layers.length - 1);
+  buildLayerList();
+  buildPropsPanel();
+  markDirty();
+}
+
+function moveLayer(dir) {
+  if (!scene || selectedIdx < 0) return;
+  const idx = selectedIdx;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= scene.layers.length) return;
+  [scene.layers[idx], scene.layers[newIdx]] = [scene.layers[newIdx], scene.layers[idx]];
+  selectedIdx = newIdx;
+  buildLayerList();
+  markDirty();
+}
+
+// ===================================================================
+// NEW SCENE
+// ===================================================================
+function showNewSceneModal() {
+  document.getElementById('overlay').classList.add('visible');
+  document.getElementById('new-scene-name').focus();
+}
+
+function hideModal() {
+  document.getElementById('overlay').classList.remove('visible');
+}
+
+async function createNewScene() {
+  const name = document.getElementById('new-scene-name').value.trim().toUpperCase();
+  let id = document.getElementById('new-scene-id').value.trim().toLowerCase().replace(/\s+/g,'_');
+  if (!name) { alert('Enter a scene name.'); return; }
+  if (!id) id = name.toLowerCase().replace(/[^a-z0-9]+/g,'_');
+
+  const newScene = {
+    id, name,
+    class: 'CUSTOM', sym: '●', desc: 'Custom scene.',
+    code: 'AV-CS-00', life: 'NOMINAL', comms: 'ACTIVE', crew: 'NOMINAL', ship: 'NOMINAL',
+    msg: 'CUSTOM VIBE SCENE ACTIVE',
+    layers: [makeNewLayer('solid_bg')],
+  };
+  scene = newScene;
+  await saveCurrentScene();
+  await loadSceneList();
+  document.getElementById('scene-select').value = id;
+  hideModal();
+  particleState.clear();
+  selectedIdx = -1;
+  buildLayerList();
+  buildPropsPanel();
+  updateSceneMeta();
+  document.getElementById('new-scene-name').value = '';
+  document.getElementById('new-scene-id').value = '';
+}
+
+// ===================================================================
+// IMPORT / EXPORT
+// ===================================================================
+function importScene() {
+  document.getElementById('import-file').click();
+}
+
+async function handleImportFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  setStatus('IMPORTING…', true);
+  const fd = new FormData();
+  fd.append('file', file);
+  const r = await fetch('/api/editor/import', {method:'POST', body:fd});
+  const res = await r.json();
+  if (res.ok) {
+    await loadSceneList();
+    await loadScene(res.id);
+    document.getElementById('scene-select').value = res.id;
+    setStatus('IMPORTED', false);
+  } else {
+    setStatus('IMPORT ERROR: ' + (res.error || '?'), true);
+  }
+  e.target.value = '';
+}
+
+function exportScene() {
+  if (!scene) return;
+  window.location.href = `/api/editor/scenes/${encodeURIComponent(scene.id)}/export`;
+}
+
+// ===================================================================
+// ASSET UPLOAD
+// ===================================================================
+async function handleAssetUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  setStatus('UPLOADING…', true);
+  const fd = new FormData();
+  fd.append('file', file);
+  const r = await fetch('/api/editor/assets', {method:'POST', body:fd});
+  const res = await r.json();
+  if (res.ok) {
+    await loadAssets();
+    setStatus('UPLOADED: ' + res.filename, false);
+    setTimeout(() => setStatus('READY', false), 3000);
+  } else {
+    setStatus('UPLOAD ERROR: ' + (res.error || '?'), true);
+  }
+  e.target.value = '';
+}
+
+// ===================================================================
+// TEST ON DISPLAY
+// ===================================================================
+async function testOnDisplay() {
+  if (!scene) return;
+  try {
+    if (dirty) {
+      setStatus('SAVING before test…', true);
+      const saved = await saveCurrentScene();
+      if (!saved) return;
+    }
+    const res = await apiPost('/api/scene-by-id', {scene_id: scene.id});
+    if (res && res.error) {
+      setStatus('TEST ERROR: ' + res.error, true);
+    } else {
+      setStatus('→ OBS: ' + scene.id, false);
+      setTimeout(() => setStatus('READY', false), 3000);
+    }
+  } catch(err) {
+    setStatus('TEST ERROR: ' + err.message, true);
+  }
+}
+
+// ===================================================================
+// PLAYBACK CONTROLS
+// ===================================================================
+function play() {
+  if (playing) return;
+  playing = true;
+  startTime = performance.now() - (pausedAt - startTime);
+}
+
+function pause() {
+  if (!playing) return;
+  playing = false;
+  pausedAt = performance.now();
+}
+
+function reset() {
+  particleState.clear();
+  startTime = performance.now();
+  pauseOffset = 0;
+  pausedAt = performance.now();
+}
+
+// ===================================================================
+// INIT
+// ===================================================================
+async function init() {
+  setStatus('LOADING…', true);
+  await loadAssets();
+  await loadSceneList();
+
+  if (allScenes.length > 0) {
+    const firstId = allScenes[0].id;
+    document.getElementById('scene-select').value = firstId;
+    await loadScene(firstId);
+  }
+
+  setStatus('READY', false);
+  startLoop();
+}
+
+// ===================================================================
+// EVENT LISTENERS
+// ===================================================================
+document.getElementById('scene-select').addEventListener('change', async (e) => {
+  if (dirty && !confirm('Unsaved changes. Switch scene anyway?')) {
+    e.target.value = scene?.id || '';
+    return;
+  }
+  await loadScene(e.target.value);
+});
+
+document.getElementById('btn-new').addEventListener('click', showNewSceneModal);
+document.getElementById('btn-save').addEventListener('click', saveCurrentScene);
+document.getElementById('btn-import').addEventListener('click', importScene);
+document.getElementById('btn-export').addEventListener('click', exportScene);
+document.getElementById('btn-test').addEventListener('click', testOnDisplay);
+document.getElementById('btn-open-display').addEventListener('click', () => window.open('/display', '_blank'));
+
+document.getElementById('btn-layer-add').addEventListener('click', addLayer);
+document.getElementById('btn-layer-del').addEventListener('click', deleteLayer);
+document.getElementById('btn-layer-up').addEventListener('click', () => moveLayer(-1));
+document.getElementById('btn-layer-dn').addEventListener('click', () => moveLayer(1));
+
+document.getElementById('btn-play').addEventListener('click', play);
+document.getElementById('btn-pause').addEventListener('click', pause);
+document.getElementById('btn-reset').addEventListener('click', reset);
+
+document.getElementById('btn-asset-upload').addEventListener('click', () => {
+  document.getElementById('asset-upload').click();
+});
+document.getElementById('asset-upload').addEventListener('change', handleAssetUpload);
+document.getElementById('import-file').addEventListener('change', handleImportFile);
+
+document.getElementById('modal-cancel').addEventListener('click', hideModal);
+document.getElementById('modal-create').addEventListener('click', createNewScene);
+document.getElementById('overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('overlay')) hideModal();
+});
+document.getElementById('new-scene-name').addEventListener('input', () => {
+  const name = document.getElementById('new-scene-name').value.trim();
+  const idField = document.getElementById('new-scene-id');
+  if (!idField.dataset.edited) {
+    idField.value = name.toLowerCase().replace(/[^a-z0-9]+/g,'_');
+  }
+});
+document.getElementById('new-scene-id').addEventListener('input', () => {
+  document.getElementById('new-scene-id').dataset.edited = '1';
+});
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault(); saveCurrentScene();
+  }
+  if (e.key === 'Escape') hideModal();
+});
+
+// Start
+init().catch(err => {
+  console.error(err);
+  setStatus('ERROR: ' + err.message, true);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+{
+  "id": "hypersleep",
+  "name": "HYPERSLEEP",
+  "class": "TRANSIT",
+  "sym": "❄",
+  "desc": "57 years of cold silence. She did not know.",
+  "code": "AV-HS-05",
+  "life": "NOMINAL",
+  "comms": "OFFLINE",
+  "crew": "STASIS",
+  "ship": "NOMINAL",
+  "msg": "HYPERSLEEP NOMINAL — 57 YEARS 3 MONTHS ELAPSED",
+  "layers": [
+    {
+      "id": "hs_bg",
+      "name": "Deep blue-black space",
+      "type": "solid_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": { "color": "#00000e" }
+    },
+    {
+      "id": "hs_planet_glow",
+      "name": "Distant planet glow (upper-right)",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "type": "radial",
+        "cx": 0.88,
+        "cy": 0.15,
+        "stops": [
+          { "pos": 0.0, "color": "rgba(40,80,180,0.18)" },
+          { "pos": 0.4, "color": "rgba(20,50,140,0.08)" },
+          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "hs_stars",
+      "name": "Drifting parallax stars",
+      "type": "particle_field",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "count": 320,
+        "hue_min": 210,
+        "hue_max": 240,
+        "size_min": 0.4,
+        "size_max": 2.2,
+        "speed": 0.038,
+        "spread": "full",
+        "alpha_min": 0.22,
+        "alpha_max": 0.80
+      }
+    },
+    {
+      "id": "hs_frost_vignette",
+      "name": "Blue frost edge vignette",
+      "type": "vignette",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "type": "radial",
+        "strength": 0.08,
+        "color": "#5082ff"
+      }
+    },
+    {
+      "id": "hs_reticle",
+      "name": "Ice crystal cryo-pod reticle rings",
+      "type": "geometric",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.06,
+      "blend": "screen",
+      "params": {
+        "type": "rings",
+        "color": "#3c6edc",
+        "alpha": 0.06,
+        "ring_count": 5
+      }
+    },
+    {
+      "id": "hs_radial_lines",
+      "name": "12 radial spoke lines (cryo pod)",
+      "type": "geometric",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.06,
+      "blend": "screen",
+      "params": {
+        "type": "crosshair",
+        "color": "#3c6edc",
+        "alpha": 0.06,
+        "spoke_count": 12
+      }
+    },
+    {
+      "id": "hs_top_glow",
+      "name": "Top scan-line glow",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "linear",
+        "angle": 90,
+        "stops": [
+          { "pos": 0.0, "color": "rgba(40,80,200,0.06)" },
+          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "hs_bottom_glow",
+      "name": "Bottom scan-line glow",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "linear",
+        "angle": 270,
+        "stops": [
+          { "pos": 0.0, "color": "rgba(0,0,0,0)" },
+          { "pos": 1.0, "color": "rgba(40,80,200,0.06)" }
+        ]
+      }
+    }
+  ]
+}

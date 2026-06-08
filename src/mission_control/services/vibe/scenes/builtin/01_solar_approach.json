@@ -1,0 +1,146 @@
+{
+  "id": "solar_approach",
+  "name": "SOLAR APPROACH",
+  "class": "ASTRONOMICAL",
+  "sym": "◎",
+  "desc": "Final orbital burn. The star does not care.",
+  "code": "AV-SA-02",
+  "life": "NOMINAL",
+  "comms": "ACTIVE",
+  "crew": "NOMINAL",
+  "ship": "NOMINAL",
+  "msg": "SOLAR WIND INTENSITY: 94% — RADIATION SHIELDS OPTIMAL",
+  "layers": [
+    {
+      "id": "sa_bg",
+      "name": "Solar atmosphere gradient",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "linear",
+        "angle": 90,
+        "stops": [
+          { "pos": 0.00, "color": "#8a1500" },
+          { "pos": 0.28, "color": "#3a0600" },
+          { "pos": 0.55, "color": "#150200" },
+          { "pos": 1.00, "color": "#000000" }
+        ]
+      }
+    },
+    {
+      "id": "sa_plasma_blobs",
+      "name": "Drifting plasma blobs",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "note": "65 elliptical radial-gradient blobs with individual hue/size/drift physics.",
+        "count": 65,
+        "hue_min": 6,
+        "hue_max": 44,
+        "rx_min": 55,
+        "rx_max": 300,
+        "ry_min": 35,
+        "ry_max": 170,
+        "alpha_min": 0.06,
+        "alpha_max": 0.22
+      },
+      "motion": {
+        "pulse": "0.65 + 0.35 * sin(t * blob_spd * 3 + blob_ph)"
+      }
+    },
+    {
+      "id": "sa_hot_core",
+      "name": "Hot stellar core glow",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "note": "Single large drifting radial gradient (r=min(W,H)*0.26). Stops: rgba(255,248,200,0.52) → rgba(255,75,0,0.14) → transparent.",
+        "cx_base": 0.36,
+        "cy_base": 0.21,
+        "radius_factor": 0.26
+      },
+      "motion": {
+        "cx": "W * 0.36 + sin(t * 0.00019) * W * 0.07",
+        "cy": "H * 0.21 + cos(t * 0.00015) * H * 0.05"
+      }
+    },
+    {
+      "id": "sa_flares",
+      "name": "Solar flare particles",
+      "type": "particle_field",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.55,
+      "blend": "screen",
+      "params": {
+        "count": 220,
+        "hue_min": 10,
+        "hue_max": 50,
+        "size_min": 0.4,
+        "size_max": 3.2,
+        "speed": 0.45,
+        "spread": "full",
+        "alpha_min": 0.0,
+        "alpha_max": 1.0
+      }
+    },
+    {
+      "id": "sa_bottom_vignette",
+      "name": "Bottom fade to black",
+      "type": "vignette",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "linear",
+        "direction": "bottom",
+        "strength": 0.92,
+        "color": "#000000"
+      }
+    },
+    {
+      "id": "sa_right_vignette",
+      "name": "Right-edge fade to black",
+      "type": "vignette",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "linear",
+        "direction": "right",
+        "strength": 0.55,
+        "color": "#000000"
+      }
+    },
+    {
+      "id": "sa_station",
+      "name": "Space station silhouette",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "drawStation() — complex multi-rect/arc silhouette with engine glow ellipses. No sprite asset.",
+        "cx": 0.76,
+        "cy": 0.48,
+        "scale_factor": 0.0019
+      },
+      "motion": {
+        "y_offset": "sin(t * 0.00024) * 4",
+        "rotation": "sin(t * 0.00018) * 0.012"
+      }
+    }
+  ]
+}

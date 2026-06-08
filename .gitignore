@@ -17,6 +17,7 @@ env/
 # --- PyInstaller build output ---
 build/
 dist/
+MissionControl-*.zip
 
 # --- Test / tooling caches ---
 .pytest_cache/

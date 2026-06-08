@@ -1,0 +1,154 @@
+{
+  "id": "motion_tracker",
+  "name": "MOTION TRACKER",
+  "class": "TECHNICAL",
+  "sym": "⊕",
+  "desc": "Contacts on the scope. Range closing. They are already inside.",
+  "code": "AV-MT-11",
+  "life": "NOMINAL",
+  "comms": "ACTIVE",
+  "crew": "NOMINAL",
+  "ship": "NOMINAL",
+  "msg": "RADAR CONTACTS: 7 ACTIVE — RANGE CLOSING ON ALL VECTORS",
+  "layers": [
+    {
+      "id": "mt_bg",
+      "name": "Dark amber background",
+      "type": "solid_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": { "color": "#040200" }
+    },
+    {
+      "id": "mt_radial_glow",
+      "name": "Radial background glow",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "radial",
+        "cx": 0.5,
+        "cy": 0.5,
+        "stops": [
+          { "pos": 0.0, "color": "rgba(60,18,0,0.5)" },
+          { "pos": 0.6, "color": "rgba(30,8,0,0.22)" },
+          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "mt_range_rings",
+      "name": "Concentric range rings",
+      "type": "geometric",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "rings",
+        "color": "#ff8c1e",
+        "alpha": 0.18,
+        "ring_count": 4
+      }
+    },
+    {
+      "id": "mt_crosshair",
+      "name": "Crosshair axes",
+      "type": "geometric",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.10,
+      "blend": "source-over",
+      "params": {
+        "type": "crosshair",
+        "color": "#ff8c1e",
+        "alpha": 0.10
+      }
+    },
+    {
+      "id": "mt_bearing_ticks",
+      "name": "Bearing ticks (72 around rim)",
+      "type": "geometric",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "bearing_ticks",
+        "color": "#ff8c1e",
+        "alpha": 0.20,
+        "tick_count": 72
+      }
+    },
+    {
+      "id": "mt_sweep",
+      "name": "Rotating sweep arm",
+      "type": "geometric",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "radar_sweep",
+        "color": "#ff9628",
+        "trail_segments": 26,
+        "trail_span": 0.95,
+        "sweep_speed": 0.012
+      },
+      "motion": {
+        "sweep_angle": "(t * 0.012) % TAU"
+      }
+    },
+    {
+      "id": "mt_contacts",
+      "name": "Radar contacts / blips",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "7 contact blips in polar coords, slowly drifting. Flare (seen=1→fade at rate 0.006) when sweep arm passes within 0.11 rad. State-machine logic not expressible as a primitive layer.",
+        "count": 7,
+        "drift_range": 0.00020,
+        "radial_range": 0.000035,
+        "flare_decay": 0.006,
+        "glow_radius": 13,
+        "dot_radius": 2.3
+      }
+    },
+    {
+      "id": "mt_center_hub",
+      "name": "Center hub dot and ring",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "Filled circle r=3 + stroked ring r=7 at exact canvas center. Static.",
+        "dot_r": 3,
+        "ring_r": 7,
+        "color": "rgba(255,150,40,0.9)"
+      }
+    },
+    {
+      "id": "mt_vignette",
+      "name": "Edge vignette to black",
+      "type": "vignette",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "radial",
+        "strength": 0.85,
+        "color": "#000000"
+      }
+    }
+  ]
+}

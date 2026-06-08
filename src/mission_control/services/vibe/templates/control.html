@@ -153,33 +153,26 @@ body::before{content:'';position:fixed;inset:0;z-index:1000;pointer-events:none;
 
 </div>
 <script>
-var SCENES=[
-  {id:0, name:"CRIMSON VORTEX",  cls:"ANOMALY",      sym:"◉", desc:"A swirling wound in space. Two ships. No survivors.",                   code:"AV-CV-01",
-   life:"NOMINAL", comms:"DEGRADED", crew:"UNKNOWN", ship:"NOMINAL", msg:"WARNING: ANOMALOUS ENERGY SIGNATURE DETECTED"},
-  {id:1, name:"SOLAR APPROACH",  cls:"ASTRONOMICAL", sym:"◎", desc:"Final orbital burn. The star does not care.",                            code:"AV-SA-02",
-   life:"NOMINAL", comms:"ACTIVE",   crew:"NOMINAL", ship:"NOMINAL", msg:"SOLAR WIND INTENSITY: 94% — RADIATION SHIELDS OPTIMAL"},
-  {id:2, name:"THE HIVE",        cls:"BIOLOGICAL",   sym:"⬡", desc:"Every surface breathes. You are not alone.",                             code:"AV-TH-03",
-   life:"DEGRADED",comms:"DEGRADED", crew:"UNKNOWN", ship:"NOMINAL", msg:"WARNING: BIOHAZARD LOCKDOWN ACTIVE — DECK C"},
-  {id:3, name:"DEEP TRANSIT",    cls:"TRANSIT",      sym:"✦", desc:"32 days out. Stars streak. The ship barely moves.",                      code:"AV-DT-04",
-   life:"NOMINAL", comms:"ACTIVE",   crew:"NOMINAL", ship:"NOMINAL", msg:"FTL DRIVE: STANDBY — LONG RANGE NAVIGATION ENGAGED"},
-  {id:4, name:"HYPERSLEEP",      cls:"TRANSIT",      sym:"❄", desc:"57 years of cold silence. She did not know.",                            code:"AV-HS-05",
-   life:"NOMINAL", comms:"OFFLINE",  crew:"STASIS",  ship:"NOMINAL", msg:"HYPERSLEEP NOMINAL — 57 YEARS 3 MONTHS ELAPSED"},
-  {id:5, name:"ICHOR FLOW",      cls:"BIOLOGICAL",   sym:"◈", desc:"Organic. Systemic. Older than the colony.",                              code:"AV-IF-06",
-   life:"DEGRADED",comms:"ACTIVE",   crew:"UNKNOWN", ship:"NOMINAL", msg:"ORGANIC CONTAMINATION DETECTED — SECTOR 4-ALPHA"},
-  {id:6, name:"THE NEST",        cls:"BIOLOGICAL",   sym:"⬢", desc:"Amber light, broken shells. Something already hatched.",                 code:"AV-TN-07",
-   life:"DEGRADED",comms:"DEGRADED", crew:"UNKNOWN", ship:"NOMINAL", msg:"WARNING: NON-TERRESTRIAL BIOSIGNATURE — DECK G"},
-  {id:7, name:"DERELICT",        cls:"ASTRONOMICAL", sym:"⌖", desc:"On the surface of LV-426. Ancient. Warning unheeded.",                   code:"AV-DR-08",
-   life:"NOMINAL", comms:"OFFLINE",  crew:"NOMINAL", ship:"NOMINAL", msg:"ATMOSPHERIC INTERFERENCE — COMM RELAY DEGRADED"},
-  {id:8, name:"SINGULARITY",     cls:"ANOMALY",      sym:"○", desc:"Beyond the event horizon, nothing returns.",                             code:"AV-SG-09",
-   life:"NOMINAL", comms:"DEGRADED", crew:"NOMINAL", ship:"CRITICAL",msg:"WARNING: GRAVITATIONAL ANOMALY — STRUCTURAL STRESS DETECTED"},
-  {id:9, name:"NEURAL MAP",      cls:"ANOMALY",      sym:"◌", desc:"The network is alive. It has been watching.",                            code:"AV-NM-10",
-   life:"NOMINAL", comms:"ACTIVE",   crew:"UNKNOWN", ship:"NOMINAL", msg:"NEURAL LINK ACTIVE — SIGNAL INTEGRITY 34%"},
-  {id:10,name:"MOTION TRACKER",  cls:"TECHNICAL",    sym:"⊕", desc:"Contacts on the scope. Range closing. They are already inside.",         code:"AV-MT-11",
-   life:"NOMINAL", comms:"ACTIVE",   crew:"NOMINAL", ship:"NOMINAL", msg:"RADAR CONTACTS: 7 ACTIVE — RANGE CLOSING ON ALL VECTORS"},
-  {id:11,name:"BLOOD ORBIT",     cls:"ASTRONOMICAL", sym:"◎", desc:"LV-426 from orbit. The derelict is a speck below.",                      code:"AV-BO-12",
-   life:"NOMINAL", comms:"ACTIVE",   crew:"NOMINAL", ship:"NOMINAL", msg:"ORBITAL ALTITUDE: 847km — DERELICT VESSEL VISIBLE"},
+var BUILTIN_IDS=[
+  'crimson_vortex','solar_approach','the_hive','deep_transit',
+  'hypersleep','ichor_flow','the_nest','derelict',
+  'singularity','neural_map','motion_tracker','blood_orbit'
 ];
-var current=0, currentFilter='ALL';
+var BUILTIN_META={
+  crimson_vortex:{sym:"◉",cls:"ANOMALY",desc:"A swirling wound in space. Two ships. No survivors.",code:"AV-CV-01",ship:"NOMINAL",msg:"WARNING: ANOMALOUS ENERGY SIGNATURE DETECTED"},
+  solar_approach:{sym:"◎",cls:"ASTRONOMICAL",desc:"Final orbital burn. The star does not care.",code:"AV-SA-02",ship:"NOMINAL",msg:"SOLAR WIND INTENSITY: 94% — RADIATION SHIELDS OPTIMAL"},
+  the_hive:      {sym:"⬡",cls:"BIOLOGICAL",desc:"Every surface breathes. You are not alone.",code:"AV-TH-03",ship:"NOMINAL",msg:"WARNING: BIOHAZARD LOCKDOWN ACTIVE — DECK C"},
+  deep_transit:  {sym:"✦",cls:"TRANSIT",desc:"32 days out. Stars streak. The ship barely moves.",code:"AV-DT-04",ship:"NOMINAL",msg:"FTL DRIVE: STANDBY — LONG RANGE NAVIGATION ENGAGED"},
+  hypersleep:    {sym:"❄",cls:"TRANSIT",desc:"57 years of cold silence. She did not know.",code:"AV-HS-05",ship:"NOMINAL",msg:"HYPERSLEEP NOMINAL — 57 YEARS 3 MONTHS ELAPSED"},
+  ichor_flow:    {sym:"◈",cls:"BIOLOGICAL",desc:"Organic. Systemic. Older than the colony.",code:"AV-IF-06",ship:"NOMINAL",msg:"ORGANIC CONTAMINATION DETECTED — SECTOR 4-ALPHA"},
+  the_nest:      {sym:"⬢",cls:"BIOLOGICAL",desc:"Amber light, broken shells. Something already hatched.",code:"AV-TN-07",ship:"NOMINAL",msg:"WARNING: NON-TERRESTRIAL BIOSIGNATURE — DECK G"},
+  derelict:      {sym:"⌖",cls:"ASTRONOMICAL",desc:"On the surface of LV-426. Ancient. Warning unheeded.",code:"AV-DR-08",ship:"NOMINAL",msg:"ATMOSPHERIC INTERFERENCE — COMM RELAY DEGRADED"},
+  singularity:   {sym:"○",cls:"ANOMALY",desc:"Beyond the event horizon, nothing returns.",code:"AV-SG-09",ship:"CRITICAL",msg:"WARNING: GRAVITATIONAL ANOMALY — STRUCTURAL STRESS DETECTED"},
+  neural_map:    {sym:"◌",cls:"ANOMALY",desc:"The network is alive. It has been watching.",code:"AV-NM-10",ship:"NOMINAL",msg:"NEURAL LINK ACTIVE — SIGNAL INTEGRITY 34%"},
+  motion_tracker:{sym:"⊕",cls:"TECHNICAL",desc:"Contacts on the scope. Range closing. They are already inside.",code:"AV-MT-11",ship:"NOMINAL",msg:"RADAR CONTACTS: 7 ACTIVE — RANGE CLOSING ON ALL VECTORS"},
+  blood_orbit:   {sym:"◎",cls:"ASTRONOMICAL",desc:"LV-426 from orbit. The derelict is a speck below.",code:"AV-BO-12",ship:"NOMINAL",msg:"ORBITAL ALTITUDE: 847km — DERELICT VESSEL VISIBLE"},
+};
+var allScenes=[], currentSceneId=null, currentFilter='ALL';
 
 function tick(){
   var d=new Date(),p=function(n){return String(n).padStart(2,'0');};
@@ -189,33 +182,42 @@ setInterval(tick,1000); tick();
 
 function buildGrid(){
   var g=document.getElementById('sgrid'); g.innerHTML='';
-  for(var i=0;i<SCENES.length;i++){
-    var s=SCENES[i];
-    if(currentFilter!=='ALL' && s.cls!==currentFilter) continue;
+  for(var i=0;i<allScenes.length;i++){
+    var s=allScenes[i];
+    var meta=BUILTIN_META[s.id]||{};
+    var cls=s.category||meta.cls||'—';
+    if(currentFilter!=='ALL'&&cls!==currentFilter) continue;
+    var sym=s.sym||meta.sym||'◈';
     var c=document.createElement('div');
-    c.className='sc'+(i===current?' on':''); c.dataset.id=i;
-    c.innerHTML='<span class="sc-sym">'+s.sym+'</span>'+
-      '<div class="sc-name">'+s.name+'</div>'+
-      '<div class="sc-cls">'+s.cls+'</div>'+
-      '<div class="sc-st '+(i===current?'bc':'idle')+'">'+(i===current?'BROADCASTING':'IDLE')+'</div>';
-    c.addEventListener('click',function(){setScene(+this.dataset.id);});
+    c.className='sc'+(s.id===currentSceneId?' on':''); c.dataset.id=s.id;
+    c.innerHTML='<span class="sc-sym">'+sym+'</span>'+
+      '<div class="sc-name">'+(s.builtin?'':'★ ')+s.name+'</div>'+
+      '<div class="sc-cls">'+cls+'</div>'+
+      '<div class="sc-st '+(s.id===currentSceneId?'bc':'idle')+'">'+(s.id===currentSceneId?'BROADCASTING':'IDLE')+'</div>';
+    c.addEventListener('click',(function(sid){return function(){setScene(sid);};})(s.id));
     g.appendChild(c);
   }
 }
 
-function applyUI(id){
-  var prev=current; current=id; var s=SCENES[id];
-  document.getElementById('ctx-name').textContent=s.name;
-  document.getElementById('ctx-desc').textContent=s.desc;
-  document.getElementById('ctx-code').textContent=s.code;
+function applyUI(sceneId){
+  currentSceneId=sceneId;
+  var s=allScenes.find(function(x){return x.id===sceneId;})||{};
+  var meta=BUILTIN_META[sceneId]||{};
+  var name=(s.name||meta.name||sceneId||'—').toUpperCase();
+  var desc=s.description||meta.desc||'—';
+  var code=meta.code||sceneId.toUpperCase().slice(0,10);
+  var ship=meta.ship||'NOMINAL';
+  var msg=meta.msg||'AMBIENT SYSTEMS NOMINAL';
+  document.getElementById('ctx-name').textContent=name;
+  document.getElementById('ctx-desc').textContent=desc;
+  document.getElementById('ctx-code').textContent=code;
   var sh=document.getElementById('ship-st');
-  sh.textContent=s.ship; sh.className='tstat-val'+(s.ship==='NOMINAL'?'':s.ship==='CRITICAL'?' err':' warn');
+  sh.textContent=ship; sh.className='tstat-val'+(ship==='NOMINAL'?'':ship==='CRITICAL'?' err':' warn');
   var sm=document.getElementById('sysmsg');
-  sm.textContent=s.msg; sm.className=s.msg.startsWith('WARNING')?'al':'';
+  sm.textContent=msg; sm.className=msg.startsWith('WARNING')?'al':'';
   var q=65+Math.floor(Math.random()*30); document.getElementById('sig-q').textContent=q+'%';
   buildGrid();
 }
-
 
 /* Waveform */
 var wfc=document.getElementById('wfc'),wfx=wfc.getContext('2d'),wfp=0;
@@ -244,41 +246,82 @@ document.querySelectorAll('.fb').forEach(function(b){
   });
 });
 
-/* Keyboard */
+/* Keyboard - 1-9 maps to scenes 0-8, 0 maps to scene 9 */
 window.addEventListener('keydown',function(e){
-  var n=parseInt(e.key,10); if(!isNaN(n)&&n>=0&&n<=9)setScene(n);
+  var n=parseInt(e.key,10); if(!isNaN(n)&&n>=0&&n<=9){
+    var idx=(n===0)?9:n-1;
+    if(allScenes[idx]) setScene(allScenes[idx].id);
+  }
 });
 
 /* Scene set */
 var _lastReqId=0;
-function setScene(id){
+function setScene(sceneId){
   var reqId=++_lastReqId;
-  fetch('/api/scene',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scene:id})})
+  fetch('/api/scene-by-id',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scene_id:sceneId})})
     .then(function(r){return r.json();})
-    .then(function(d){if(reqId===_lastReqId&&typeof d.scene==='number')applyUI(d.scene);})
+    .then(function(d){
+      if(reqId!==_lastReqId) return;
+      if(d.scene_id) applyUI(d.scene_id);
+      else if(typeof d.scene==='number'&&d.scene>=0&&BUILTIN_IDS[d.scene]) applyUI(BUILTIN_IDS[d.scene]);
+    })
     .catch(function(){});
 }
 
 /* SSE */
 function startSSE(){
   var es=new EventSource('/api/events');
-  es.onmessage=function(e){try{var d=JSON.parse(e.data);if(typeof d.scene==='number'&&d.scene!==current)applyUI(d.scene);}catch(err){}};
+  es.onmessage=function(e){
+    try{
+      var d=JSON.parse(e.data);
+      if(d.scene_id) applyUI(d.scene_id);
+      else if(typeof d.scene==='number'&&d.scene>=0&&BUILTIN_IDS[d.scene]) applyUI(BUILTIN_IDS[d.scene]);
+    }catch(err){}
+  };
   es.onerror=function(){es.close();setTimeout(startSSE,500);};
 }
 startSSE();
 
 /* Polling fallback + coordinates */
-setInterval(function(){fetch('/api/scene').then(function(r){return r.json();}).then(function(d){if(typeof d.scene==='number'&&d.scene!==current)applyUI(d.scene);}).catch(function(){});},5000);
+setInterval(function(){
+  fetch('/api/scene').then(function(r){return r.json();}).then(function(d){
+    if(d.scene_id) applyUI(d.scene_id);
+    else if(typeof d.scene==='number'&&d.scene>=0&&BUILTIN_IDS[d.scene]) applyUI(BUILTIN_IDS[d.scene]);
+  }).catch(function(){});
+},5000);
 setInterval(function(){
   var x=(Math.random()*200-100).toFixed(1),y=(Math.random()*200-100).toFixed(1),z=(Math.random()*200-100).toFixed(1);
   document.getElementById('coords').textContent='X:'+x+' Y:'+y+' Z:'+z;
 },3000);
 
-/* Init */
-buildGrid();
-fetch('/api/scene').then(function(r){return r.json();})
-  .then(function(d){applyUI(typeof d.scene==='number'?d.scene:0);})
-  .catch(function(){applyUI(0);});
+/* Init — load all scenes (builtins + custom) from editor API */
+function loadScenes(){
+  fetch('/api/editor/scenes').then(function(r){return r.json();})
+    .then(function(scenes){
+      allScenes=scenes;
+      buildGrid();
+      fetch('/api/scene').then(function(r){return r.json();})
+        .then(function(d){
+          if(d.scene_id) applyUI(d.scene_id);
+          else if(typeof d.scene==='number'&&d.scene>=0&&BUILTIN_IDS[d.scene]) applyUI(BUILTIN_IDS[d.scene]);
+          else if(allScenes.length) applyUI(allScenes[0].id);
+        })
+        .catch(function(){if(allScenes.length) applyUI(allScenes[0].id);});
+    })
+    .catch(function(){
+      allScenes=BUILTIN_IDS.map(function(id){
+        var m=BUILTIN_META[id]||{}; return {id:id,name:id.replace(/_/g,' ').toUpperCase(),category:m.cls||'—',sym:m.sym||'◈',builtin:true};
+      });
+      buildGrid();
+      fetch('/api/scene').then(function(r){return r.json();})
+        .then(function(d){
+          if(typeof d.scene==='number'&&d.scene>=0&&BUILTIN_IDS[d.scene]) applyUI(BUILTIN_IDS[d.scene]);
+          else applyUI(BUILTIN_IDS[0]);
+        })
+        .catch(function(){applyUI(BUILTIN_IDS[0]);});
+    });
+}
+loadScenes();
 </script>
 </body>
 </html>

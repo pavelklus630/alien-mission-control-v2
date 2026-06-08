@@ -1,0 +1,82 @@
+{
+  "id": "ichor_flow",
+  "name": "ICHOR FLOW",
+  "class": "BIOLOGICAL",
+  "sym": "◈",
+  "desc": "Organic. Systemic. Older than the colony.",
+  "code": "AV-IF-06",
+  "life": "DEGRADED",
+  "comms": "ACTIVE",
+  "crew": "UNKNOWN",
+  "ship": "NOMINAL",
+  "msg": "ORGANIC CONTAMINATION DETECTED — SECTOR 4-ALPHA",
+  "layers": [
+    {
+      "id": "if_bg",
+      "name": "Near-black background",
+      "type": "solid_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": { "color": "#010001" }
+    },
+    {
+      "id": "if_center_glow",
+      "name": "Subtle center radial glow",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "radial",
+        "cx": 0.5,
+        "cy": 0.5,
+        "stops": [
+          { "pos": 0.0, "color": "rgba(18,0,4,0.25)" },
+          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "if_vessel_paths",
+      "name": "Vessel path particles",
+      "type": "path_flow",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "paths": [
+          [[0,0.28],[0.18,0.22],[0.38,0.38],[0.58,0.30],[0.78,0.46],[1,0.40]],
+          [[0,0.56],[0.14,0.50],[0.32,0.64],[0.52,0.55],[0.72,0.68],[1,0.62]],
+          [[0.22,0],[0.20,0.22],[0.26,0.48],[0.20,0.74],[0.24,1]],
+          [[0.52,0],[0.56,0.18],[0.48,0.40],[0.54,0.62],[0.50,0.82],[0.55,1]],
+          [[0.80,0],[0.77,0.24],[0.83,0.50],[0.78,0.76],[0.82,1]],
+          [[0,0.80],[0.22,0.76],[0.45,0.88],[0.68,0.78],[1,0.84]]
+        ],
+        "particle_count": 30,
+        "hue_min": 340,
+        "hue_max": 362,
+        "speed_min": 0.0006,
+        "speed_max": 0.0018
+      }
+    },
+    {
+      "id": "if_pulse_wave",
+      "name": "Synchronized pulse wave",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "note": "A single radial gradient glow (r=22, rgba(255,30,60,0.55)) sweeping along all 6 paths simultaneously at waveT=(t*0.00045)%1.",
+        "radius": 22,
+        "color_inner": "rgba(255,30,60,0.55)",
+        "wave_speed": 0.00045
+      }
+    }
+  ]
+}

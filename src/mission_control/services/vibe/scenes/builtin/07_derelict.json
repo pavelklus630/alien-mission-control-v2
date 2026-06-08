@@ -1,0 +1,164 @@
+{
+  "id": "derelict",
+  "name": "DERELICT",
+  "class": "ASTRONOMICAL",
+  "sym": "⌖",
+  "desc": "On the surface of LV-426. Ancient. Warning unheeded.",
+  "code": "AV-DR-08",
+  "life": "NOMINAL",
+  "comms": "OFFLINE",
+  "crew": "NOMINAL",
+  "ship": "NOMINAL",
+  "msg": "ATMOSPHERIC INTERFERENCE — COMM RELAY DEGRADED",
+  "layers": [
+    {
+      "id": "der_bg",
+      "name": "Murky planet atmosphere",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "linear",
+        "angle": 90,
+        "stops": [
+          { "pos": 0.00, "color": "#000000" },
+          { "pos": 0.30, "color": "#010100" },
+          { "pos": 0.65, "color": "#080601" },
+          { "pos": 1.00, "color": "#000000" }
+        ]
+      }
+    },
+    {
+      "id": "der_stars",
+      "name": "Faint stars through atmosphere",
+      "type": "particle_field",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "count": 80,
+        "hue_min": 40,
+        "hue_max": 50,
+        "size_min": 0.3,
+        "size_max": 1.4,
+        "speed": 0.0,
+        "spread": "full",
+        "alpha_min": 0.08,
+        "alpha_max": 0.38
+      },
+      "motion": {
+        "alpha": "star_a * (0.5 + 0.5 * sin(t * 0.0009 + star_ph))"
+      }
+    },
+    {
+      "id": "der_atm_wisps",
+      "name": "Atmospheric murk wisps",
+      "type": "nebula_wisps",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "count": 18,
+        "hue_min": 30,
+        "hue_max": 42,
+        "alpha_min": 0.012,
+        "alpha_max": 0.040,
+        "size_min": 80,
+        "size_max": 280,
+        "drift_speed": 0.00004
+      }
+    },
+    {
+      "id": "der_interior_glow",
+      "name": "Amber interior glow",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "type": "radial",
+        "cx": 0.50,
+        "cy": 0.40,
+        "stops": [
+          { "pos": 0.0, "color": "rgba(255,140,0,0.22)" },
+          { "pos": 0.4, "color": "rgba(180,70,0,0.10)" },
+          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "der_ground_fog",
+      "name": "Ground fog",
+      "type": "vignette",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "linear",
+        "direction": "bottom",
+        "strength": 0.82,
+        "color": "#05030a"
+      }
+    },
+    {
+      "id": "der_ship",
+      "name": "Derelict horseshoe ship",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "Horseshoe arc (outer r=200*sc, inner r=108*sc, arc 0.20π–1.80π), 14 structural ribs, inner dark disc r=82*sc, amber glow pulse (screen), amber rim stroke, 6 surface ellipse lumps. sc=min(W,H)*0.42/200.",
+        "cx": 0.50,
+        "cy": 0.40,
+        "ship_r_factor": 0.42,
+        "outer_r": 200,
+        "inner_r": 108,
+        "rib_count": 14,
+        "shimmer_speed": 0.00085
+      },
+      "motion": {
+        "x": "W * 0.50 + sin(t * 0.00014) * 4",
+        "y": "H * 0.40 + cos(t * 0.00010) * 2",
+        "rotation": "sin(t * 0.00010) * 0.008",
+        "shimmer": "0.4 + 0.28 * sin(t * 0.00085)"
+      }
+    },
+    {
+      "id": "der_ground",
+      "name": "Planet surface silhouette",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "36-segment sinusoidal rocky ground polygon at y≈H*0.72, filled black.",
+        "base_y": 0.72,
+        "color": "#000000",
+        "segments": 36
+      }
+    },
+    {
+      "id": "der_haze",
+      "name": "Overall atmospheric haze vignette",
+      "type": "vignette",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "radial",
+        "strength": 0.65,
+        "color": "#000000"
+      }
+    }
+  ]
+}

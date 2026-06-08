@@ -152,3 +152,72 @@ Running record of every meaningful decision and change. Append-only; newest entr
 - **Required for every release going forward:** bump `CURRENT_VERSION` in `launcher/app.py`, run `build.sh`, attach the resulting zip to the GitHub release.
 - **Auto-updater status:** the full update flow (API check → banner → zip download → `.app` swap → relaunch) has never been end-to-end tested. To be verified in a future version.
 - **GitHub release `v2.0.2`** published (tag only, no zip asset — acknowledged deficiency above).
+
+---
+
+### 2026-06-08 — v2.1.0 Vibe Scene Editor + full JSON renderer
+
+**Version bump:** `2.0.2` → `2.1.0` in `pyproject.toml` and `CURRENT_VERSION` in `launcher/app.py`.
+
+**Vibe — Scene Editor (`/editor`):**
+- New browser-based scene editor at `/editor` (three-panel SPA: layer list, canvas preview, property panel).
+- 12 built-in JSON scenes in `scenes/builtin/` — each a declarative layer stack (solid_bg, gradient_bg, vignette, particle_field, vortex, nebula_wisps, path_flow, geometric, image, sprite, custom).
+- Custom scenes saved to `data_dir/vibe/scenes/` — shadow builtins with the same ID (custom copy wins).
+- Import/export as `.vibe` ZIP (scene.json + assets/ subfolder).
+- Scene editor restyled to match green color scheme (`--g:#33dd55`, `--bg:#020602`, etc.) of all other app panels.
+- "TEST ▶" button now calls `POST /api/scene-by-id` for any scene (builtin or custom), not just integer-indexed builtins.
+
+**Vibe — Scene-by-ID API:**
+- New `POST /api/scene-by-id` endpoint: switches to any scene (builtin or custom) by string ID.
+- `VibeState.set_scene_by_id(scene_id)`: sets `_scene_id`, sets `_scene = -1` sentinel, broadcasts `{scene: -1, scene_id: "xxx"}` via SSE.
+- `VibeState.set_scene(int)`: clears `_scene_id = None` (existing int-based API unmodified).
+- `VibeState.get()`: includes `scene_id` key only when not None — preserves existing test `{"scene": 0}` exact match.
+
+**Vibe — display.html rewritten:**
+- Replaced 994-line hardcoded imperative renderer with JSON renderer (~360 lines).
+- All 12 layer types rendered from JSON: solid_bg, gradient_bg, vignette, particle_field, vortex, nebula_wisps, path_flow, geometric, image, sprite, custom.
+- SSE listener handles both `{scene: N}` (integer → BUILTIN_IDS mapping) and `{scene_id: "xxx"}` (direct string ID).
+- Crossfade transition via black overlay (fade_out → load → fade_in).
+- Asset preloading from `/api/editor/assets` on init.
+
+**Vibe — control.html updated:**
+- Now loads scenes from `GET /api/editor/scenes` (returns all scenes: builtins + custom shadows) instead of `GET /api/scenes` (builtins only, integer-indexed).
+- Custom scenes appear in the grid with a `★` prefix.
+- Scene switching uses `POST /api/scene-by-id` with string ID.
+- SSE and polling fallback both handle `scene_id` field.
+- Keyboard shortcut 1-9 maps to scenes by position in the loaded list (not hardcoded integers).
+- Static `SCENES` array replaced with `BUILTIN_META` lookup for display metadata (symbol, description, ship status, system message).
+
+**Launcher:**
+- Vibe service card now shows three URL buttons: GM CONTROL, OBS DISPLAY, SCENE EDITOR.
+
+**Tests:** all 54 existing tests pass (no regressions).
+
+---
+
+### 2026-06-08 — v2.1.1 Vibe display & editor fixes
+
+**Version bump:** `2.1.0` → `2.1.1` in `pyproject.toml` and `CURRENT_VERSION` in `launcher/app.py`.
+
+**Vibe — custom layer rendering (display.html):**
+- `renderCustom` was a no-op (`default: break` in switch) — all custom layers (ships, radar blips, planet discs, etc.) were invisible on the OBS output.
+- Implemented generic `renderCustom(ctx, W, H, layer, p)` dispatcher: dispatches on param signature (`size_factor` → cross-ship silhouette, `rx`/`ry` → ellipse, `radius_factor` → planet disc, `count` → scattered blips, `color` → point glow).
+- Added `default: renderCustom(...)` to `renderLayer` switch so all unknown layer types also render.
+
+**Vibe — custom layer rendering (editor.html):**
+- Editor `renderCustom` was showing a dashed "preview not available" placeholder; not passing resolved motion params (`p`) to the function.
+- Ported identical rendering logic from display.html.
+- Updated `renderLayer` to pass `p` to `renderCustom` for both `case 'custom'` and `default`.
+
+**Vibe — editor TEST button fixed:**
+- Renamed "TEST ▶" → "OBS ▶" (clearer intent: sends to OBS display).
+- Auto-saves the scene before sending if it has unsaved changes (previously sent the scene ID but display loaded the old server-side version, so edits were invisible on OBS).
+- `saveCurrentScene()` now returns `true`/`false`; `testOnDisplay` aborts if save fails.
+- Full try/catch added — errors now appear in the status bar instead of silently crashing.
+- Added "↗" button next to OBS ▶ that opens `/display` in a new tab.
+
+**Vibe — button layout shift fixed:**
+- `#status` span had `min-width: 120px` with no upper bound; long messages (e.g. "SENT TO DISPLAY: crimson_vortex") caused the span to grow, compressing the flex spacer and shifting all toolbar buttons.
+- Fixed: `width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;` — buttons are now stable regardless of status text length.
+
+**Tests:** all 54 existing tests pass.

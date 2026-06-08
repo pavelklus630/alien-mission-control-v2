@@ -1,0 +1,122 @@
+{
+  "id": "the_hive",
+  "name": "THE HIVE",
+  "class": "BIOLOGICAL",
+  "sym": "⬡",
+  "desc": "Every surface breathes. You are not alone.",
+  "code": "AV-TH-03",
+  "life": "DEGRADED",
+  "comms": "DEGRADED",
+  "crew": "UNKNOWN",
+  "ship": "NOMINAL",
+  "msg": "WARNING: BIOHAZARD LOCKDOWN ACTIVE — DECK C",
+  "layers": [
+    {
+      "id": "hive_bg",
+      "name": "Deep atmospheric gradient",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "linear",
+        "angle": 90,
+        "stops": [
+          { "pos": 0.00, "color": "#000200" },
+          { "pos": 0.55, "color": "#010400" },
+          { "pos": 1.00, "color": "#000000" }
+        ]
+      }
+    },
+    {
+      "id": "hive_cave",
+      "name": "Breathing cave walls and ceiling",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "Canvas-scaled sinusoidal polygon ceiling + two side walls, color #010b01. Uses ctx.scale(1, breathe).",
+        "breathe_speed": 0.00048,
+        "breathe_amplitude": 0.028,
+        "ceiling_color": "#010b01"
+      },
+      "motion": {
+        "breathe": "1 + sin(t * 0.00048) * 0.028"
+      }
+    },
+    {
+      "id": "hive_resin_strands",
+      "name": "Resin strands",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.40,
+      "blend": "source-over",
+      "params": {
+        "note": "12 bezier-curve strands top-to-bottom, color rgba(6,28,3,0.40), lineWidth 2.",
+        "count": 12,
+        "color": "rgba(6,28,3,0.40)",
+        "line_width": 2
+      }
+    },
+    {
+      "id": "hive_drips",
+      "name": "Resin drips",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "22 teardrop path shapes (quadraticCurveTo) falling downward, color #0a2412.",
+        "count": 22,
+        "color": "#0a2412",
+        "speed_min": 0.3,
+        "speed_max": 1.2,
+        "len_min": 28,
+        "len_max": 100,
+        "alpha_min": 0.18,
+        "alpha_max": 0.5
+      }
+    },
+    {
+      "id": "hive_eggs",
+      "name": "Amber glowing eggs (9)",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "note": "9 eggs: outer radial glow (screen) + dark body (source-over) + inner amber glow (screen) + 4 petal arcs (screen).",
+        "count": 9,
+        "glow_speed": 0.0009,
+        "petal_speed": 0.00072,
+        "petal_open_min": 0.22,
+        "petal_open_max": 0.36
+      },
+      "motion": {
+        "glow": "0.30 + 0.20 * sin(t * 0.0009 + egg_gph)",
+        "petal_open": "0.22 + 0.14 * sin(t * 0.00072 + egg_ph)"
+      }
+    },
+    {
+      "id": "hive_floor_mist",
+      "name": "Floor mist",
+      "type": "vignette",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "linear",
+        "direction": "bottom",
+        "strength": 0.65,
+        "color": "#000401"
+      }
+    }
+  ]
+}

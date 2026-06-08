@@ -6,7 +6,10 @@ from fastapi import FastAPI
 
 from ...config import Settings, get_settings
 from ...core.app_factory import create_service_app
+from .asset_store import AssetStore
+from .editor_routes import build_editor_router
 from .routes import build_router
+from .scene_store import SceneStore
 from .state import VibeState
 
 
@@ -16,6 +19,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = create_service_app("Vibe")
     state = VibeState(persist_path=persist_path)
     app.include_router(build_router(settings, state))
+
+    scene_store = SceneStore(settings.data_dir)
+    asset_store = AssetStore(settings.data_dir)
+    app.include_router(build_editor_router(settings, scene_store, asset_store))
+
     app.state.settings = settings
     app.state.vibe = state
     return app

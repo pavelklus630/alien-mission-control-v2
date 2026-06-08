@@ -1,0 +1,102 @@
+{
+  "id": "neural_map",
+  "name": "NEURAL MAP",
+  "class": "ANOMALY",
+  "sym": "◌",
+  "desc": "The network is alive. It has been watching.",
+  "code": "AV-NM-10",
+  "life": "NOMINAL",
+  "comms": "ACTIVE",
+  "crew": "UNKNOWN",
+  "ship": "NOMINAL",
+  "msg": "NEURAL LINK ACTIVE — SIGNAL INTEGRITY 34%",
+  "layers": [
+    {
+      "id": "nm_bg",
+      "name": "Near-black background",
+      "type": "solid_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": { "color": "#020000" }
+    },
+    {
+      "id": "nm_center_glow",
+      "name": "Subtle center radial glow",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "radial",
+        "cx": 0.5,
+        "cy": 0.5,
+        "stops": [
+          { "pos": 0.0, "color": "rgba(12,0,2,0.22)" },
+          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "nm_edges",
+      "name": "Neural network edges",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "note": "Edges between nodes within min(W,H)*0.16 distance. Lines rgba(120,0,20,0.8) with pulsing alpha. Topology from init (graph structure, not bezier paths).",
+        "max_connect_dist_factor": 0.16,
+        "color": "rgba(120,0,20,0.8)",
+        "line_width": 0.6
+      },
+      "motion": {
+        "alpha": "(0.28 + 0.15 * sin(t * 0.0008 + edge_ph)) * distFactor * 0.55"
+      }
+    },
+    {
+      "id": "nm_tracers",
+      "name": "Signal tracers",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.85,
+      "blend": "screen",
+      "params": {
+        "note": "14 tracers interpolating along randomly-picked graph edges. Radial gradient glow dot (r=10). Occasionally hop to a new edge. Graph topology, not smooth bezier paths.",
+        "count": 14,
+        "glow_radius": 10,
+        "color_inner": "rgba(255,30,50,0.9)",
+        "color_mid": "rgba(180,0,20,0.35)",
+        "speed_min": 0.002,
+        "speed_max": 0.007
+      }
+    },
+    {
+      "id": "nm_nodes",
+      "name": "Neural nodes (4 concentric rings)",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "note": "41 nodes in 4 concentric rings. Each: outer glow (r*3 radial gradient) + filled core (r*0.7). Deterministic ring layout, not random particle positions.",
+        "rings": [
+          { "count": 1,  "r": 0.00 },
+          { "count": 8,  "r": 0.18 },
+          { "count": 14, "r": 0.32 },
+          { "count": 18, "r": 0.44 }
+        ],
+        "node_r_min": 3,
+        "node_r_max": 8
+      },
+      "motion": {
+        "pulse": "0.55 + 0.45 * sin(t * 0.0012 * pulseDir + node_ph)"
+      }
+    }
+  ]
+}

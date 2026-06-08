@@ -1,0 +1,118 @@
+{
+  "id": "singularity",
+  "name": "SINGULARITY",
+  "class": "ANOMALY",
+  "sym": "○",
+  "desc": "Beyond the event horizon, nothing returns.",
+  "code": "AV-SG-09",
+  "life": "NOMINAL",
+  "comms": "DEGRADED",
+  "crew": "NOMINAL",
+  "ship": "CRITICAL",
+  "msg": "WARNING: GRAVITATIONAL ANOMALY — STRUCTURAL STRESS DETECTED",
+  "layers": [
+    {
+      "id": "sing_bg",
+      "name": "Deep space indigo-black",
+      "type": "solid_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": { "color": "#010008" }
+    },
+    {
+      "id": "sing_warped_stars",
+      "name": "Gravitationally warped stars",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "160 stars with per-star alpha reduced by gravitational warp factor within MR*0.45 radius of center. Not a standard particle_field.",
+        "count": 160,
+        "color": "#aabbff",
+        "r_min": 0.3,
+        "r_max": 1.5,
+        "warp_radius_factor": 0.45,
+        "warp_strength": 0.35
+      },
+      "motion": {
+        "alpha": "(0.20 + 0.14 * sin(t * 0.001 + star_ph)) * (1 - warp * 0.60)"
+      }
+    },
+    {
+      "id": "sing_accretion_disk",
+      "name": "Accretion disk particles",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "note": "260 particles in polar orbit (ang, dist). Angular speed = 0.00009 + (1-dist/MR)*0.00026. Elliptical projection y*0.34. Brightness inversely proportional to distance.",
+        "count": 260,
+        "hue_min": 0,
+        "hue_max": 42,
+        "dist_min_factor": 0.10,
+        "dist_max_factor": 0.43,
+        "base_angular_speed": 0.00009,
+        "y_squish": 0.34
+      },
+      "motion": {
+        "wobble": "sin(ang * 3 + ph) * 0.052",
+        "brightness": "max(0, 1 - dist / (MR * 0.44))"
+      }
+    },
+    {
+      "id": "sing_event_horizon",
+      "name": "Event horizon black disc",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "Radial gradient: solid black at 0–0.44 fading to transparent at r=2.8*ehR, where ehR=min(W,H)*0.5*0.12.",
+        "radius_factor": 0.12,
+        "gradient_outer_factor": 2.8
+      }
+    },
+    {
+      "id": "sing_disk_glow",
+      "name": "Accretion disk ambient glow",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "type": "radial",
+        "cx": 0.5,
+        "cy": 0.5,
+        "stops": [
+          { "pos": 0.0, "color": "rgba(255,140,0,0.28)" },
+          { "pos": 0.3, "color": "rgba(220,80,0,0.14)" },
+          { "pos": 1.0, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "sing_photon_ring",
+      "name": "Photon ring",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "note": "Ellipse stroke (rx=ehR*3.2, ry=ehR*1.1), rgba(255,180,60,0.35), lineWidth=MR*0.018. Flattened — not a circular geometric ring.",
+        "rx_factor": 3.2,
+        "ry_factor": 1.1,
+        "color": "rgba(255,180,60,0.35)",
+        "line_width_factor": 0.018
+      }
+    }
+  ]
+}

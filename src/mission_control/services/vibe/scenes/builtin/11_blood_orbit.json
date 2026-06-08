@@ -1,0 +1,150 @@
+{
+  "id": "blood_orbit",
+  "name": "BLOOD ORBIT",
+  "class": "ASTRONOMICAL",
+  "sym": "◎",
+  "desc": "LV-426 from orbit. The derelict is a speck below.",
+  "code": "AV-BO-12",
+  "life": "NOMINAL",
+  "comms": "ACTIVE",
+  "crew": "NOMINAL",
+  "ship": "NOMINAL",
+  "msg": "ORBITAL ALTITUDE: 847km — DERELICT VESSEL VISIBLE",
+  "layers": [
+    {
+      "id": "bo_bg",
+      "name": "Black space",
+      "type": "solid_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": { "color": "#000000" }
+    },
+    {
+      "id": "bo_stars",
+      "name": "Background starfield",
+      "type": "particle_field",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "count": 240,
+        "hue_min": 35,
+        "hue_max": 45,
+        "size_min": 0.3,
+        "size_max": 1.6,
+        "speed": 0.0,
+        "spread": "full",
+        "alpha_min": 0.12,
+        "alpha_max": 0.5
+      },
+      "motion": {
+        "alpha": "star_b * (0.5 + 0.4 * sin(t * 0.001 + star_ph))"
+      }
+    },
+    {
+      "id": "bo_atm_halo",
+      "name": "Atmospheric limb halo",
+      "type": "gradient_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "type": "radial",
+        "cx": 0.5,
+        "cy": 0.5,
+        "stops": [
+          { "pos": 0.00, "color": "rgba(150,40,0,0)" },
+          { "pos": 0.35, "color": "rgba(170,46,4,0.30)" },
+          { "pos": 0.70, "color": "rgba(90,18,0,0.12)" },
+          { "pos": 1.00, "color": "rgba(0,0,0,0)" }
+        ]
+      }
+    },
+    {
+      "id": "bo_planet_disc",
+      "name": "Planet disc (clipped sphere shading)",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "Circular clip (r=min(W,H)*0.34) then radial gradient lit from upper-right. Base stops: #8a1e02 → #5a1000 → #330700 → #140200 → #050000. Requires clip path — not a plain gradient_bg.",
+        "radius_factor": 0.34,
+        "light_offset_x": 0.42,
+        "light_offset_y": -0.18
+      }
+    },
+    {
+      "id": "bo_surface_features",
+      "name": "Rotating surface features",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "note": "48 features in spherical projection (lat/lon). lon drifts at t*0.00006. px=cx+sin(lon)*PR*cosLat, py=cy+sin(lat)*PR. Far hemisphere culled (cosLon<=0.02). Radial gradient ellipse per feature with illumination factor.",
+        "count": 48,
+        "hue_min": 4,
+        "hue_max": 26,
+        "rotation_speed": 0.00006,
+        "alpha_min": 0.10,
+        "alpha_max": 0.34
+      },
+      "motion": {
+        "lon_drift": "lon + t * 0.00006"
+      }
+    },
+    {
+      "id": "bo_terminator",
+      "name": "Terminator shadow",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "Horizontal linear gradient (cx-PR to cx+PR*0.35) inside clip: rgba(0,0,0,0.88) → rgba(0,0,0,0.40) → transparent. Night-side shadow.",
+        "shadow_start_x": -1.0,
+        "shadow_end_x": 0.35,
+        "alpha_dark": 0.88,
+        "alpha_mid": 0.40
+      }
+    },
+    {
+      "id": "bo_crescent_rim",
+      "name": "Warm crescent rim light",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "note": "Radial gradient centered at cx+PR*0.62, cy-PR*0.16 (inner r=PR*0.15, outer r=PR*1.15) inside clip. rgba(255,140,50,0.42) → rgba(200,60,0,0.12) → transparent.",
+        "center_offset_x": 0.62,
+        "center_offset_y": -0.16,
+        "inner_r_factor": 0.15,
+        "outer_r_factor": 1.15
+      }
+    },
+    {
+      "id": "bo_vignette",
+      "name": "Corner vignette to black",
+      "type": "vignette",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "type": "radial",
+        "strength": 0.90,
+        "color": "#000000"
+      }
+    }
+  ]
+}

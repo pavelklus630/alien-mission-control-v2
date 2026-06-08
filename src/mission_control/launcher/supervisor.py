@@ -79,8 +79,9 @@ def make_services(settings: Settings, lan_ip: str) -> list[ServiceDescriptor]:
             icon="wave",
             port=settings.port_vibe,
             url_labels=[
-                ("GM CONTROL", f"http://{lan_ip}:{settings.port_vibe}/control"),
-                ("OBS DISPLAY", f"http://localhost:{settings.port_vibe}/display"),
+                ("GM CONTROL",   f"http://{lan_ip}:{settings.port_vibe}/control"),
+                ("OBS DISPLAY",  f"http://localhost:{settings.port_vibe}/display"),
+                ("SCENE EDITOR", f"http://{lan_ip}:{settings.port_vibe}/editor"),
             ],
             _factory=create_vibe,
         ),

@@ -1,0 +1,107 @@
+{
+  "id": "crimson_vortex",
+  "name": "CRIMSON VORTEX",
+  "class": "ANOMALY",
+  "sym": "◉",
+  "desc": "A swirling wound in space. Two ships. No survivors.",
+  "code": "AV-CV-01",
+  "life": "NOMINAL",
+  "comms": "DEGRADED",
+  "crew": "UNKNOWN",
+  "ship": "NOMINAL",
+  "msg": "WARNING: ANOMALOUS ENERGY SIGNATURE DETECTED",
+  "layers": [
+    {
+      "id": "cv_bg",
+      "name": "Deep black space",
+      "type": "solid_bg",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": { "color": "#000000" }
+    },
+    {
+      "id": "cv_vortex",
+      "name": "Vortex swirl",
+      "type": "vortex",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "cx": 0.50,
+        "cy": 0.46,
+        "tilt": -0.40,
+        "hue_start": 0,
+        "hue_end": 58,
+        "layer_count": 6,
+        "base_alpha": 0.55,
+        "rotation_speed": 0.000095
+      },
+      "motion": {
+        "pulse": "1 + 0.06 * sin(t * 0.00042)"
+      }
+    },
+    {
+      "id": "cv_ship1",
+      "name": "Cross-shape ship (upper-left)",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "drawCrossShip() — cross silhouette from fillRect calls. No sprite asset.",
+        "cx": 0.30,
+        "cy": 0.22,
+        "size_factor": 0.052
+      },
+      "motion": {
+        "y_offset": "sin(t * 0.00022) * 3.5",
+        "rotation": "sin(t * 0.00015) * 0.028"
+      }
+    },
+    {
+      "id": "cv_ship2",
+      "name": "Small elongated ship near core",
+      "type": "custom",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "source-over",
+      "params": {
+        "note": "Tiny ellipse (19x6) ship with engine glow. No sprite asset.",
+        "cx": 0.54,
+        "cy": 0.57,
+        "rx": 19,
+        "ry": 6,
+        "rotation": 0.18
+      },
+      "motion": {
+        "x_offset": "sin(t * 0.00028 + 1) * 5",
+        "y_offset": "cos(t * 0.00020 + 0.5) * 3"
+      }
+    },
+    {
+      "id": "cv_embers",
+      "name": "Ember / spark particles",
+      "type": "particle_field",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "screen",
+      "params": {
+        "count": 380,
+        "hue_min": 5,
+        "hue_max": 42,
+        "size_min": 0.5,
+        "size_max": 3.0,
+        "speed": 0.35,
+        "spread": "full",
+        "alpha_min": 0.2,
+        "alpha_max": 0.85
+      }
+    }
+  ]
+}

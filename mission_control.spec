@@ -32,7 +32,7 @@ datas = [
 # Collect all package data (templates, static, shared_static) from the
 # installed package. This captures every file under src/mission_control/.
 from PyInstaller.utils.hooks import collect_data_files
-datas += collect_data_files("mission_control", includes=["**/*.html", "**/*.css", "**/*.js", "**/*.woff2", "**/*.png"])
+datas += collect_data_files("mission_control", includes=["**/*.html", "**/*.css", "**/*.js", "**/*.woff2", "**/*.png", "**/*.json"])
 
 # ── hidden imports ───────────────────────────────────────────────────────────
 # FastAPI/Starlette/uvicorn use dynamic imports that PyInstaller can't trace.
