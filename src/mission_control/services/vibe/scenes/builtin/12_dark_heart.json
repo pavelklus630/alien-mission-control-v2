@@ -29,6 +29,8 @@
     }
   },
   "objects": [
+    { "id": "sky", "type": "starscape",
+      "params": { "src": "/static/tex/helix.jpg", "brightness": 0.42, "tint": "#ffd2c0", "radius": 340, "spin": 0.0000025 } },
     { "id": "stars", "type": "starfield",
       "params": { "count": 2600, "radius": 155, "size": 1.0, "color": "#d6def2", "warm": "#ffd2a0", "cool": "#9fb6ff" } },
     { "id": "gas", "type": "nebula_volume",

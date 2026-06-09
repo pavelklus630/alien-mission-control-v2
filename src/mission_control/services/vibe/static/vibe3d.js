@@ -461,6 +461,26 @@ const BUILDERS = {
     return { object3d: obj, update: (t) => { obj.rotation.x = t * drift; obj.rotation.z = t * drift * 0.6; } };
   },
 
+  // Real photographic backdrop (e.g. NASA public-domain nebulae) on a far
+  // inside-out sphere. fog:false so it isn't swallowed by scene fog.
+  starscape(p) {
+    const group = new THREE.Group();
+    const R = p.radius ?? 320;
+    const mat = new THREE.MeshBasicMaterial({
+      side: THREE.BackSide, depthWrite: false, fog: false,
+      color: new THREE.Color(p.tint || '#ffffff').multiplyScalar(p.brightness ?? 0.5),
+    });
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(R, 48, 32), mat);
+    group.add(mesh);
+    if (p.src) {
+      new THREE.TextureLoader().load(p.src, (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace; mat.map = tex; mat.needsUpdate = true;
+      });
+    }
+    const spin = p.spin ?? 0.000003;
+    return { object3d: group, update: (t) => { group.rotation.y = t * spin; } };
+  },
+
   light(p) {
     const kind = p.kind || 'point';
     let l;

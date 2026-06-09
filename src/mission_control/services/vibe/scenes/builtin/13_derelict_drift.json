@@ -28,6 +28,8 @@
     }
   },
   "objects": [
+    { "id": "sky", "type": "starscape",
+      "params": { "src": "/static/tex/n44c.jpg", "brightness": 0.3, "tint": "#9fb4d0", "radius": 360, "spin": 0.000002 } },
     { "id": "stars", "type": "starfield",
       "params": { "count": 2200, "radius": 135, "size": 0.9, "color": "#bcc8e0", "warm": "#e0c4a0", "cool": "#9fc8ff" } },
     { "id": "haze", "type": "nebula_volume",

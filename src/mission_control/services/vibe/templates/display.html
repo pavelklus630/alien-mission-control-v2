@@ -566,7 +566,7 @@ async function load3DScene(scene) {
   if (!engine3d && !engineLoading) {
     engineLoading = true;
     try {
-      const mod = await import('/static/vibe3d.js');
+      const mod = await import('/static/vibe3d.js?v=' + Date.now());  // bust module cache
       engine3d = new mod.Vibe3DEngine(canvas3);
       engine3d.resize(W, H);
     } catch(_) { engineLoading = false; return; }

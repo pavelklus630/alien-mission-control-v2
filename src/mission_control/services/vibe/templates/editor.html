@@ -423,7 +423,7 @@ async function ensure3DEngine() {
   if (engine3d || engine3dLoading) return engine3d;
   engine3dLoading = true;
   try {
-    const mod = await import('/static/vibe3d.js');
+    const mod = await import('/static/vibe3d.js?v=' + Date.now());  // bust module cache
     engine3d = new mod.Vibe3DEngine(canvas3d);
     engine3d.resize(W, H);
   } catch (e) { console.error('3D engine failed to load', e); }
@@ -456,11 +456,20 @@ function scheduleReload3D() { clearTimeout(_reloadTimer); _reloadTimer = setTime
 
 let selectedObjIdx = -1;   // selected 3D object (separate from 2D selectedIdx)
 
-const OBJECT_TYPES_3D = ['starfield','nebula_volume','dark_core','accretion_disk','embers',
+const OBJECT_TYPES_3D = ['starscape','starfield','nebula_volume','dark_core','accretion_disk','embers',
                          'planet','derelict_hull','debris_field','dust_motes','light','grid'];
+
+const STARSCAPE_IMAGES = ['/static/tex/helix.jpg','/static/tex/trifid.jpg','/static/tex/n44c.jpg'];
 
 // Editable params per 3D object type. t: range|color|select|colors.
 const OBJECT_SCHEMA = {
+  starscape: [
+    {k:'src',l:'Image',t:'select',opts:STARSCAPE_IMAGES},
+    {k:'brightness',l:'Brightness',t:'range',min:0,max:1.5,step:0.05},
+    {k:'tint',l:'Tint',t:'color'},
+    {k:'spin',l:'Spin',t:'range',min:0,max:0.00002,step:0.0000005},
+    {k:'radius',l:'Radius',t:'range',min:100,max:600,step:10},
+  ],
   starfield: [
     {k:'count',l:'Count',t:'range',min:100,max:6000,step:50},
     {k:'radius',l:'Radius',t:'range',min:20,max:300,step:1},
