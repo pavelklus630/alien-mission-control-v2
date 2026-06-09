@@ -442,6 +442,97 @@ function unload3DPreview() {
 function syncEnv() { if (engine3d && scene3dActive) { engine3d.applyEnvironment(scene.environment || {}); engine3d.applyCamera(scene.camera || {}); } }
 // Rebuild the 3D scene in the engine (after structural object edits).
 function reload3D() { if (engine3d && scene3dActive) { try { engine3d.load(scene); } catch (e) { console.error(e); } } }
+// Coalesce rapid param edits (slider drags) into one rebuild.
+let _reloadTimer = null;
+function scheduleReload3D() { clearTimeout(_reloadTimer); _reloadTimer = setTimeout(reload3D, 130); }
+
+let selectedObjIdx = -1;   // selected 3D object (separate from 2D selectedIdx)
+
+const OBJECT_TYPES_3D = ['starfield','nebula_volume','dark_core','accretion_disk','embers',
+                         'planet','derelict_hull','debris_field','dust_motes','light','grid'];
+
+// Editable params per 3D object type. t: range|color|select|colors.
+const OBJECT_SCHEMA = {
+  starfield: [
+    {k:'count',l:'Count',t:'range',min:100,max:6000,step:50},
+    {k:'radius',l:'Radius',t:'range',min:20,max:300,step:1},
+    {k:'size',l:'Size',t:'range',min:0.2,max:3,step:0.05},
+    {k:'color',l:'Colour',t:'color'},{k:'warm',l:'Warm tint',t:'color'},{k:'cool',l:'Cool tint',t:'color'},
+    {k:'spin',l:'Spin',t:'range',min:0,max:0.00002,step:0.0000005},
+  ],
+  nebula_volume: [
+    {k:'count',l:'Puffs',t:'range',min:1,max:90,step:1},
+    {k:'spread',l:'Spread',t:'range',min:5,max:100,step:1},
+    {k:'flat',l:'Flatten',t:'range',min:0,max:1.5,step:0.05},
+    {k:'alpha_min',l:'Alpha min',t:'range',min:0,max:0.5,step:0.005},
+    {k:'alpha_max',l:'Alpha max',t:'range',min:0,max:0.6,step:0.005},
+    {k:'size_min',l:'Size min',t:'range',min:2,max:80,step:1},
+    {k:'size_max',l:'Size max',t:'range',min:4,max:120,step:1},
+    {k:'drift',l:'Drift',t:'range',min:0,max:0.0001,step:0.000002},
+    {k:'colors',l:'Colours',t:'colors'},
+  ],
+  dark_core: [
+    {k:'radius',l:'Core radius',t:'range',min:0.2,max:6,step:0.1},
+    {k:'glow',l:'Halo glow',t:'color'},{k:'photon',l:'Photon ring',t:'color'},
+    {k:'disk_hot',l:'Disk inner',t:'color'},{k:'disk_mid',l:'Disk mid',t:'color'},{k:'disk_out',l:'Disk outer',t:'color'},
+    {k:'disk_count',l:'Disk particles',t:'range',min:200,max:14000,step:100},
+    {k:'disk_radius',l:'Disk radius',t:'range',min:2,max:10,step:0.1},
+    {k:'disk_dot',l:'Particle size',t:'range',min:0.05,max:0.5,step:0.01},
+    {k:'tilt',l:'Tilt',t:'range',min:0,max:1.6,step:0.02},
+    {k:'disk_spin',l:'Spin',t:'range',min:0,max:0.001,step:0.00002},
+    {k:'disk_infall',l:'Infall',t:'range',min:0,max:0.0001,step:0.000001},
+    {k:'disk_brightness',l:'Brightness',t:'range',min:0.2,max:2,step:0.05},
+  ],
+  embers: [
+    {k:'count',l:'Count',t:'range',min:10,max:2000,step:10},
+    {k:'spread',l:'Spread',t:'range',min:2,max:60,step:1},
+    {k:'flat',l:'Flatten',t:'range',min:0,max:2,step:0.05},
+    {k:'color',l:'Colour',t:'color'},{k:'color2',l:'Colour 2',t:'color'},
+    {k:'size',l:'Size',t:'range',min:0.1,max:2,step:0.05},
+    {k:'spin',l:'Spin',t:'range',min:0,max:0.0003,step:0.000005},
+    {k:'bob',l:'Bob',t:'range',min:0,max:5,step:0.1},
+  ],
+  planet: [
+    {k:'radius',l:'Radius',t:'range',min:1,max:15,step:0.5},
+    {k:'color',l:'Surface',t:'color'},{k:'night',l:'Night side',t:'color'},{k:'atmosphere',l:'Atmosphere',t:'color'},
+    {k:'spin',l:'Spin',t:'range',min:0,max:0.0001,step:0.000002},
+  ],
+  derelict_hull: [
+    {k:'scale',l:'Scale',t:'range',min:0.2,max:4,step:0.1},
+    {k:'color',l:'Hull',t:'color'},{k:'lights',l:'Windows',t:'color'},{k:'beacon',l:'Beacon',t:'color'},
+    {k:'tumble',l:'Tumble X',t:'range',min:0,max:0.0002,step:0.000002},
+    {k:'tumble_y',l:'Tumble Y',t:'range',min:0,max:0.0002,step:0.000002},
+  ],
+  debris_field: [
+    {k:'count',l:'Count',t:'range',min:5,max:220,step:5},
+    {k:'spread',l:'Spread',t:'range',min:2,max:50,step:1},
+    {k:'color',l:'Colour',t:'color'},{k:'emissive',l:'Emissive',t:'color'},
+    {k:'size_min',l:'Size min',t:'range',min:0.05,max:2,step:0.05},
+    {k:'size_max',l:'Size max',t:'range',min:0.1,max:3,step:0.05},
+    {k:'drift',l:'Drift',t:'range',min:0,max:0.0001,step:0.000002},
+  ],
+  dust_motes: [
+    {k:'count',l:'Count',t:'range',min:10,max:2500,step:10},
+    {k:'spread',l:'Spread',t:'range',min:2,max:80,step:1},
+    {k:'color',l:'Colour',t:'color'},
+    {k:'opacity',l:'Opacity',t:'range',min:0,max:1,step:0.02},
+    {k:'size',l:'Size',t:'range',min:0.05,max:1,step:0.01},
+    {k:'drift',l:'Drift',t:'range',min:0,max:0.0001,step:0.000002},
+  ],
+  light: [
+    {k:'kind',l:'Kind',t:'select',opts:['point','directional','ambient']},
+    {k:'color',l:'Colour',t:'color'},
+    {k:'intensity',l:'Intensity',t:'range',min:0,max:200,step:1},
+  ],
+  grid: [
+    {k:'size',l:'Size',t:'range',min:10,max:200,step:1},
+    {k:'divisions',l:'Divisions',t:'range',min:4,max:120,step:1},
+    {k:'color',l:'Colour',t:'color'},
+    {k:'opacity',l:'Opacity',t:'range',min:0,max:1,step:0.02},
+    {k:'y',l:'Height',t:'range',min:-30,max:30,step:0.5},
+  ],
+};
+OBJECT_SCHEMA.accretion_disk = OBJECT_SCHEMA.dark_core;
 
 // ===================================================================
 // UTILITY
@@ -1108,6 +1199,7 @@ async function loadScene(sceneId) {
   motionFnCache.clear();
   scene = await apiGet(`/api/editor/scenes/${sceneId}`);
   selectedIdx = -1;
+  selectedObjIdx = -1;
   if (scene.renderer === '3d') await load3DPreview();
   else unload3DPreview();
   buildLayerList();
@@ -1186,17 +1278,17 @@ function selectLayer(idx) {
 // placeholder in the preview. Full 3D authoring (param panels, in-editor
 // WebGL preview, gizmos) is the planned next phase.
 function build3DObjectList(list) {
-  const note = document.createElement('div');
-  note.className = 'layer-item';
-  note.style.opacity = '0.7';
-  note.style.cursor = 'default';
-  note.innerHTML = '<span class="layer-type-badge">3D</span>' +
-    '<span class="layer-name">WebGL scene — view on display output</span>';
-  list.appendChild(note);
-  for (const obj of (scene.objects || [])) {
+  // Header row doubles as "deselect" -> back to the scene/environment panel.
+  const head = document.createElement('div');
+  head.className = 'layer-item' + (selectedObjIdx < 0 ? ' selected' : '');
+  head.innerHTML = '<span class="layer-type-badge">3D</span>' +
+    '<span class="layer-name">◳ SCENE / ENVIRONMENT</span>';
+  head.addEventListener('click', () => { selectedObjIdx = -1; buildLayerList(); buildPropsPanel(); });
+  list.appendChild(head);
+
+  (scene.objects || []).forEach((obj, i) => {
     const div = document.createElement('div');
-    div.className = 'layer-item';
-    div.style.cursor = 'default';
+    div.className = 'layer-item' + (i === selectedObjIdx ? ' selected' : '');
     const badge = document.createElement('span');
     badge.className = 'layer-type-badge';
     badge.textContent = obj.type;
@@ -1205,8 +1297,81 @@ function build3DObjectList(list) {
     name.textContent = obj.id || obj.type;
     div.appendChild(badge);
     div.appendChild(name);
+    div.addEventListener('click', () => selectObject(i));
     list.appendChild(div);
+  });
+}
+
+function selectObject(i) { selectedObjIdx = i; buildLayerList(); buildPropsPanel(); }
+
+function addObject() {
+  scene.objects = scene.objects || [];
+  const type = prompt('Object type:\n' + OBJECT_TYPES_3D.join(', '), 'dark_core');
+  if (!type || !OBJECT_TYPES_3D.includes(type.trim())) return;
+  const t = type.trim();
+  scene.objects.push({ id: t + '_' + Math.random().toString(36).slice(2, 6), type: t, params: {} });
+  selectedObjIdx = scene.objects.length - 1;
+  reload3D(); buildLayerList(); buildPropsPanel(); markDirty();
+}
+
+function deleteObject() {
+  if (!scene.objects || selectedObjIdx < 0) return;
+  const obj = scene.objects[selectedObjIdx];
+  if (!confirm(`Delete object "${obj.id || obj.type}"?`)) return;
+  scene.objects.splice(selectedObjIdx, 1);
+  selectedObjIdx = Math.min(selectedObjIdx, scene.objects.length - 1);
+  reload3D(); buildLayerList(); buildPropsPanel(); markDirty();
+}
+
+function moveObject(dir) {
+  if (!scene.objects || selectedObjIdx < 0) return;
+  const i = selectedObjIdx, j = i + dir;
+  if (j < 0 || j >= scene.objects.length) return;
+  [scene.objects[i], scene.objects[j]] = [scene.objects[j], scene.objects[i]];
+  selectedObjIdx = j;
+  reload3D(); buildLayerList(); markDirty();
+}
+
+// Property panel for one 3D object.
+function buildObjectPanel(content, obj, idx) {
+  const baseS = makeSection('OBJECT');
+  baseS.appendChild(makeTextRow('ID', obj.id || '', v => { obj.id = v; buildLayerList(); markDirty(); }));
+  baseS.appendChild(makeSelectRow('Type', obj.type, OBJECT_TYPES_3D, v => {
+    obj.type = v; obj.params = obj.params || {}; reload3D(); selectObject(idx); markDirty();
+  }));
+  content.appendChild(baseS);
+
+  obj.params = obj.params || {};
+  const p = obj.params;
+  const pS = makeSection('PARAMS');
+  for (const f of (OBJECT_SCHEMA[obj.type] || [])) {
+    if (f.t === 'range') {
+      pS.appendChild(makeRangeRow(f.l, p[f.k], f.min, f.max, f.step, v => { p[f.k] = v; scheduleReload3D(); markDirty(); }));
+    } else if (f.t === 'color') {
+      pS.appendChild(makeColorRow(f.l, p[f.k] || '#ffffff', v => { p[f.k] = v; scheduleReload3D(); markDirty(); }));
+    } else if (f.t === 'select') {
+      pS.appendChild(makeSelectRow(f.l, p[f.k] || f.opts[0], f.opts, v => { p[f.k] = v; scheduleReload3D(); markDirty(); }));
+    } else if (f.t === 'colors') {
+      p.colors = p.colors || ['#5a1024', '#1a0a30'];
+      for (let ci = 0; ci < 3; ci++)
+        pS.appendChild(makeColorRow('Colour ' + (ci + 1), p.colors[ci] || '#000000',
+          v => { p.colors[ci] = v; scheduleReload3D(); markDirty(); }));
+    }
   }
+  content.appendChild(pS);
+
+  p.position = p.position || [0, 0, 0];
+  const posS = makeSection('POSITION');
+  ['X', 'Y', 'Z'].forEach((ax, i) => posS.appendChild(
+    makeRangeRow(ax, p.position[i] ?? 0, -40, 40, 0.5, v => { p.position[i] = v; scheduleReload3D(); markDirty(); })));
+  content.appendChild(posS);
+
+  obj.motion = obj.motion || {};
+  const mS = makeSection('MOTION (expr of t)');
+  for (const axis of ['px', 'py', 'pz', 'rx', 'ry', 'rz'])
+    mS.appendChild(makeTextRow(axis, obj.motion[axis] || '',
+      v => { if (v) obj.motion[axis] = v; else delete obj.motion[axis]; scheduleReload3D(); markDirty(); }));
+  content.appendChild(mS);
 }
 
 // Environment / camera controls for a 3D scene — live-tuned via the engine.
@@ -1401,7 +1566,13 @@ const LAYER_TYPES = [
 function buildPropsPanel() {
   const content = document.getElementById('props-content');
   if (!scene) { content.innerHTML = '<span style="color:var(--dim)">No scene.</span>'; return; }
-  if (!scene.layers) { content.innerHTML = ''; buildEnvPanel(content); return; }  // 3D scene
+  if (!scene.layers) {  // 3D scene: object panel if one is selected, else environment
+    content.innerHTML = '';
+    if (selectedObjIdx >= 0 && scene.objects && selectedObjIdx < scene.objects.length)
+      buildObjectPanel(content, scene.objects[selectedObjIdx], selectedObjIdx);
+    else buildEnvPanel(content);
+    return;
+  }
   if (selectedIdx < 0 || selectedIdx >= scene.layers.length) {
     content.innerHTML = '<span style="color:var(--dim)">Select a layer.</span>';
     return;
@@ -1745,7 +1916,7 @@ function makeNewLayer(type) {
 
 function addLayer() {
   if (!scene) return;
-  if (!scene.layers) { alert('Layers belong to 2D scenes. This is a 3D scene.'); return; }
+  if (!scene.layers) { addObject(); return; }
   const types = LAYER_TYPES;
   const sel = prompt('Layer type:\n' + types.join(', '), 'solid_bg');
   if (!sel || !types.includes(sel.trim())) return;
@@ -1758,7 +1929,9 @@ function addLayer() {
 }
 
 function deleteLayer() {
-  if (!scene || selectedIdx < 0) return;
+  if (!scene) return;
+  if (!scene.layers) { deleteObject(); return; }
+  if (selectedIdx < 0) return;
   if (!confirm(`Delete layer "${scene.layers[selectedIdx].name}"?`)) return;
   particleState.delete(scene.layers[selectedIdx].id);
   scene.layers.splice(selectedIdx, 1);
@@ -1769,7 +1942,9 @@ function deleteLayer() {
 }
 
 function moveLayer(dir) {
-  if (!scene || selectedIdx < 0) return;
+  if (!scene) return;
+  if (!scene.layers) { moveObject(dir); return; }
+  if (selectedIdx < 0) return;
   const idx = selectedIdx;
   const newIdx = idx + dir;
   if (newIdx < 0 || newIdx >= scene.layers.length) return;
