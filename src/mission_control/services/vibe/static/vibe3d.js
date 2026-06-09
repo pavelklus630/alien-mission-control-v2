@@ -93,6 +93,59 @@ function starTexture() {
 
 function rand(a, b) { return a + Math.random() * (b - a); }
 
+// ── Procedural FBM noise → cloud & planet "assets" (offline, license-free) ──
+function _hash2(x, y) { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); }
+function _vnoise(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  const a = _hash2(xi, yi), b = _hash2(xi + 1, yi), c = _hash2(xi, yi + 1), d = _hash2(xi + 1, yi + 1);
+  return a * (1 - u) * (1 - v) + b * u * (1 - v) + c * (1 - u) * v + d * u * v;
+}
+function _fbm(x, y, oct) {
+  let s = 0, amp = 0.5, f = 1;
+  for (let o = 0; o < (oct || 5); o++) { s += amp * _vnoise(x * f, y * f); f *= 2; amp *= 0.5; }
+  return s;
+}
+
+// Wispy cloud puff with internal structure + radial falloff. A few seeded
+// variants give nebulae variety instead of repeated identical blobs.
+const _cloudTex = {};
+function cloudTexture(seed) {
+  if (_cloudTex[seed]) return _cloudTex[seed];
+  const s = 128, cv = document.createElement('canvas'); cv.width = cv.height = s;
+  const g = cv.getContext('2d'), img = g.createImageData(s, s), off = seed * 13.7;
+  for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
+    const n = _fbm(x / s * 5 + off, y / s * 5 + off, 5);
+    const dx = x / s - 0.5, dy = y / s - 0.5, fall = Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy) * 2);
+    let a = Math.max(0, n - 0.42) * 2.2 * fall * fall;
+    const i = (y * s + x) * 4;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+    img.data[i + 3] = Math.min(1, a) * 255;
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+  _cloudTex[seed] = t; return t;
+}
+
+// Equirectangular planet surface: fbm mottling + faint latitude banding.
+function planetTexture(colorA, colorB) {
+  const w = 256, h = 128, cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const g = cv.getContext('2d'), img = g.createImageData(w, h);
+  const ca = new THREE.Color(colorA), cb = new THREE.Color(colorB);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    let n = _fbm(x / w * 8, y / h * 8, 5) + Math.sin(y / h * Math.PI * 6) * 0.12;
+    n = Math.max(0, Math.min(1, n));
+    const i = (y * w + x) * 4;
+    img.data[i] = (ca.r + (cb.r - ca.r) * n) * 255;
+    img.data[i + 1] = (ca.g + (cb.g - ca.g) * n) * 255;
+    img.data[i + 2] = (ca.b + (cb.b - ca.b) * n) * 255;
+    img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping;
+  return t;
+}
+
 // GLSL for the accretion disk: each particle orbits at a Keplerian rate
 // (inner faster than outer) and drifts slowly inward, so it reads as matter
 // spiralling into the hole rather than a rigid disc spinning.
@@ -180,15 +233,15 @@ const BUILDERS = {
     const spread = p.spread ?? 36;
     const flat = p.flat ?? 0.45; // squash vertically so it reads as a disc from above
     const group = new THREE.Group();
-    const tex = glowTexture();
     const colors = (p.colors || [p.color || '#5a1024', '#1a0a30']).map((c) => new THREE.Color(c));
     const sprites = [];
     for (let i = 0; i < count; i++) {
       const tint = colors[i % colors.length].clone().lerp(colors[(i + 1) % colors.length], Math.random());
       const mat = new THREE.SpriteMaterial({
-        map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+        map: cloudTexture(i % 3), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
         opacity: rand(p.alpha_min ?? 0.05, p.alpha_max ?? 0.16), color: tint,
       });
+      mat.rotation = Math.random() * TAU;  // vary the cloud orientation
       const s = new THREE.Sprite(mat);
       s.position.set(rand(-spread, spread), rand(-spread, spread) * flat, rand(-spread, spread));
       const sc = rand(p.size_min ?? 16, p.size_max ?? 46);
@@ -314,7 +367,8 @@ const BUILDERS = {
     const R = p.radius ?? 6;
     const body = new THREE.Mesh(new THREE.SphereGeometry(R, 64, 64),
       new THREE.MeshStandardMaterial({
-        color: new THREE.Color(p.color || '#241b16'), roughness: 0.95, metalness: 0.05,
+        map: planetTexture(p.color || '#241b16', p.color2 || '#4a3526'),
+        roughness: 0.95, metalness: 0.05,
         emissive: new THREE.Color(p.night || '#0a0406'), emissiveIntensity: 0.5,
       }));
     group.add(body);

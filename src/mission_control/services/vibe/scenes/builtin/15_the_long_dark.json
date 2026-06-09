@@ -29,13 +29,16 @@
   },
   "objects": [
     { "id": "stars", "type": "starfield",
-      "params": { "count": 1100, "radius": 160, "size": 0.7, "color": "#7a8098", "warm": "#c0a080", "cool": "#8a9ad0" } },
+      "params": { "count": 1400, "radius": 160, "size": 0.75, "color": "#8a90a8", "warm": "#d8b890", "cool": "#8a9ad8" } },
+    { "id": "reflection", "type": "nebula_volume",
+      "params": { "count": 16, "spread": 56, "flat": 0.7, "colors": ["#10203a", "#0a1428", "#06101e"],
+                  "alpha_min": 0.025, "alpha_max": 0.08, "size_min": 22, "size_max": 54, "position": [8, 4, -18] } },
     { "id": "sun", "type": "light",
-      "params": { "kind": "directional", "color": "#ffcea0", "intensity": 2.6, "position": [38, 12, 18] } },
+      "params": { "kind": "directional", "color": "#ffcea0", "intensity": 2.8, "position": [38, 12, 18] } },
     { "id": "world", "type": "planet",
-      "params": { "position": [-7, -3.5, -10], "radius": 8.0, "color": "#241b16", "night": "#0a0406",
-                  "atmosphere": "#ff5a2a", "spin": 0.000012 } },
+      "params": { "position": [-7, -3.5, -10], "radius": 8.0, "color": "#2a1d14", "color2": "#4a3322",
+                  "night": "#0a0406", "atmosphere": "#ff6a2a", "spin": 0.000012 } },
     { "id": "motes", "type": "dust_motes",
-      "params": { "count": 260, "spread": 48, "color": "#2a2a32", "opacity": 0.35, "size": 0.11, "drift": 0.00001 } }
+      "params": { "count": 260, "spread": 48, "color": "#2a2c36", "opacity": 0.32, "size": 0.11, "drift": 0.00001 } }
   ]
 }
