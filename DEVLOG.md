@@ -243,3 +243,74 @@ Running record of every meaningful decision and change. Append-only; newest entr
 **Scene-shadow gotcha documented:** `SceneStore.get()` reads the custom data-dir copy before the builtin source. The editor's OBS auto-save had written shadow copies of crimson_vortex / solar_approach / derelict / blood_orbit to `~/Library/Application Support/MissionControl/vibe/scenes/`, which silently overrode builtin edits. Stale shadows cleared. Previewing from the GM Control panel never writes shadows; the editor's OBS ▶ only shadows a scene with unsaved edits.
 
 **Tests:** all 54 pass.
+
+---
+
+### 2026-06-09 — Sound editor Phase 1: soundbank model (WIP, unreleased)
+
+First slice of the planned soundboard editor (mirrors the vibe scene store's builtin-vs-custom shadowing). No converter/editor SPA yet — that's Phases 2–3.
+
+- **`repository.py`** refactored: scanning logic extracted into a pure `scan_categories(root, category_order)` function; `SoundLibrary` class removed.
+- **`bank_store.py`** (new): `BankStore` — active-bank-aware library. Builtin bank (`heart_of_darkness`) synthesised by scanning the shipped sounds dir; custom banks live in `data_dir/soundboard/banks/<id>/bank.json`; a custom bank with the builtin's id shadows it. Active pointer persisted to `data_dir/soundboard/active_bank.json`. Exposes `categories()`/`refresh()` (drop-in for the old library) plus `list_banks`/`get_bank`/`set_active`/`active_root`/`create_bank`/`delete_bank`.
+- **`app.py`**: wires `BankStore` as `app.state.library`.
+- **`routes.py`**: `/audio/<path>` now resolves against the **active bank's root** (not a fixed sounds dir); `/sounds.json` + `/api/sounds` reflect the active bank; `/state` snapshot gains a `_bank` field (poll-based bank-switch signal — soundboard is poll-based, not SSE). New: `GET /api/banks`, `GET /api/banks/{id}`, `POST /api/banks/{id}/activate`.
+- **`control.html`**: SOUNDBANK selector in the sidebar; switching activates the bank and reloads the board; the 1 Hz `/state` poll detects external bank switches (via `_bank`) and reloads.
+- **Tests:** 61 pass (was 54; +7 bank tests — list/manifest/activate/custom-switch/shadow/create-delete; `test_state` updated for `_bank`). `/sounds.json` contract preserved when the builtin bank is active.
+
+**Next (Phase 2):** vendor + bundle + codesign ffmpeg; `audio_ingest` converter (Opus + −16 LUFS, async jobs); upload endpoint that ingests into a bank.
+
+---
+
+### 2026-06-09 — Sound editor Phase 2: converter + ingest (WIP, unreleased)
+
+The upload/conversion pipeline. Every uploaded sound is transcoded to Opus/.ogg and loudness-normalised to −16 LUFS so a bank plays at a consistent level.
+
+- **`paths.py`**: `ffmpeg_path()`/`ffprobe_path()` resolve a vendored/bundled binary first (`vendor/ffmpeg/` in dev, `_MEIPASS/ffmpeg/` frozen), then fall back to system PATH. A Finder-launched .app has no Homebrew on PATH, so the bundled copy is what makes the shipped converter work.
+- **`audio_ingest.py`** (new): `convert_and_normalize(data, filename, kind, settings)` → `(ogg_bytes, lufs, peak)` via `ffmpeg -af loudnorm=I=-16:TP=-1.5:LRA=11 -c:a libopus -b:a {96|128}k`; `analyze_loudness()` parses loudnorm JSON for measured LUFS/peak. `ConverterUnavailable` / `ConversionError`; `converter_available()` for graceful degradation.
+- **`bank_store.py`**: `ensure_writable()` forks the builtin copy-on-write (copies its audio + synthesises a manifest) so editing the shipped bank creates a complete custom shadow; `add_sound()` writes the .ogg + appends a manifest entry (name/category/kind/lufs/peak).
+- **`routes.py`**: `POST /api/banks` (create), `DELETE /api/banks/{id}`, `POST /api/banks/{id}/upload` (multipart `files`+`category`+`kind` → convert in a threadpool → ingest; returns `{added, errors}`; 503 if no converter). Fixed an UploadFile isinstance pitfall (fastapi vs starlette class identity) by duck-typing non-string form values.
+- **Build scaffolding**: `scripts/fetch_ffmpeg.sh` (best-effort vendor of arm64 static ffmpeg/ffprobe, non-fatal), `mission_control.spec` conditionally bundles them to `_MEIPASS/ffmpeg/`, `build.sh` fetches before PyInstaller and **codesigns** the nested binaries after (hardened-runtime requirement). `vendor/` gitignored.
+- **Tests:** 66 pass (+5: converter→Opus and upload→ingest gated on ffmpeg present; add_sound; builtin fork-on-edit; create-bank API). Real conversion verified: a test tone ingests at −15.95 LUFS.
+
+**Verification gap:** the bundled+codesigned ffmpeg path can't be confirmed without a real `build.sh` run that actually vendors an arm64 static binary — to validate at the next release. Dev works via Homebrew ffmpeg today.
+
+**Next (Phase 3):** the editor SPA — bank/category/sound CRUD, waveform + preview, per-sound metadata, drag-drop upload with progress, test-on-output; launcher SOUND EDITOR button.
+
+---
+
+### 2026-06-09 — Sound editor Phase 3: editor SPA (WIP, unreleased)
+
+The browser editor at `/editor` (port 8765), mirroring the vibe editor's green three-panel layout, tailored to audio.
+
+- **`templates/editor.html`** (new): top bar (bank selector, NEW / DELETE / ● GO LIVE, status); left category list with counts; centre sound list (per row: preview ▶, name, kind, measured-LUFS chip that flags >3 LUFS off target, delete) plus a drag-drop / file-input upload zone with category + kind selectors and progress; right properties panel (per-sound name/category/kind/volume/loop + SAVE + ▶ OUTPUT, and bank name/description + SAVE). Local preview streams from the bank-scoped audio endpoint so any bank can be auditioned without going live.
+- **`bank_store.py`**: `update_sound` (rename/recategorise/volume/loop/kind — category change re-tags only, since grouping follows the manifest, no file move), `remove_sound`, `update_bank` (name/description/category_order), `bank_file` (read-only resolve for preview, no fork).
+- **`routes.py`**: `GET /editor`; `POST /api/banks/{id}/meta`; `POST /api/banks/{id}/sounds` (patch); `DELETE /api/banks/{id}/sounds?path=`; `GET /api/banks/{id}/audio/{path}` (bank-scoped range stream for preview of any bank).
+- **Launcher**: soundboard card now has a third button, SOUND EDITOR (the editor page now exists).
+- **Tests:** 70 pass (+4: editor page renders; edit+delete sound incl. manifest-driven regrouping; bank meta; bank-scoped preview of a non-active bank).
+
+The sound editor is now functional end-to-end in dev (create bank → upload+convert → edit metadata → go live → switches the control board). **Phase 4 (advanced)** remains: bulk normalize + report, waveform trim/fade, tags/search, `.sndbank` import/export, hotkeys; plus the ffmpeg-bundle verification on a real build before shipping.
+
+---
+
+### 2026-06-09 — Sound editor Phase 4: portability + loudness tools (WIP, unreleased)
+
+Bank portability and the "keep everything at one level" tools.
+
+- **Export / import `.sndbank`**: `GET /api/banks/{id}/export` (zip of bank.json + audio), `POST /api/import` (zip → new custom bank with a fresh id; zip-slip-guarded via safe_join). `bank_store.import_bank()` + `write_sound_bytes()`.
+- **Loudness tools**: `POST /api/banks/{id}/analyze` measures every sound (read-only — no fork, works on the builtin) and returns a report flagging anything >2 LUFS off target; `POST /api/banks/{id}/normalize` re-encodes only the sounds that drift beyond a threshold back to −16 LUFS and reports what changed.
+- **Editor UI**: EXPORT / IMPORT buttons, 📊 ANALYZE (fills in measured-LUFS chips) and ⇄ NORMALIZE in the centre header, plus a live search filter over the sound list.
+- **Tests:** 73 pass (+3: export→import round-trip serves identical audio; analyze is read-only / doesn't fork the builtin; normalize of an already-normalised tone is a clean no-op). E2E verified: upload→−15.95 LUFS, analyze report, 9.5 KB .sndbank export→import.
+
+**Sound editor functional across Phases 1–4** (banks, convert-on-upload, edit, go-live, portability, loudness). **Deferred to a later 4b:** waveform trim/fade, per-sound tags, hotkey/Stream-Deck mapping, and player-side music/SFX ducking. **Pre-ship task:** verify the bundled+codesigned ffmpeg path with a real build.sh run (dev uses Homebrew ffmpeg).
+
+---
+
+### 2026-06-09 — v2.3.0 RELEASE — Soundbank editor
+
+Version `2.2.0` → `2.3.0` (`pyproject.toml`, `CURRENT_VERSION`, spec `CFBundleShortVersionString`/`Version`). Ships the soundbank editor (Phases 1–4).
+
+- **Editor ALL-filter fix:** `buildCats()` treated the ALL selection (`selCat=null`) as "unset" and snapped back to the first category, so ALL never showed Music Cues / the full list. Now `undefined` = unset (default to first category on load), `null` = explicit ALL.
+- **ffmpeg bundle VERIFIED:** `scripts/fetch_ffmpeg.sh` vendored arm64 static ffmpeg/ffprobe 7.1.1; the build bundled them to `Contents/Frameworks/ffmpeg/` and codesigned them (`valid on disk` / `satisfies its Designated Requirement`). `_MEIPASS == Contents/Frameworks` confirmed, so `paths.vendor_dir()` resolves them in the frozen app — the converter works in the shipped `.app`, not just dev.
+- **73 tests pass.** Build + codesign clean.
+
+Deferred to a later 4b: waveform trim/fade, per-sound tags, hotkey/Stream-Deck mapping, player-side music/SFX ducking.

@@ -19,6 +19,9 @@ build/
 dist/
 MissionControl-*.zip
 
+# --- Vendored binaries (ffmpeg/ffprobe) — fetched at build time, not committed ---
+vendor/
+
 # --- Test / tooling caches ---
 .pytest_cache/
 .mypy_cache/

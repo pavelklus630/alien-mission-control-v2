@@ -24,10 +24,30 @@ echo "[build] Running test suite..."
 echo "[build] Tests passed."
 echo ""
 
-# ── 3. PyInstaller ───────────────────────────────────────────────────────────
+# ── 3. Vendor ffmpeg/ffprobe (best-effort; converter stays off if unavailable) ─
+echo "[build] Vendoring ffmpeg/ffprobe..."
+bash "$ROOT/scripts/fetch_ffmpeg.sh"
+echo ""
+
+# ── 4. PyInstaller ───────────────────────────────────────────────────────────
 echo "[build] Running PyInstaller..."
 cd "$ROOT"
 "$VENV/bin/python" -m PyInstaller mission_control.spec --noconfirm
+
+# ── 5. Codesign bundled binaries ─────────────────────────────────────────────
+# Under the hardened runtime a Finder-launched app cannot spawn unsigned nested
+# binaries. Ad-hoc sign ffmpeg/ffprobe (and re-sign the app) for local use.
+# Set CODESIGN_ID to a Developer ID to notarize for distribution.
+APP="$ROOT/dist/Mission Control.app"
+SIGN_ID="${CODESIGN_ID:--}"
+if [ -d "$APP" ]; then
+    while IFS= read -r bin; do
+        echo "[build] codesign $bin"
+        codesign --force --timestamp=none -s "$SIGN_ID" "$bin" 2>/dev/null || true
+    done < <(find "$APP/Contents" -type f \( -name ffmpeg -o -name ffprobe \))
+    # Re-sign the bundle so the new nested signatures are sealed in.
+    codesign --force --deep -s "$SIGN_ID" "$APP" 2>/dev/null || true
+fi
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"

@@ -9,7 +9,7 @@ from fastapi import FastAPI
 
 from ...config import Settings, get_settings
 from ...core.app_factory import create_service_app
-from .repository import SoundLibrary
+from .bank_store import BankStore
 from .routes import build_router
 from .state import PlaybackState
 
@@ -17,7 +17,7 @@ from .state import PlaybackState
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     app = create_service_app("Soundboard")
-    library = SoundLibrary(settings.resolved_sounds_dir)
+    library = BankStore(settings)
     state = PlaybackState()
     app.include_router(build_router(settings, library, state))
     # Expose for tests / launcher introspection.

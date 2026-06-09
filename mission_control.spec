@@ -34,6 +34,19 @@ datas = [
 from PyInstaller.utils.hooks import collect_data_files
 datas += collect_data_files("mission_control", includes=["**/*.html", "**/*.css", "**/*.js", "**/*.woff2", "**/*.png", "**/*.json"])
 
+# ── bundled binaries (ffmpeg/ffprobe for the audio converter) ────────────────
+# Vendored arm64 static binaries land at _MEIPASS/ffmpeg/, which paths.vendor_dir()
+# resolves to in a frozen app. Built by scripts/fetch_ffmpeg.sh; if absent the
+# converter degrades gracefully (upload returns 503) — the app still runs.
+binaries = []
+_vendor_ff = ROOT / "vendor" / "ffmpeg"
+for _tool in ("ffmpeg", "ffprobe"):
+    _p = _vendor_ff / _tool
+    if _p.exists():
+        binaries.append((str(_p), "ffmpeg"))
+    else:
+        print(f"[spec] WARNING: {_p} missing — shipped converter will be disabled.")
+
 # ── hidden imports ───────────────────────────────────────────────────────────
 # FastAPI/Starlette/uvicorn use dynamic imports that PyInstaller can't trace.
 hidden = [
@@ -65,7 +78,7 @@ hidden = [
 a = Analysis(
     [str(SRC / "__main__.py")],
     pathex=[str(ROOT / "src")],
-    binaries=[],
+    binaries=binaries,
     datas=datas,
     hiddenimports=hidden,
     hookspath=[],
@@ -98,8 +111,8 @@ app = BUNDLE(
     info_plist={
         "CFBundleName":              "Mission Control",
         "CFBundleDisplayName":       "Mission Control",
-        "CFBundleShortVersionString": "2.0.1",
-        "CFBundleVersion":           "2.0.1",
+        "CFBundleShortVersionString": "2.3.0",
+        "CFBundleVersion":           "2.3.0",
         "NSHighResolutionCapable":   True,
         "LSMinimumSystemVersion":    "11.0",
     },

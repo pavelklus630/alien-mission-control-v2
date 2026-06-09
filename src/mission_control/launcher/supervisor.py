@@ -59,6 +59,7 @@ def make_services(settings: Settings, lan_ip: str) -> list[ServiceDescriptor]:
             url_labels=[
                 ("GM CONTROL", f"http://{lan_ip}:{settings.port_soundboard}/control"),
                 ("OBS OUTPUT",  f"http://localhost:{settings.port_soundboard}/output"),
+                ("SOUND EDITOR", f"http://{lan_ip}:{settings.port_soundboard}/editor"),
             ],
             _factory=create_soundboard,
         ),

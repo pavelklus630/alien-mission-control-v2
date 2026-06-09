@@ -322,6 +322,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 <div id="sidebar">
 
   <div class="sbs">
+    <div class="sbt">SOUNDBANK</div>
+    <select id="bank-select" class="comm-select"></select>
+  </div>
+
+  <div class="sbs">
     <div class="sbt">MASTER CONTROL</div>
     <div class="sb-vol-label">
       <span>MASTER VOLUME</span>
@@ -423,6 +428,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 <script>
 const API = location.origin;
 let sounds = {}, order = [], serverState = {}, masterVol = 1, activeFilter = null;
+let currentBank = null;
 let loopVol = 1, sfxVol = 1;
 let recentlyPlayed = [];
 
@@ -611,6 +617,14 @@ async function cmd(body) {
 async function pollState() {
   try {
     serverState = await (await fetch(API + '/state')).json();
+    // Active bank can change from the editor or another control client —
+    // detect it on the existing poll and reload the board if so.
+    if (serverState._bank && serverState._bank !== currentBank) {
+      currentBank = serverState._bank;
+      const sel = document.getElementById('bank-select');
+      if (sel) sel.value = currentBank;
+      await reloadSounds();
+    }
     applyState();
     setOnline(true);
   } catch(e) {
@@ -1219,9 +1233,43 @@ document.getElementById('comm-dev').addEventListener('change', commUpdateUI);
 document.getElementById('comm-refresh').addEventListener('click', commLoadDevices);
 document.getElementById('comm-tx').addEventListener('click', commToggle);
 
+// ── Soundbanks ───────────────────────────────────────────────────────────────
+async function loadBanks() {
+  const banks = await (await fetch(API + '/api/banks')).json();
+  const sel = document.getElementById('bank-select');
+  sel.innerHTML = '';
+  for (const b of banks) {
+    const opt = document.createElement('option');
+    opt.value = b.id;
+    opt.textContent = (b.builtin ? '' : '★ ') + b.name;
+    if (b.active) { opt.selected = true; currentBank = b.id; }
+    sel.appendChild(opt);
+  }
+}
+
+async function switchBank(bankId) {
+  const r = await fetch(API + '/api/banks/' + encodeURIComponent(bankId) + '/activate',
+    { method: 'POST' });
+  if (!r.ok) return;
+  currentBank = bankId;
+  await reloadSounds();
+}
+
+async function reloadSounds() {
+  sounds = await (await fetch(API + '/sounds.json')).json();
+  order = Object.keys(sounds);
+  activeFilter = null;
+  buildChips();
+  buildSbCats();
+  buildBoard();
+}
+
+document.getElementById('bank-select').addEventListener('change', (e) => switchBank(e.target.value));
+
 // ── Init ───────────────────────────────────────────────────────────────────────
 async function init() {
   try {
+    await loadBanks();
     sounds = await (await fetch(API + '/sounds.json')).json();
     order = Object.keys(sounds);
     buildChips();

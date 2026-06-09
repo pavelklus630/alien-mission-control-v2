@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOUNDBANK EDITOR</title>
+<style>
+  :root{
+    --g:#33dd55; --g2:#7dffa0; --bg:#020602; --panel:#050d06; --panel2:#071107;
+    --brd:#0e2a14; --brdh:#1a5a28; --txt:#7ab88a; --txd:#3a6a48; --red:#cc3344;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:var(--bg);color:var(--txt);font-family:"SF Mono",ui-monospace,Menlo,monospace;
+    font-size:12px;display:flex;flex-direction:column;overflow:hidden}
+  button,select,input{font-family:inherit;font-size:11px;color:var(--txt);background:#030a04;
+    border:1px solid var(--brd);padding:4px 8px;letter-spacing:.05em}
+  button{cursor:pointer}
+  button:hover{border-color:var(--brdh);color:var(--g2)}
+  .btn-go{border-color:var(--g);color:var(--g2)}
+  .btn-go:hover{background:#0b2e14}
+  .btn-red{border-color:var(--red);color:var(--red)}
+  .btn-red:hover{background:#1a0000}
+  select option{background:#030a04}
+
+  #top{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--brd);
+    background:#030802;flex-shrink:0}
+  #top .title{color:var(--g);font-weight:bold;letter-spacing:2px;margin-right:6px}
+  #top select{flex:0 0 auto;max-width:260px}
+  .spacer{flex:1}
+  #status{font-size:10px;color:var(--txd);width:240px;text-align:right;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+
+  #main{display:flex;flex:1;overflow:hidden}
+  #cats{width:200px;border-right:1px solid var(--brd);background:var(--panel);overflow-y:auto;flex-shrink:0}
+  #center{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  #props{width:280px;border-left:1px solid var(--brd);background:var(--panel);overflow-y:auto;flex-shrink:0}
+
+  .phead{padding:7px 10px;color:var(--g);letter-spacing:1px;border-bottom:1px solid var(--brd);
+    font-size:10px;display:flex;justify-content:space-between;align-items:center}
+  .cat-item{padding:7px 12px;border-bottom:1px solid #081a0c;cursor:pointer;display:flex;
+    justify-content:space-between}
+  .cat-item:hover{background:var(--panel2)}
+  .cat-item.sel{background:#0b2e14;color:var(--g2)}
+  .cat-item .n{color:var(--txd)}
+
+  #uploadzone{margin:10px;padding:14px;border:1px dashed var(--brd);text-align:center;color:var(--txd)}
+  #uploadzone.drag{border-color:var(--g);color:var(--g2);background:#0b2e14}
+  #uprow{display:flex;gap:6px;align-items:center;padding:0 10px 8px;flex-wrap:wrap}
+  #soundlist{flex:1;overflow-y:auto;padding:0 6px}
+  .snd{display:flex;align-items:center;gap:8px;padding:7px 8px;border-bottom:1px solid #081a0c;cursor:pointer}
+  .snd:hover{background:var(--panel2)}
+  .snd.sel{background:#0b2e14}
+  .snd .play{flex:0 0 auto;width:26px;text-align:center}
+  .snd .nm{flex:1;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .snd .lufs{flex:0 0 auto;font-size:9px;color:var(--txd);border:1px solid var(--brd);padding:1px 4px}
+  .snd .lufs.warn{color:#e0a020;border-color:#5a4010}
+  .snd .kind{flex:0 0 auto;font-size:9px;color:var(--txd)}
+  .snd .del{flex:0 0 auto;color:var(--red);border:none;background:none;padding:2px 4px}
+
+  .pgrp{padding:10px;border-bottom:1px solid var(--brd)}
+  .pgrp label{display:block;color:var(--txd);font-size:10px;margin:8px 0 3px;letter-spacing:.05em}
+  .pgrp input[type=text],.pgrp select,.pgrp textarea{width:100%}
+  .pgrp textarea{height:48px;resize:vertical}
+  .row{display:flex;gap:8px;align-items:center}
+  .row input[type=range]{flex:1}
+  .muted{color:var(--txd);font-size:10px;padding:20px;text-align:center}
+  .toggle{display:inline-block;padding:3px 10px;border:1px solid var(--brd)}
+  .toggle.on{border-color:var(--g);color:var(--g2);background:#0b2e14}
+  #prog{font-size:10px;color:var(--g2);padding:0 10px 8px}
+</style>
+</head>
+<body>
+
+<div id="top">
+  <span class="title">◈ SOUNDBANK EDITOR</span>
+  <select id="bank-select" title="Bank to edit"></select>
+  <button id="btn-new">NEW</button>
+  <button id="btn-del" class="btn-red">DELETE</button>
+  <button id="btn-activate" class="btn-go" title="Make this the live bank">● GO LIVE</button>
+  <button id="btn-export" title="Download this bank as .sndbank">⤓ EXPORT</button>
+  <button id="btn-import" title="Import a .sndbank">⤒ IMPORT</button>
+  <input type="file" id="import-input" accept=".sndbank,.zip" style="display:none">
+  <span class="spacer"></span>
+  <span id="status">READY</span>
+</div>
+
+<div id="main">
+  <!-- LEFT: categories -->
+  <div id="cats">
+    <div class="phead">CATEGORIES</div>
+    <div id="cat-list"></div>
+  </div>
+
+  <!-- CENTER: sounds + upload -->
+  <div id="center">
+    <div class="phead">
+      <span id="center-title">SOUNDS</span>
+      <span style="display:flex;gap:6px;align-items:center">
+        <input type="text" id="search" placeholder="search…" style="width:120px">
+        <button id="btn-analyze" title="Measure loudness of every sound">📊 ANALYZE</button>
+        <button id="btn-normalize" class="btn-go" title="Re-normalise drifting sounds to −16 LUFS">⇄ NORMALIZE</button>
+        <span id="snd-count"></span>
+      </span>
+    </div>
+    <div id="uploadzone">DROP AUDIO HERE — or choose files below</div>
+    <div id="uprow">
+      <input type="file" id="file-input" accept="audio/*" multiple>
+      <label style="color:var(--txd)">CAT</label>
+      <select id="up-cat"></select>
+      <label style="color:var(--txd)">KIND</label>
+      <select id="up-kind"><option value="sfx">sfx</option><option value="music">music</option><option value="stinger">stinger</option></select>
+      <button id="btn-upload" class="btn-go">▲ UPLOAD &amp; CONVERT</button>
+    </div>
+    <div id="prog"></div>
+    <div id="soundlist"></div>
+  </div>
+
+  <!-- RIGHT: properties -->
+  <div id="props">
+    <div class="phead">BANK</div>
+    <div class="pgrp">
+      <label>NAME</label><input type="text" id="bk-name">
+      <label>DESCRIPTION</label><textarea id="bk-desc"></textarea>
+      <div class="row" style="margin-top:8px"><button id="btn-bank-save" class="btn-go">SAVE BANK</button></div>
+    </div>
+    <div class="phead">SOUND</div>
+    <div id="sound-props"><div class="muted">Select a sound to edit.</div></div>
+  </div>
+</div>
+
+<audio id="preview"></audio>
+<script>
+const API = '';
+let banks = [], bankId = null, manifest = null, selCat = null, selPath = null, searchTerm = '';
+const audio = document.getElementById('preview');
+
+function setStatus(m, warn){ const s=document.getElementById('status'); s.textContent=m; s.style.color=warn?'#e0a020':''; }
+async function jget(u){ const r=await fetch(API+u); if(!r.ok) throw new Error(u+' '+r.status); return r.json(); }
+async function jpost(u,b){ const r=await fetch(API+u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})}); return r.json(); }
+
+// ── banks ──────────────────────────────────────────────────────────────────
+async function loadBanks(keep){
+  banks = await jget('/api/banks');
+  const sel=document.getElementById('bank-select'); sel.innerHTML='';
+  for(const b of banks){
+    const o=document.createElement('option'); o.value=b.id;
+    o.textContent=(b.active?'● ':'')+(b.builtin?'':'★ ')+b.name; sel.appendChild(o);
+  }
+  const target = keep && banks.find(b=>b.id===keep) ? keep : (banks.find(b=>b.active)?.id || banks[0]?.id);
+  sel.value=target; await loadBank(target);
+}
+async function loadBank(id){
+  bankId=id; manifest=await jget('/api/banks/'+encodeURIComponent(id));
+  document.getElementById('bk-name').value=manifest.name||'';
+  document.getElementById('bk-desc').value=manifest.description||'';
+  selCat=undefined; selPath=null;  // undefined = unset (pick first cat); null = ALL
+  buildCats(); buildUploadCats(); renderSounds(); renderSoundProps();
+  const b=banks.find(x=>x.id===id);
+  document.getElementById('btn-del').disabled = !!(b&&b.builtin);
+  setStatus('EDITING: '+(manifest.name||id));
+}
+
+function catList(){
+  const order = manifest.category_order||[];
+  const present = new Set((manifest.sounds||[]).map(s=>s.category||'Other'));
+  const cats=[...order.filter(c=>present.has(c))];
+  for(const c of present) if(!cats.includes(c)) cats.push(c);
+  return cats;
+}
+function buildCats(){
+  const el=document.getElementById('cat-list'); el.innerHTML='';
+  const cats=catList(); if(selCat===undefined&&cats.length) selCat=cats[0];
+  const all=document.createElement('div'); all.className='cat-item'+(selCat===null?' sel':'');
+  all.innerHTML='<span>ALL</span><span class="n">'+(manifest.sounds||[]).length+'</span>';
+  all.onclick=()=>{selCat=null;buildCats();renderSounds();}; el.appendChild(all);
+  for(const c of cats){
+    const n=(manifest.sounds||[]).filter(s=>(s.category||'Other')===c).length;
+    const d=document.createElement('div'); d.className='cat-item'+(selCat===c?' sel':'');
+    d.innerHTML='<span>'+c+'</span><span class="n">'+n+'</span>';
+    d.onclick=()=>{selCat=c;buildCats();renderSounds();}; el.appendChild(d);
+  }
+  document.getElementById('center-title').textContent = selCat?selCat.toUpperCase():'ALL SOUNDS';
+}
+function buildUploadCats(){
+  const sel=document.getElementById('up-cat'); const cur=sel.value; sel.innerHTML='';
+  const cats=catList().length?catList():['Atmosphere & FX'];
+  for(const c of cats){ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); }
+  const oNew=document.createElement('option'); oNew.value='__new__'; oNew.textContent='+ new category…'; sel.appendChild(oNew);
+  if(cur) sel.value=cur;
+}
+
+// ── sounds ──────────────────────────────────────────────────────────────────
+function soundsIn(cat){
+  let list=(manifest.sounds||[]).filter(s=>cat===null||(s.category||'Other')===cat);
+  if(searchTerm){ const q=searchTerm.toLowerCase();
+    list=list.filter(s=>(s.name||s.path||'').toLowerCase().includes(q)); }
+  return list;
+}
+function renderSounds(){
+  const el=document.getElementById('soundlist'); el.innerHTML='';
+  const list=soundsIn(selCat);
+  document.getElementById('snd-count').textContent=list.length+' SOUND'+(list.length===1?'':'S');
+  if(!list.length){ el.innerHTML='<div class="muted">No sounds. Upload some above.</div>'; return; }
+  for(const s of list){
+    const row=document.createElement('div'); row.className='snd'+(s.path===selPath?' sel':'');
+    const lufs = (s.lufs!=null)? s.lufs.toFixed(1)+' LUFS' : '—';
+    const warn = (s.lufs!=null && Math.abs(s.lufs-(-16))>3)?' warn':'';
+    row.innerHTML =
+      '<button class="play">▶</button>'+
+      '<span class="nm">'+esc(s.name||s.path)+'</span>'+
+      '<span class="kind">'+(s.kind||'sfx')+'</span>'+
+      '<span class="lufs'+warn+'">'+lufs+'</span>'+
+      '<button class="del" title="Delete">✕</button>';
+    row.querySelector('.play').onclick=(e)=>{e.stopPropagation();preview(s.path);};
+    row.querySelector('.del').onclick=(e)=>{e.stopPropagation();delSound(s.path);};
+    row.onclick=()=>{selPath=s.path;renderSounds();renderSoundProps();};
+    el.appendChild(row);
+  }
+}
+function preview(path){
+  audio.src=API+'/api/banks/'+encodeURIComponent(bankId)+'/audio/'+path.split('/').map(encodeURIComponent).join('/');
+  audio.play().catch(()=>{});
+  setStatus('PREVIEW: '+path);
+}
+async function delSound(path){
+  if(!confirm('Delete this sound?')) return;
+  await fetch(API+'/api/banks/'+encodeURIComponent(bankId)+'/sounds?path='+encodeURIComponent(path),{method:'DELETE'});
+  if(selPath===path) selPath=null;
+  await loadBank(bankId);
+}
+
+function renderSoundProps(){
+  const el=document.getElementById('sound-props');
+  const s=(manifest.sounds||[]).find(x=>x.path===selPath);
+  if(!s){ el.innerHTML='<div class="muted">Select a sound to edit.</div>'; return; }
+  const cats=catList();
+  el.innerHTML=
+    '<div class="pgrp">'+
+    '<label>NAME</label><input type="text" id="sp-name" value="'+escAttr(s.name||'')+'">'+
+    '<label>CATEGORY</label><select id="sp-cat">'+cats.map(c=>'<option'+(c===s.category?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select>'+
+    '<label>KIND</label><select id="sp-kind">'+['sfx','music','stinger'].map(k=>'<option'+(k===(s.kind||'sfx')?' selected':'')+'>'+k+'</option>').join('')+'</select>'+
+    '<label>DEFAULT VOLUME <span id="sp-vpct">'+Math.round((s.volume??1)*100)+'%</span></label>'+
+    '<div class="row"><input type="range" id="sp-vol" min="0" max="1" step="0.01" value="'+(s.volume??1)+'"></div>'+
+    '<label>LOOP BY DEFAULT</label><div><span class="toggle'+(s.loop?' on':'')+'" id="sp-loop">'+(s.loop?'LOOP ON':'LOOP OFF')+'</span></div>'+
+    '<div class="row" style="margin-top:10px"><button id="sp-save" class="btn-go">SAVE</button>'+
+    '<button id="sp-test">▶ OUTPUT</button></div>'+
+    '<div style="color:var(--txd);font-size:9px;margin-top:6px">'+esc(s.lufs!=null?('measured '+s.lufs.toFixed(1)+' LUFS / peak '+(s.peak_db!=null?s.peak_db.toFixed(1):'?')+' dB'):'')+'</div>'+
+    '</div>';
+  document.getElementById('sp-vol').oninput=(e)=>document.getElementById('sp-vpct').textContent=Math.round(e.target.value*100)+'%';
+  let loopOn=!!s.loop;
+  document.getElementById('sp-loop').onclick=(e)=>{loopOn=!loopOn;e.target.classList.toggle('on',loopOn);e.target.textContent=loopOn?'LOOP ON':'LOOP OFF';};
+  document.getElementById('sp-save').onclick=async()=>{
+    await jpost('/api/banks/'+encodeURIComponent(bankId)+'/sounds',{
+      path:s.path, name:document.getElementById('sp-name').value,
+      category:document.getElementById('sp-cat').value, kind:document.getElementById('sp-kind').value,
+      volume:parseFloat(document.getElementById('sp-vol').value), loop:loopOn});
+    setStatus('SAVED'); await loadBank(bankId);
+  };
+  document.getElementById('sp-test').onclick=async()=>{
+    await jpost('/api/banks/'+encodeURIComponent(bankId)+'/activate',{});
+    await fetch(API+'/',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'play',path:s.path,loop:loopOn,volume:s.volume??1})});
+    setStatus('▶ SENT TO OUTPUT: '+s.path);
+  };
+}
+
+// ── upload ──────────────────────────────────────────────────────────────────
+async function doUpload(files){
+  if(!files||!files.length) return;
+  let cat=document.getElementById('up-cat').value;
+  if(cat==='__new__'){ cat=prompt('New category name:','Atmosphere & FX'); if(!cat) return; }
+  const kind=document.getElementById('up-kind').value;
+  const fd=new FormData();
+  for(const f of files) fd.append('files',f);
+  fd.append('category',cat); fd.append('kind',kind);
+  document.getElementById('prog').textContent='Converting '+files.length+' file(s)…';
+  setStatus('CONVERTING…',true);
+  try{
+    const r=await fetch(API+'/api/banks/'+encodeURIComponent(bankId)+'/upload',{method:'POST',body:fd});
+    const res=await r.json();
+    if(r.status===503){ document.getElementById('prog').textContent=''; setStatus('CONVERTER UNAVAILABLE (ffmpeg)',true); return; }
+    const ok=(res.added||[]).length, bad=(res.errors||[]).length;
+    document.getElementById('prog').textContent='Added '+ok+(bad?(', '+bad+' failed'):'');
+    if(bad) console.warn('upload errors',res.errors);
+    setStatus('UPLOADED '+ok+' SOUND(S)');
+    selCat=cat; await loadBank(bankId); selCat=cat; buildCats(); renderSounds();
+  }catch(e){ document.getElementById('prog').textContent=''; setStatus('UPLOAD ERROR',true); }
+}
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function escAttr(s){return esc(s).replace(/"/g,'&quot;');}
+
+// ── events ────────────────────────────────────────────────────────────────────
+document.getElementById('bank-select').onchange=(e)=>loadBank(e.target.value);
+document.getElementById('btn-new').onclick=async()=>{
+  const name=prompt('New soundbank name:'); if(!name) return;
+  const r=await jpost('/api/banks',{name}); if(r.id) await loadBanks(r.id);
+};
+document.getElementById('btn-del').onclick=async()=>{
+  if(!confirm('Delete bank "'+(manifest.name||bankId)+'"? This removes its sounds.')) return;
+  await fetch(API+'/api/banks/'+encodeURIComponent(bankId),{method:'DELETE'}); await loadBanks();
+};
+document.getElementById('btn-activate').onclick=async()=>{
+  await jpost('/api/banks/'+encodeURIComponent(bankId)+'/activate',{});
+  setStatus('● LIVE: '+(manifest.name||bankId)); await loadBanks(bankId);
+};
+document.getElementById('btn-bank-save').onclick=async()=>{
+  await jpost('/api/banks/'+encodeURIComponent(bankId)+'/meta',{
+    name:document.getElementById('bk-name').value, description:document.getElementById('bk-desc').value});
+  setStatus('BANK SAVED'); await loadBanks(bankId);
+};
+document.getElementById('search').oninput=(e)=>{searchTerm=e.target.value;renderSounds();};
+document.getElementById('btn-export').onclick=()=>{
+  window.location.href=API+'/api/banks/'+encodeURIComponent(bankId)+'/export';
+};
+document.getElementById('btn-import').onclick=()=>document.getElementById('import-input').click();
+document.getElementById('import-input').onchange=async(e)=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  const fd=new FormData(); fd.append('file',f);
+  setStatus('IMPORTING…',true);
+  const r=await fetch(API+'/api/import',{method:'POST',body:fd}); const res=await r.json();
+  if(res.id){ setStatus('IMPORTED: '+res.id); await loadBanks(res.id); }
+  else setStatus('IMPORT ERROR: '+(res.error||'?'),true);
+};
+document.getElementById('btn-analyze').onclick=async()=>{
+  setStatus('ANALYZING…',true); document.getElementById('prog').textContent='Measuring loudness…';
+  const res=await jpost('/api/banks/'+encodeURIComponent(bankId)+'/analyze',{});
+  const byPath={}; (res.report||[]).forEach(r=>byPath[r.path]=r);
+  for(const s of (manifest.sounds||[])) if(byPath[s.path]){ s.lufs=byPath[s.path].lufs; s.peak_db=byPath[s.path].peak_db; }
+  const off=(res.report||[]).filter(r=>r.off).length;
+  document.getElementById('prog').textContent='Analyzed '+(res.report||[]).length+' — '+off+' off target ('+res.target_lufs+' LUFS)';
+  setStatus('ANALYZED'); renderSounds(); renderSoundProps();
+};
+document.getElementById('btn-normalize').onclick=async()=>{
+  if(!confirm('Re-normalise sounds that drift from −16 LUFS? This re-encodes them.')) return;
+  setStatus('NORMALIZING…',true); document.getElementById('prog').textContent='Normalising…';
+  const r=await fetch(API+'/api/banks/'+encodeURIComponent(bankId)+'/normalize',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:'{}'});
+  if(r.status===503){ document.getElementById('prog').textContent=''; setStatus('CONVERTER UNAVAILABLE (ffmpeg)',true); return; }
+  const res=await r.json();
+  document.getElementById('prog').textContent='Re-normalised '+(res.changed||[]).length+' sound(s)'+((res.errors||[]).length?(', '+res.errors.length+' failed'):'');
+  setStatus('NORMALIZED'); await loadBank(bankId);
+};
+document.getElementById('btn-upload').onclick=()=>doUpload(document.getElementById('file-input').files);
+const uz=document.getElementById('uploadzone');
+uz.ondragover=(e)=>{e.preventDefault();uz.classList.add('drag');};
+uz.ondragleave=()=>uz.classList.remove('drag');
+uz.ondrop=(e)=>{e.preventDefault();uz.classList.remove('drag');doUpload(e.dataTransfer.files);};
+
+loadBanks().catch(()=>setStatus('CANNOT REACH AUDIO SERVER',true));
+</script>
+</body>
+</html>
