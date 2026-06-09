@@ -71,7 +71,54 @@ function glowTexture() {
   return _glowTex;
 }
 
+// Crisp star sprite — small bright core, tight falloff, so points read as
+// stars rather than soft blobs.
+let _starTex = null;
+function starTexture() {
+  if (_starTex) return _starTex;
+  const s = 64, cv = document.createElement('canvas');
+  cv.width = cv.height = s;
+  const g = cv.getContext('2d');
+  const grad = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  grad.addColorStop(0.0, 'rgba(255,255,255,1.0)');
+  grad.addColorStop(0.10, 'rgba(255,255,255,0.95)');
+  grad.addColorStop(0.22, 'rgba(255,255,255,0.35)');
+  grad.addColorStop(0.45, 'rgba(255,255,255,0.06)');
+  grad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+  g.fillStyle = grad; g.fillRect(0, 0, s, s);
+  _starTex = new THREE.CanvasTexture(cv);
+  _starTex.colorSpace = THREE.SRGBColorSpace;
+  return _starTex;
+}
+
 function rand(a, b) { return a + Math.random() * (b - a); }
+
+// GLSL for the accretion disk: each particle orbits at a Keplerian rate
+// (inner faster than outer) and drifts slowly inward, so it reads as matter
+// spiralling into the hole rather than a rigid disc spinning.
+const DISK_VERT = `
+  uniform float uTime, uInner, uOuter, uSpin, uInfall, uSize, uBrightness;
+  uniform vec3 cHot, cMid, cOut;
+  attribute float aAngle; attribute float aSeed; attribute float aY;
+  varying vec3 vCol; varying float vA;
+  void main() {
+    float m = fract(aSeed - uTime * uInfall);          // 1=outer -> 0=falling in
+    float radius = mix(uInner, uOuter, pow(m, 1.7));
+    float omega = uSpin / pow(radius, 1.5);            // Keplerian: inner faster
+    float ang = aAngle + uTime * omega;
+    vec3 pos = vec3(cos(ang) * radius,
+                    aY * (0.04 + 0.02 * (radius / uOuter)) * radius,
+                    sin(ang) * radius);
+    vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+    gl_Position = projectionMatrix * mv;
+    gl_PointSize = uSize * (300.0 / max(0.001, -mv.z));
+    vec3 c = m < 0.5 ? mix(cHot, cMid, m * 2.0) : mix(cMid, cOut, (m - 0.5) * 2.0);
+    vCol = c * (uBrightness * (1.7 - m * 1.2));         // inner hotter/brighter
+    vA = smoothstep(0.0, 0.06, m) * (1.0 - smoothstep(0.93, 1.0, m)); // hide wrap
+  }`;
+const DISK_FRAG = `
+  uniform sampler2D uTex; varying vec3 vCol; varying float vA;
+  void main() { vec4 t = texture2D(uTex, gl_PointCoord); gl_FragColor = vec4(vCol, t.a * vA); }`;
 
 // ── Film-grain + vignette pass (linear space, before OutputPass) ───────────
 const GrainVignetteShader = {
@@ -120,7 +167,7 @@ const BUILDERS = {
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
     const obj = new THREE.Points(geo, new THREE.PointsMaterial({
-      size: p.size ?? 1.1, map: glowTexture(), vertexColors: true,
+      size: p.size ?? 1.1, map: starTexture(), vertexColors: true,
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true,
     }));
     const spin = p.spin ?? 0.0000035;
@@ -188,40 +235,46 @@ const BUILDERS = {
     const ringHolder = new THREE.Group(); ringHolder.add(ring); ringHolder.rotation.x = tilt;
     group.add(ringHolder);
 
-    // Accretion disk — annulus of additive particles, hot inner -> deep outer.
-    const dcount = Math.min(p.disk_count ?? 4000, 12000);
+    // Accretion disk — GPU shader particles with Keplerian differential spin
+    // and slow inward drift, so it reads as matter falling in.
+    const dcount = Math.min(p.disk_count ?? 4000, 14000);
     const inner = R * 1.25, outer = R * (p.disk_radius ?? 4.8);
-    const pos = new Float32Array(dcount * 3), col = new Float32Array(dcount * 3);
-    const cHot = new THREE.Color(p.disk_hot || '#fff0c8');
-    const cMid = new THREE.Color(p.disk_mid || '#ff7a2a');
-    const cOut = new THREE.Color(p.disk_out || '#8a0e16');
+    const posD = new Float32Array(dcount * 3); // unused 'position' (ShaderMaterial needs it)
+    const aAngle = new Float32Array(dcount), aSeed = new Float32Array(dcount), aY = new Float32Array(dcount);
     for (let i = 0; i < dcount; i++) {
-      const a = Math.random() * TAU;
-      const m = Math.pow(Math.random(), 1.7);          // bias toward inner (brighter)
-      const rr = inner + m * (outer - inner);
-      pos[i * 3]     = Math.cos(a) * rr;
-      pos[i * 3 + 1] = rand(-1, 1) * (0.05 + 0.02 * (rr / outer)) * rr; // thin, flares slightly out
-      pos[i * 3 + 2] = Math.sin(a) * rr;
-      const c = m < 0.5 ? cHot.clone().lerp(cMid, m * 2) : cMid.clone().lerp(cOut, (m - 0.5) * 2);
-      const b = 1.6 - m * 1.1;                          // inner brighter
-      col[i * 3] = c.r * b; col[i * 3 + 1] = c.g * b; col[i * 3 + 2] = c.b * b;
+      aAngle[i] = Math.random() * TAU;
+      aSeed[i] = Math.random();
+      aY[i] = rand(-1, 1);
     }
     const dgeo = new THREE.BufferGeometry();
-    dgeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    dgeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    const disk = new THREE.Points(dgeo, new THREE.PointsMaterial({
-      size: p.disk_dot ?? 0.16, map: glowTexture(), vertexColors: true,
+    dgeo.setAttribute('position', new THREE.BufferAttribute(posD, 3));
+    dgeo.setAttribute('aAngle', new THREE.BufferAttribute(aAngle, 1));
+    dgeo.setAttribute('aSeed', new THREE.BufferAttribute(aSeed, 1));
+    dgeo.setAttribute('aY', new THREE.BufferAttribute(aY, 1));
+    const diskMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 }, uInner: { value: inner }, uOuter: { value: outer },
+        uSpin: { value: p.disk_spin ?? 0.00028 }, uInfall: { value: p.disk_infall ?? 0.0000115 },
+        uSize: { value: p.disk_dot ?? 0.16 }, uBrightness: { value: p.disk_brightness ?? 1.0 },
+        uTex: { value: glowTexture() },
+        cHot: { value: new THREE.Color(p.disk_hot || '#fff0c8') },
+        cMid: { value: new THREE.Color(p.disk_mid || '#ff7a2a') },
+        cOut: { value: new THREE.Color(p.disk_out || '#8a0e16') },
+      },
+      vertexShader: DISK_VERT, fragmentShader: DISK_FRAG,
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    }));
+    });
+    const disk = new THREE.Points(dgeo, diskMat);
     disk.rotation.x = tilt;
+    disk.frustumCulled = false; // positions live in the shader; bounding sphere is wrong
     group.add(disk);
 
-    const spin = p.disk_spin ?? 0.00030;
+    const ringSpin = p.disk_spin ?? 0.00028;
     return {
       object3d: group,
       update: (t) => {
-        disk.rotation.z = t * spin;
-        ring.rotation.z = -t * spin * 0.5;
+        diskMat.uniforms.uTime.value = t;
+        ring.rotation.z = -t * ringSpin * 0.4;
         halo.material.opacity = 0.4 + 0.1 * Math.sin(t * 0.0008);
       },
     };
