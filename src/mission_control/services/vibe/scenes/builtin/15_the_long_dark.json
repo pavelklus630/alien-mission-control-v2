@@ -4,7 +4,7 @@
   "renderer": "3d",
   "class": "STASIS",
   "sym": "·",
-  "desc": "Hypersleep deferred. Just the cold, the dust, and one distant light that never gets closer.",
+  "desc": "Hypersleep deferred. Just the cold, the dust, and a dead world turning below.",
   "code": "AV-HOD-VOID",
   "life": "STASIS",
   "comms": "SILENT",
@@ -13,24 +13,29 @@
   "msg": "LIFE SUPPORT: MINIMAL — CONSERVATION MODE",
   "environment": {
     "background": "#000000",
-    "fog": { "color": "#000000", "near": 30, "far": 150 }
+    "fog": { "color": "#000000", "near": 40, "far": 200 },
+    "exposure": 1.0,
+    "bloom": { "strength": 0.7, "radius": 0.6, "threshold": 0.08 },
+    "grain": 0.05, "vignette": 0.72, "ambient": 0.06
   },
   "camera": {
     "fov": 50,
-    "position": [0, 0, 20],
-    "lookAt": [0, 0, 0],
+    "position": [0, 1, 22],
+    "lookAt": [-3, -1, 0],
     "motion": {
-      "px": "sin(t*0.00002)*2",
-      "py": "sin(t*0.000015)*1"
+      "px": "sin(t*0.000018)*2.5",
+      "py": "1 + sin(t*0.000013)*1.0"
     }
   },
   "objects": [
     { "id": "stars", "type": "starfield",
-      "params": { "count": 900, "radius": 150, "size": 0.5, "color": "#5a607a" } },
-    { "id": "star", "type": "dark_core",
-      "params": { "radius": 0.6, "glow": "#101830", "ring_color": "#2a3a6a", "ring_color2": "#7088c0",
-                  "disk_count": 800, "disk_radius": 3.0, "disk_dot": 0.14, "tilt": 1.2, "disk_spin": 0.00018 } },
+      "params": { "count": 1100, "radius": 160, "size": 0.7, "color": "#7a8098", "warm": "#c0a080", "cool": "#8a9ad0" } },
+    { "id": "sun", "type": "light",
+      "params": { "kind": "directional", "color": "#ffcea0", "intensity": 2.6, "position": [38, 12, 18] } },
+    { "id": "world", "type": "planet",
+      "params": { "position": [-7, -3.5, -10], "radius": 8.0, "color": "#241b16", "night": "#0a0406",
+                  "atmosphere": "#ff5a2a", "spin": 0.000012 } },
     { "id": "motes", "type": "dust_motes",
-      "params": { "count": 240, "spread": 46, "color": "#2a2a30", "opacity": 0.4, "size": 0.11, "drift": 0.00001 } }
+      "params": { "count": 260, "spread": 48, "color": "#2a2a32", "opacity": 0.35, "size": 0.11, "drift": 0.00001 } }
   ]
 }

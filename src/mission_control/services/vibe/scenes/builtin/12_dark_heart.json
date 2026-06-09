@@ -13,27 +13,34 @@
   "msg": "WARNING: SPACETIME CURVATURE EXCEEDS SENSOR RANGE",
   "environment": {
     "background": "#000000",
-    "fog": { "color": "#0a0006", "near": 24, "far": 130 }
+    "fog": { "color": "#0a0006", "near": 26, "far": 140 },
+    "exposure": 1.15,
+    "bloom": { "strength": 1.05, "radius": 0.72, "threshold": 0.0 },
+    "grain": 0.04, "vignette": 0.6, "ambient": 0.18
   },
   "camera": {
-    "fov": 55,
-    "position": [0, 3, 16],
+    "fov": 52,
+    "position": [0, 9, 12],
     "lookAt": [0, 0, 0],
     "motion": {
-      "px": "sin(t*0.00004)*16",
-      "pz": "cos(t*0.00004)*16",
-      "py": "3 + sin(t*0.00002)*2"
+      "px": "sin(t*0.00003)*12",
+      "pz": "cos(t*0.00003)*12",
+      "py": "9 + sin(t*0.00002)*1.5"
     }
   },
   "objects": [
     { "id": "stars", "type": "starfield",
-      "params": { "count": 2200, "radius": 145, "size": 0.7, "color": "#8a93b5" } },
+      "params": { "count": 2400, "radius": 150, "size": 1.0, "color": "#cdd6ee", "warm": "#ffcaa0", "cool": "#9fb6ff" } },
     { "id": "gas", "type": "nebula_volume",
-      "params": { "count": 26, "spread": 55, "color": "#3a0a1e", "alpha_min": 0.03, "alpha_max": 0.12, "size_min": 14, "size_max": 40 } },
+      "params": { "count": 26, "spread": 58, "flat": 0.4, "colors": ["#5a1024", "#2a0626", "#120216"],
+                  "alpha_min": 0.04, "alpha_max": 0.14, "size_min": 22, "size_max": 56 } },
     { "id": "core", "type": "dark_core",
-      "params": { "radius": 2.4, "glow": "#6a0e22", "ring_color": "#ff3a2a", "ring_color2": "#ffce8a",
-                  "disk_count": 3400, "disk_radius": 5.0, "disk_dot": 0.18, "tilt": 1.12, "disk_spin": 0.00040 } },
+      "params": { "radius": 2.6, "glow": "#6a0e22", "photon": "#ffe6b0",
+                  "disk_hot": "#fff0c8", "disk_mid": "#ff7a2a", "disk_out": "#8a0e16",
+                  "disk_count": 5200, "disk_radius": 5.0, "disk_dot": 0.16, "tilt": 1.18, "disk_spin": 0.00032 } },
+    { "id": "embers", "type": "embers",
+      "params": { "count": 260, "spread": 9, "flat": 0.5, "color": "#ff6a1e", "color2": "#ffd089", "size": 0.4, "spin": 0.00009, "bob": 0.6 } },
     { "id": "motes", "type": "dust_motes",
-      "params": { "count": 320, "spread": 38, "color": "#5a3030", "opacity": 0.45, "size": 0.13 } }
+      "params": { "count": 320, "spread": 40, "color": "#5a3030", "opacity": 0.35, "size": 0.13 } }
   ]
 }
