@@ -338,7 +338,7 @@ select.prop-input { cursor: pointer; }
     <div id="canvas-wrap">
       <canvas id="preview" width="480" height="480"></canvas>
       <!-- WebGL preview for 3D scenes; overlays #preview, shown only for renderer:3d -->
-      <canvas id="preview3d" width="480" height="480" style="display:none;position:absolute;top:0;left:0"></canvas>
+      <canvas id="preview3d" width="480" height="480" style="display:none;position:absolute;top:0;left:0;width:480px;height:480px"></canvas>
     </div>
     <div id="canvas-controls">
       <button class="btn" id="btn-play">▶ PLAY</button>
@@ -425,7 +425,8 @@ async function ensure3DEngine() {
 
 async function load3DPreview() {
   scene3dActive = true;
-  canvas.style.display = 'none';
+  // Keep the 2D #preview in flow (it sizes #canvas-wrap); the opaque WebGL
+  // canvas simply overlays it.
   canvas3d.style.display = 'block';
   const eng = await ensure3DEngine();
   if (eng) { try { eng.load(scene); } catch (e) { console.error('3D scene load failed', e); } }
@@ -434,7 +435,6 @@ async function load3DPreview() {
 function unload3DPreview() {
   scene3dActive = false;
   canvas3d.style.display = 'none';
-  canvas.style.display = 'block';
   if (engine3d) engine3d.clear();
 }
 

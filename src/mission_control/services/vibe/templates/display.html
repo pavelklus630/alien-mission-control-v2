@@ -590,7 +590,9 @@ function preloadSceneAssets(scene) {
 }
 
 function transitionTo(sceneId) {
-  if (activeScene && activeScene.id === sceneId && txState === 'idle') return;
+  // Re-selecting the current scene reloads it (so saved editor changes refresh
+  // on the display); only skip if we're already transitioning to that same id.
+  if (txState !== 'idle' && pendingSceneId === sceneId) return;
   pendingSceneId = sceneId;
   if (txState === 'idle') { fadeAlpha = 0; txState = 'fade_out'; }
 }
