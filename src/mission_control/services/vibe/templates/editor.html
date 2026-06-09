@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VIBE EDITOR — MISSION CONTROL</title>
+<!-- Resolve bare 'three' used by the vendored post-processing addons. -->
+<script type="importmap">
+{ "imports": { "three": "/static/three.module.min.js" } }
+</script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -333,6 +337,8 @@ select.prop-input { cursor: pointer; }
   <div id="canvas-panel">
     <div id="canvas-wrap">
       <canvas id="preview" width="480" height="480"></canvas>
+      <!-- WebGL preview for 3D scenes; overlays #preview, shown only for renderer:3d -->
+      <canvas id="preview3d" width="480" height="480" style="display:none;position:absolute;top:0;left:0"></canvas>
     </div>
     <div id="canvas-controls">
       <button class="btn" id="btn-play">▶ PLAY</button>
@@ -398,8 +404,44 @@ let pauseOffset = 0;
 let pausedAt = 0;
 let animId = null;
 
+// 3D preview engine (lazy-loaded for renderer:"3d" scenes)
+const canvas3d = document.getElementById('preview3d');
+let engine3d = null, engine3dLoading = false, scene3dActive = false;
+
 // Per-layer particle/wisp state (keyed by layer.id)
 const particleState = new Map();
+
+async function ensure3DEngine() {
+  if (engine3d || engine3dLoading) return engine3d;
+  engine3dLoading = true;
+  try {
+    const mod = await import('/static/vibe3d.js');
+    engine3d = new mod.Vibe3DEngine(canvas3d);
+    engine3d.resize(W, H);
+  } catch (e) { console.error('3D engine failed to load', e); }
+  engine3dLoading = false;
+  return engine3d;
+}
+
+async function load3DPreview() {
+  scene3dActive = true;
+  canvas.style.display = 'none';
+  canvas3d.style.display = 'block';
+  const eng = await ensure3DEngine();
+  if (eng) { try { eng.load(scene); } catch (e) { console.error('3D scene load failed', e); } }
+}
+
+function unload3DPreview() {
+  scene3dActive = false;
+  canvas3d.style.display = 'none';
+  canvas.style.display = 'block';
+  if (engine3d) engine3d.clear();
+}
+
+// Push the current scene's environment/camera to the live engine (no rebuild).
+function syncEnv() { if (engine3d && scene3dActive) { engine3d.applyEnvironment(scene.environment || {}); engine3d.applyCamera(scene.camera || {}); } }
+// Rebuild the 3D scene in the engine (after structural object edits).
+function reload3D() { if (engine3d && scene3dActive) { try { engine3d.load(scene); } catch (e) { console.error(e); } } }
 
 // ===================================================================
 // UTILITY
@@ -978,7 +1020,8 @@ function renderFrame(ts) {
   // 3D scenes have no 2D layers — the WebGL engine renders them on the display
   // output. Show a placeholder here until the in-editor 3D preview lands.
   if (!scene.layers) {
-    draw3DPlaceholder();
+    if (scene3dActive && engine3d) engine3d.render(t);
+    else draw3DPlaceholder();
     document.getElementById('time-display').textContent = 't = ' + (t/1000).toFixed(1) + 's';
     return;
   }
@@ -1065,7 +1108,10 @@ async function loadScene(sceneId) {
   motionFnCache.clear();
   scene = await apiGet(`/api/editor/scenes/${sceneId}`);
   selectedIdx = -1;
+  if (scene.renderer === '3d') await load3DPreview();
+  else unload3DPreview();
   buildLayerList();
+  buildPropsPanel();
   updateSceneMeta();
   markClean();
 }
@@ -1161,6 +1207,52 @@ function build3DObjectList(list) {
     div.appendChild(name);
     list.appendChild(div);
   }
+}
+
+// Environment / camera controls for a 3D scene — live-tuned via the engine.
+function buildEnvPanel(content) {
+  scene.environment = scene.environment || {};
+  scene.camera = scene.camera || {};
+  const env = scene.environment, cam = scene.camera;
+  env.bloom = env.bloom || {};
+  cam.position = cam.position || [0, 0, 14];
+
+  const head = document.createElement('div');
+  head.style.cssText = 'color:var(--dim);font-size:10px;padding:4px 8px;line-height:1.4;';
+  head.textContent = 'SCENE (3D) — select an object on the left to edit it, or tune the whole scene here.';
+  content.appendChild(head);
+
+  const envS = makeSection('ENVIRONMENT');
+  envS.appendChild(makeRangeRow('Exposure', env.exposure ?? 1.1, 0.3, 2.2, 0.05, v => { env.exposure = v; syncEnv(); markDirty(); }));
+  envS.appendChild(makeRangeRow('Grain', env.grain ?? 0.045, 0, 0.15, 0.005, v => { env.grain = v; syncEnv(); markDirty(); }));
+  envS.appendChild(makeRangeRow('Vignette', env.vignette ?? 0.55, 0, 1, 0.02, v => { env.vignette = v; syncEnv(); markDirty(); }));
+  envS.appendChild(makeColorRow('Background', env.background || '#000000', v => { env.background = v; syncEnv(); markDirty(); }));
+  content.appendChild(envS);
+
+  const bS = makeSection('BLOOM');
+  bS.appendChild(makeRangeRow('Strength', env.bloom.strength ?? 0.85, 0, 2, 0.05, v => { env.bloom.strength = v; syncEnv(); markDirty(); }));
+  bS.appendChild(makeRangeRow('Radius', env.bloom.radius ?? 0.6, 0, 1.2, 0.02, v => { env.bloom.radius = v; syncEnv(); markDirty(); }));
+  bS.appendChild(makeRangeRow('Threshold', env.bloom.threshold ?? 0.0, 0, 1, 0.02, v => { env.bloom.threshold = v; syncEnv(); markDirty(); }));
+  content.appendChild(bS);
+
+  const fog = env.fog || {};
+  const fS = makeSection('FOG');
+  fS.appendChild(makeRangeRow('Near', fog.near ?? 10, 0, 150, 1, v => { env.fog = env.fog || {}; env.fog.near = v; syncEnv(); markDirty(); }));
+  fS.appendChild(makeRangeRow('Far', fog.far ?? 90, 10, 320, 1, v => { env.fog = env.fog || {}; env.fog.far = v; syncEnv(); markDirty(); }));
+  fS.appendChild(makeColorRow('Colour', fog.color || '#000000', v => { env.fog = env.fog || {}; env.fog.color = v; syncEnv(); markDirty(); }));
+  content.appendChild(fS);
+
+  const cS = makeSection('CAMERA');
+  cS.appendChild(makeRangeRow('FOV', cam.fov ?? 55, 20, 100, 1, v => { cam.fov = v; syncEnv(); markDirty(); }));
+  ['X', 'Y', 'Z'].forEach((ax, i) => cS.appendChild(
+    makeRangeRow('Pos ' + ax, cam.position[i] ?? 0, -40, 40, 0.5, v => { cam.position[i] = v; syncEnv(); markDirty(); })));
+  if (cam.motion) {
+    const note = document.createElement('div');
+    note.style.cssText = 'color:var(--dim);font-size:9px;padding:2px 8px;';
+    note.textContent = '(camera has motion — position is animated; the base offset may not move the preview live)';
+    cS.appendChild(note);
+  }
+  content.appendChild(cS);
 }
 
 function draw3DPlaceholder() {
@@ -1308,11 +1400,8 @@ const LAYER_TYPES = [
 // ===================================================================
 function buildPropsPanel() {
   const content = document.getElementById('props-content');
-  if (!scene || !scene.layers) {
-    content.innerHTML = '<span style="color:var(--dim)">3D scene — object editing coming soon. ' +
-      'Edit via import/export for now.</span>';
-    return;
-  }
+  if (!scene) { content.innerHTML = '<span style="color:var(--dim)">No scene.</span>'; return; }
+  if (!scene.layers) { content.innerHTML = ''; buildEnvPanel(content); return; }  // 3D scene
   if (selectedIdx < 0 || selectedIdx >= scene.layers.length) {
     content.innerHTML = '<span style="color:var(--dim)">Select a layer.</span>';
     return;

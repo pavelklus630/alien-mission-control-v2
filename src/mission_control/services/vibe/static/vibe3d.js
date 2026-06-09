@@ -522,6 +522,37 @@ export class Vibe3DEngine {
     this.composer.render();
   }
 
+  // Live-tune environment without rebuilding geometry (editor use).
+  applyEnvironment(env) {
+    if (!this.scene) return;
+    env = env || {};
+    this.renderer.toneMappingExposure = env.exposure ?? 1.1;
+    if (this.bloom) {
+      const b = env.bloom || {};
+      if (b.strength != null) this.bloom.strength = b.strength;
+      if (b.radius != null) this.bloom.radius = b.radius;
+      if (b.threshold != null) this.bloom.threshold = b.threshold;
+    }
+    if (this.grainPass) {
+      if (env.grain != null) this.grainPass.uniforms.uGrain.value = env.grain;
+      if (env.vignette != null) this.grainPass.uniforms.uVignette.value = env.vignette;
+    }
+    if (env.background && this.scene.background) this.scene.background.set(env.background);
+    if (env.fog) {
+      if (!this.scene.fog) this.scene.fog = new THREE.Fog(new THREE.Color(env.fog.color || '#000'), env.fog.near ?? 10, env.fog.far ?? 80);
+      else { this.scene.fog.color.set(env.fog.color || '#000'); this.scene.fog.near = env.fog.near ?? this.scene.fog.near; this.scene.fog.far = env.fog.far ?? this.scene.fog.far; }
+    } else { this.scene.fog = null; }
+  }
+
+  // Live-tune camera without rebuilding (editor use).
+  applyCamera(cam) {
+    if (!this.camera || !cam) return;
+    if (cam.fov != null) { this.camera.fov = cam.fov; this.camera.updateProjectionMatrix(); }
+    if (cam.position) { this.camBasePos = cam.position.slice(); if (!this.camMotion) this.camera.position.set(...cam.position); }
+    if (cam.lookAt) { this.camLookAt = cam.lookAt.slice(); if (!this.camMotion) this.camera.lookAt(...cam.lookAt); }
+    if ('motion' in cam) this.camMotion = cam.motion || null;
+  }
+
   _disposeScene() {
     if (this.scene) {
       this.scene.traverse((o) => {
