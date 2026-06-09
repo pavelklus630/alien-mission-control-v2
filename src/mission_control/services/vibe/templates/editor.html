@@ -975,6 +975,14 @@ function renderFrame(ts) {
   const t = pauseOffset + (playing ? ts - startTime : 0);
   ctx.clearRect(0,0,W,H);
 
+  // 3D scenes have no 2D layers — the WebGL engine renders them on the display
+  // output. Show a placeholder here until the in-editor 3D preview lands.
+  if (!scene.layers) {
+    draw3DPlaceholder();
+    document.getElementById('time-display').textContent = 't = ' + (t/1000).toFixed(1) + 's';
+    return;
+  }
+
   for (const layer of scene.layers) {
     if (!layer.visible) continue;
     ctx.save();
@@ -1092,6 +1100,7 @@ function buildLayerList() {
   const list = document.getElementById('layer-list');
   list.innerHTML = '';
   if (!scene) return;
+  if (!scene.layers) { build3DObjectList(list); return; }
   scene.layers.forEach((layer, i) => {
     const div = document.createElement('div');
     div.className = 'layer-item' + (i === selectedIdx ? ' selected' : '') +
@@ -1126,6 +1135,48 @@ function selectLayer(idx) {
   buildPropsPanel();
 }
 
+// --- 3D scene (experimental) ---------------------------------------------
+// Minimal, forward-compatible: list the 3D objects read-only and show a
+// placeholder in the preview. Full 3D authoring (param panels, in-editor
+// WebGL preview, gizmos) is the planned next phase.
+function build3DObjectList(list) {
+  const note = document.createElement('div');
+  note.className = 'layer-item';
+  note.style.opacity = '0.7';
+  note.style.cursor = 'default';
+  note.innerHTML = '<span class="layer-type-badge">3D</span>' +
+    '<span class="layer-name">WebGL scene — view on display output</span>';
+  list.appendChild(note);
+  for (const obj of (scene.objects || [])) {
+    const div = document.createElement('div');
+    div.className = 'layer-item';
+    div.style.cursor = 'default';
+    const badge = document.createElement('span');
+    badge.className = 'layer-type-badge';
+    badge.textContent = obj.type;
+    const name = document.createElement('span');
+    name.className = 'layer-name';
+    name.textContent = obj.id || obj.type;
+    div.appendChild(badge);
+    div.appendChild(name);
+    list.appendChild(div);
+  }
+}
+
+function draw3DPlaceholder() {
+  ctx.save();
+  ctx.fillStyle = '#7ab88a';
+  ctx.globalAlpha = 0.85;
+  ctx.font = 'bold 20px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('◉ 3D SCENE (WebGL)', W/2, H/2 - 14);
+  ctx.globalAlpha = 0.5;
+  ctx.font = '13px monospace';
+  ctx.fillText('Preview renders on the display output (/display).', W/2, H/2 + 14);
+  ctx.fillText((scene.objects ? scene.objects.length : 0) + ' objects · renderer:3d', W/2, H/2 + 36);
+  ctx.restore();
+}
+
 function toggleLayerVis(idx) {
   if (!scene) return;
   scene.layers[idx].visible = !scene.layers[idx].visible;
@@ -1142,6 +1193,7 @@ function updateSceneMeta() {
   const tags = document.getElementById('meta-tags');
   tags.innerHTML = '';
   const fields = [
+    ['RENDERER', scene.renderer === '3d' ? '3D' : '2D'],
     ['CLASS', scene.class],
     ['CODE', scene.code],
     ['LIFE', scene.life],
@@ -1256,7 +1308,12 @@ const LAYER_TYPES = [
 // ===================================================================
 function buildPropsPanel() {
   const content = document.getElementById('props-content');
-  if (selectedIdx < 0 || !scene || selectedIdx >= scene.layers.length) {
+  if (!scene || !scene.layers) {
+    content.innerHTML = '<span style="color:var(--dim)">3D scene — object editing coming soon. ' +
+      'Edit via import/export for now.</span>';
+    return;
+  }
+  if (selectedIdx < 0 || selectedIdx >= scene.layers.length) {
     content.innerHTML = '<span style="color:var(--dim)">Select a layer.</span>';
     return;
   }
@@ -1599,6 +1656,7 @@ function makeNewLayer(type) {
 
 function addLayer() {
   if (!scene) return;
+  if (!scene.layers) { alert('Layers belong to 2D scenes. This is a 3D scene.'); return; }
   const types = LAYER_TYPES;
   const sel = prompt('Layer type:\n' + types.join(', '), 'solid_bg');
   if (!sel || !types.includes(sel.trim())) return;

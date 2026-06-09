@@ -1,0 +1,39 @@
+{
+  "id": "hod_dark_heart",
+  "name": "THE DARK HEART",
+  "renderer": "3d",
+  "class": "ANOMALY",
+  "sym": "◉",
+  "desc": "A gravitational wound at the centre of it all. The instruments stopped agreeing an hour ago.",
+  "code": "AV-HOD-CORE",
+  "life": "NONE",
+  "comms": "LOST",
+  "crew": "UNKNOWN",
+  "ship": "ADRIFT",
+  "msg": "WARNING: SPACETIME CURVATURE EXCEEDS SENSOR RANGE",
+  "environment": {
+    "background": "#000000",
+    "fog": { "color": "#0a0006", "near": 24, "far": 130 }
+  },
+  "camera": {
+    "fov": 55,
+    "position": [0, 3, 16],
+    "lookAt": [0, 0, 0],
+    "motion": {
+      "px": "sin(t*0.00004)*16",
+      "pz": "cos(t*0.00004)*16",
+      "py": "3 + sin(t*0.00002)*2"
+    }
+  },
+  "objects": [
+    { "id": "stars", "type": "starfield",
+      "params": { "count": 2200, "radius": 145, "size": 0.7, "color": "#8a93b5" } },
+    { "id": "gas", "type": "nebula_volume",
+      "params": { "count": 26, "spread": 55, "color": "#3a0a1e", "alpha_min": 0.03, "alpha_max": 0.12, "size_min": 14, "size_max": 40 } },
+    { "id": "core", "type": "dark_core",
+      "params": { "radius": 2.4, "glow": "#6a0e22", "ring_color": "#ff3a2a", "ring_color2": "#ffce8a",
+                  "disk_count": 3400, "disk_radius": 5.0, "disk_dot": 0.18, "tilt": 1.12, "disk_spin": 0.00040 } },
+    { "id": "motes", "type": "dust_motes",
+      "params": { "count": 320, "spread": 38, "color": "#5a3030", "opacity": 0.45, "size": 0.13 } }
+  ]
+}

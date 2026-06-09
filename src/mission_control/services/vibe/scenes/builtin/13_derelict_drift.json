@@ -1,0 +1,43 @@
+{
+  "id": "hod_derelict_drift",
+  "name": "DERELICT DRIFT",
+  "renderer": "3d",
+  "class": "WRECK",
+  "sym": "⬡",
+  "desc": "A hull turning end over end in the dark. Emergency lighting only. No life signs — yet.",
+  "code": "AV-HOD-WRK",
+  "life": "FLATLINE",
+  "comms": "BEACON",
+  "crew": "MISSING",
+  "ship": "DERELICT",
+  "msg": "AUTOMATED DISTRESS BEACON — ORIGIN UNCONFIRMED",
+  "environment": {
+    "background": "#000000",
+    "fog": { "color": "#060608", "near": 16, "far": 95 }
+  },
+  "camera": {
+    "fov": 60,
+    "position": [6, 2, 12],
+    "lookAt": [0, 0, 0],
+    "motion": {
+      "px": "6 + sin(t*0.00003)*3",
+      "py": "2 + sin(t*0.00002)*1.2"
+    }
+  },
+  "objects": [
+    { "id": "stars", "type": "starfield",
+      "params": { "count": 1800, "radius": 130, "size": 0.65, "color": "#9aa6c0" } },
+    { "id": "haze", "type": "nebula_volume",
+      "params": { "count": 18, "spread": 42, "color": "#14202c", "alpha_min": 0.03, "alpha_max": 0.10, "size_min": 12, "size_max": 34 } },
+    { "id": "hull", "type": "derelict_hull",
+      "params": { "position": [0, 0, 0], "scale": 1.6, "color": "#2b2622", "lights": "#ff5522",
+                  "tumble": 0.00002, "tumble_y": 0.00004 } },
+    { "id": "debris", "type": "debris_field",
+      "params": { "count": 60, "spread": 20, "color": "#34302b", "emissive": "#0a0604",
+                  "size_min": 0.18, "size_max": 1.0, "drift": 0.00001 } },
+    { "id": "glow", "type": "light",
+      "params": { "kind": "point", "color": "#ff5522", "intensity": 45, "position": [0, 0, 2] } },
+    { "id": "motes", "type": "dust_motes",
+      "params": { "count": 360, "spread": 30, "color": "#6a5e50", "opacity": 0.4, "size": 0.12 } }
+  ]
+}

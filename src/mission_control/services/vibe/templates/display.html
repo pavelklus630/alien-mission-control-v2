@@ -6,9 +6,13 @@
 *{margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#000}
 canvas{position:fixed;top:0;left:0;width:100%;height:100%;display:block}
+/* 3D scenes render on #c3 (behind); the transparent 2D canvas #c sits on top
+   and still carries the crossfade overlay, so transitions work for both. */
+#c3{z-index:1;display:none}
+#c{z-index:2}
 </style>
 </head>
-<body><canvas id="c"></canvas>
+<body><canvas id="c3"></canvas><canvas id="c"></canvas>
 <script>
 'use strict';
 
@@ -32,12 +36,19 @@ const startTime = performance.now();
 // ── Canvas ────────────────────────────────────────────────────────────
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
+const canvas3 = document.getElementById('c3');   // WebGL canvas for 3D scenes
 let W = 1920, H = 1080;
+
+// ── 3D engine (lazy-loaded only when a renderer:"3d" scene appears) ────
+let engine3d = null;       // Vibe3DEngine instance once the module is imported
+let engineLoading = false;
+let is3D = false;          // true while the active scene is a 3D scene
 
 function resize() {
   W = canvas.width = window.innerWidth || 1920;
   H = canvas.height = window.innerHeight || 1080;
   particleState.clear();
+  if (engine3d) engine3d.resize(W, H);
 }
 window.addEventListener('resize', resize);
 resize();
@@ -492,7 +503,11 @@ function frame(ts) {
   const t = ts - startTime;
   ctx.clearRect(0, 0, W, H);
 
-  if (activeScene) {
+  if (is3D) {
+    // 3D scene renders to the WebGL canvas behind; #c stays transparent so the
+    // crossfade overlay below still applies over the 3D output.
+    if (engine3d) engine3d.render(t);
+  } else if (activeScene) {
     for (const layer of activeScene.layers) {
       if (!layer.visible) continue;
       ctx.save();
@@ -527,11 +542,35 @@ async function loadScene(sceneId) {
     const r = await fetch(`/api/editor/scenes/${encodeURIComponent(sceneId)}`);
     if (!r.ok) return;
     const scene = await r.json();
+    if (scene.renderer === '3d') { await load3DScene(scene); return; }
+
+    // 2D path (unchanged). Tear down any 3D scene first.
+    if (engine3d) engine3d.clear();
+    is3D = false;
+    canvas3.style.display = 'none';
     particleState.clear();
     motionFnCache.clear();
     activeScene = scene;
     preloadSceneAssets(scene);
   } catch(_) {}
+}
+
+// Lazy-import the 3D engine on first use, then hand it the scene.
+async function load3DScene(scene) {
+  activeScene = null;  // stop the 2D layer loop
+  if (!engine3d && !engineLoading) {
+    engineLoading = true;
+    try {
+      const mod = await import('/static/vibe3d.js');
+      engine3d = new mod.Vibe3DEngine(canvas3);
+      engine3d.resize(W, H);
+    } catch(_) { engineLoading = false; return; }
+    engineLoading = false;
+  }
+  if (!engine3d) return;
+  canvas3.style.display = 'block';
+  is3D = true;
+  try { engine3d.load(scene); } catch(_) {}
 }
 
 function preloadSceneAssets(scene) {

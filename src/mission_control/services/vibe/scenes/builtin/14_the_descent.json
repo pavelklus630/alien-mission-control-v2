@@ -1,0 +1,38 @@
+{
+  "id": "hod_the_descent",
+  "name": "THE DESCENT",
+  "renderer": "3d",
+  "class": "APPROACH",
+  "sym": "▼",
+  "desc": "Falling inward through the murk. Something is down there, and it is patient.",
+  "code": "AV-HOD-DSC",
+  "life": "TRACE",
+  "comms": "STATIC",
+  "crew": "ABOARD",
+  "ship": "DESCENDING",
+  "msg": "PROXIMITY ALERT — MASS CONTACT AHEAD",
+  "environment": {
+    "background": "#02000a",
+    "fog": { "color": "#0a0014", "near": 6, "far": 62 }
+  },
+  "camera": {
+    "fov": 70,
+    "position": [0, 0, 30],
+    "lookAt": [0, 0, 0],
+    "motion": {
+      "pz": "17 + cos(t*0.00005)*13",
+      "px": "sin(t*0.00003)*2"
+    }
+  },
+  "objects": [
+    { "id": "stars", "type": "starfield",
+      "params": { "count": 1200, "radius": 150, "size": 0.55, "color": "#6a6a8a" } },
+    { "id": "murk", "type": "nebula_volume",
+      "params": { "count": 42, "spread": 46, "color": "#2a0a30", "alpha_min": 0.05, "alpha_max": 0.16, "size_min": 12, "size_max": 38 } },
+    { "id": "core", "type": "dark_core",
+      "params": { "radius": 1.2, "glow": "#30122e", "ring_color": "#b03a6a", "ring_color2": "#ffb0c0",
+                  "disk_count": 1600, "disk_radius": 4.0, "disk_dot": 0.16, "tilt": 0.9, "disk_spin": 0.00030 } },
+    { "id": "motes", "type": "dust_motes",
+      "params": { "count": 820, "spread": 36, "color": "#4a2a4a", "opacity": 0.6, "size": 0.14, "drift": 0.00003 } }
+  ]
+}

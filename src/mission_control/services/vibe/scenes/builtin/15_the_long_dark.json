@@ -1,0 +1,36 @@
+{
+  "id": "hod_the_long_dark",
+  "name": "THE LONG DARK",
+  "renderer": "3d",
+  "class": "STASIS",
+  "sym": "·",
+  "desc": "Hypersleep deferred. Just the cold, the dust, and one distant light that never gets closer.",
+  "code": "AV-HOD-VOID",
+  "life": "STASIS",
+  "comms": "SILENT",
+  "crew": "ASLEEP",
+  "ship": "DRIFTING",
+  "msg": "LIFE SUPPORT: MINIMAL — CONSERVATION MODE",
+  "environment": {
+    "background": "#000000",
+    "fog": { "color": "#000000", "near": 30, "far": 150 }
+  },
+  "camera": {
+    "fov": 50,
+    "position": [0, 0, 20],
+    "lookAt": [0, 0, 0],
+    "motion": {
+      "px": "sin(t*0.00002)*2",
+      "py": "sin(t*0.000015)*1"
+    }
+  },
+  "objects": [
+    { "id": "stars", "type": "starfield",
+      "params": { "count": 900, "radius": 150, "size": 0.5, "color": "#5a607a" } },
+    { "id": "star", "type": "dark_core",
+      "params": { "radius": 0.6, "glow": "#101830", "ring_color": "#2a3a6a", "ring_color2": "#7088c0",
+                  "disk_count": 800, "disk_radius": 3.0, "disk_dot": 0.14, "tilt": 1.2, "disk_spin": 0.00018 } },
+    { "id": "motes", "type": "dust_motes",
+      "params": { "count": 240, "spread": 46, "color": "#2a2a30", "opacity": 0.4, "size": 0.11, "drift": 0.00001 } }
+  ]
+}
