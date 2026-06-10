@@ -1,0 +1,51 @@
+{
+  "id": "hod_dark_heart",
+  "name": "THE DARK HEART",
+  "renderer": "3d",
+  "class": "ANOMALY",
+  "sym": "◉",
+  "desc": "A gravitational wound at the centre of it all. The instruments stopped agreeing an hour ago.",
+  "code": "AV-HOD-CORE",
+  "life": "NONE",
+  "comms": "LOST",
+  "crew": "UNKNOWN",
+  "ship": "ADRIFT",
+  "msg": "WARNING: SPACETIME CURVATURE EXCEEDS SENSOR RANGE",
+  "environment": {
+    "background": "#000000",
+    "fog": { "color": "#0c0004", "near": 18, "far": 90 },
+    "exposure": 1.2,
+    "bloom": { "strength": 1.25, "radius": 0.78, "threshold": 0.0 },
+    "grain": 0.045, "vignette": 0.62, "ambient": 0.14
+  },
+  "camera": {
+    "fov": 58,
+    "position": [0, 5.5, 10],
+    "lookAt": [0, 0, 0],
+    "motion": {
+      "px": "sin(t*0.000020)*10",
+      "pz": "cos(t*0.000020)*10",
+      "py": "5.5 + sin(t*0.000012)*1.8"
+    }
+  },
+  "objects": [
+    { "id": "stars", "type": "starfield",
+      "params": { "count": 2800, "radius": 150, "size": 1.05, "color": "#d6def2", "warm": "#ffd2a0", "cool": "#9fb6ff" } },
+    { "id": "gas_far", "type": "nebula_volume",
+      "params": { "count": 30, "spread": 64, "flat": 0.35, "colors": ["#6a1020", "#38082a", "#0a0618"],
+                  "alpha_min": 0.05, "alpha_max": 0.16, "size_min": 26, "size_max": 64 } },
+    { "id": "gas_near", "type": "nebula_volume",
+      "params": { "count": 14, "spread": 26, "flat": 0.25, "colors": ["#8a1a18", "#4a0a10"],
+                  "alpha_min": 0.04, "alpha_max": 0.11, "size_min": 12, "size_max": 28 } },
+    { "id": "core", "type": "dark_core",
+      "params": { "radius": 2.8, "glow": "#7a1018", "photon": "#ffe6b0",
+                  "disk_hot": "#fff4dc", "disk_mid": "#ffa030", "disk_out": "#6a0a0e",
+                  "disk_count": 9000, "disk_radius": 6.4, "disk_dot": 0.17, "tilt": 1.22,
+                  "disk_spin": 0.00021, "disk_infall": 0.0000095, "disk_brightness": 1.15 } },
+    { "id": "infall_embers", "type": "embers",
+      "params": { "count": 420, "spread": 14, "flat": 0.35, "color": "#ff9030", "color2": "#ffe8b8",
+                  "size": 0.42, "spin": 0.00012, "bob": 0.4 } },
+    { "id": "motes", "type": "dust_motes",
+      "params": { "count": 380, "spread": 36, "color": "#5a3028", "opacity": 0.34, "size": 0.13 } }
+  ]
+}

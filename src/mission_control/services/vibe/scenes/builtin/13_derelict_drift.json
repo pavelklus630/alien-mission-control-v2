@@ -1,0 +1,58 @@
+{
+  "id": "hod_derelict_drift",
+  "name": "DERELICT DRIFT",
+  "renderer": "3d",
+  "class": "WRECK",
+  "sym": "⬡",
+  "desc": "The station hangs black against the burning heart. Emergency lighting only. No life signs — yet.",
+  "code": "AV-HOD-WRK",
+  "life": "FLATLINE",
+  "comms": "BEACON",
+  "crew": "MISSING",
+  "ship": "DERELICT",
+  "msg": "AUTOMATED DISTRESS BEACON — ORIGIN UNCONFIRMED",
+  "environment": {
+    "background": "#0a0200",
+    "fog": { "color": "#1c0502", "near": 26, "far": 110 },
+    "exposure": 1.18,
+    "bloom": { "strength": 1.15, "radius": 0.8, "threshold": 0.0 },
+    "grain": 0.05, "vignette": 0.62, "ambient": 0.12
+  },
+  "camera": {
+    "fov": 60,
+    "position": [2.5, -3, 15],
+    "lookAt": [0, 1.5, 0],
+    "motion": {
+      "px": "2.5 + sin(t*0.000016)*1.8",
+      "py": "-3 + sin(t*0.000011)*1.2",
+      "pz": "15 + cos(t*0.000013)*1.0"
+    }
+  },
+  "objects": [
+    { "id": "vortex", "type": "fire_vortex",
+      "params": { "position": [-4, 26, -62], "rotation": [-0.18, 0, 0], "size": 105,
+                  "brightness": 1.05, "glow_color": "#ff7a20", "glow_alpha": 0.5, "spin": 0.00001 } },
+    { "id": "eye_glow", "type": "sun_glow",
+      "params": { "position": [-10, 30, -58], "color": "#fff0d0", "halo_color": "#ff8a30",
+                  "intensity": 2.6, "size": 8, "halo_scale": 7, "halo_alpha": 0.3, "pulse": 0.0002 } },
+    { "id": "murk_high", "type": "nebula_volume",
+      "params": { "count": 30, "spread": 55, "flat": 0.5, "colors": ["#7a2206", "#3a0e04", "#1a0602"],
+                  "alpha_min": 0.06, "alpha_max": 0.17, "size_min": 22, "size_max": 58, "position": [0, 14, -28] } },
+    { "id": "murk_low", "type": "nebula_volume",
+      "params": { "count": 18, "spread": 44, "flat": 0.45, "colors": ["#2a0a04", "#140402"],
+                  "alpha_min": 0.05, "alpha_max": 0.13, "size_min": 18, "size_max": 46, "position": [0, -16, -14] } },
+    { "id": "station", "type": "station_cross",
+      "params": { "position": [0, 0.5, 0], "rotation": [0.06, 0.45, 0.1], "scale": 1.0,
+                  "color": "#0c0a08", "lights": "#ff8a40", "beacon": "#ff2a18",
+                  "drift": 0.000006, "sway": 0.05 } },
+    { "id": "rim_light", "type": "light",
+      "params": { "kind": "directional", "color": "#ff7a28", "intensity": 4.5, "position": [-6, 28, -40] } },
+    { "id": "front_fill", "type": "light",
+      "params": { "kind": "point", "color": "#401008", "intensity": 18, "position": [6, -4, 10] } },
+    { "id": "sparks", "type": "embers",
+      "params": { "count": 240, "spread": 26, "flat": 1.2, "color": "#ff5a18", "color2": "#ffba70",
+                  "size": 0.38, "spin": 0.00004, "bob": 1.6 } },
+    { "id": "motes", "type": "dust_motes",
+      "params": { "count": 520, "spread": 30, "color": "#7a4630", "opacity": 0.42, "size": 0.13, "drift": 0.00002 } }
+  ]
+}

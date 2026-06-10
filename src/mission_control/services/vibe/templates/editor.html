@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VIBE EDITOR — MISSION CONTROL</title>
+<!-- Resolve bare 'three' used by the vendored post-processing addons. -->
+<script type="importmap">
+{ "imports": { "three": "/static/three.module.min.js" } }
+</script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -301,6 +305,7 @@ select.prop-input { cursor: pointer; }
   <span class="title">◈ VIBE EDITOR</span>
   <select id="scene-select" title="Switch scene"></select>
   <button class="btn" id="btn-new" title="Create new scene">NEW</button>
+  <button class="btn" id="btn-make3d" title="Create a 3D version of this 2D scene">✦ MAKE 3D</button>
   <div class="spacer"></div>
   <button class="btn" id="btn-import" title="Import .json or .vibe">IMPORT</button>
   <button class="btn" id="btn-export" title="Export as .vibe">EXPORT</button>
@@ -333,6 +338,8 @@ select.prop-input { cursor: pointer; }
   <div id="canvas-panel">
     <div id="canvas-wrap">
       <canvas id="preview" width="480" height="480"></canvas>
+      <!-- WebGL preview for 3D scenes; overlays #preview, shown only for renderer:3d -->
+      <canvas id="preview3d" width="480" height="480" style="display:none;position:absolute;top:0;left:0;width:480px;height:480px"></canvas>
     </div>
     <div id="canvas-controls">
       <button class="btn" id="btn-play">▶ PLAY</button>
@@ -367,6 +374,13 @@ select.prop-input { cursor: pointer; }
       <label class="modal-label">SCENE ID (slug)</label>
       <input class="modal-input" id="new-scene-id" placeholder="e.g. my_scene">
     </div>
+    <div class="modal-row">
+      <label class="modal-label">RENDERER</label>
+      <select class="modal-input" id="new-scene-renderer">
+        <option value="2d">2D — layered canvas</option>
+        <option value="3d">3D — WebGL</option>
+      </select>
+    </div>
     <div class="modal-btns">
       <button class="btn" id="modal-cancel">CANCEL</button>
       <button class="btn primary" id="modal-create">CREATE</button>
@@ -398,8 +412,168 @@ let pauseOffset = 0;
 let pausedAt = 0;
 let animId = null;
 
+// 3D preview engine (lazy-loaded for renderer:"3d" scenes)
+const canvas3d = document.getElementById('preview3d');
+let engine3d = null, engine3dLoading = false, scene3dActive = false;
+
 // Per-layer particle/wisp state (keyed by layer.id)
 const particleState = new Map();
+
+async function ensure3DEngine() {
+  if (engine3d || engine3dLoading) return engine3d;
+  engine3dLoading = true;
+  try {
+    const mod = await import('/static/vibe3d.js?v=' + Date.now());  // bust module cache
+    engine3d = new mod.Vibe3DEngine(canvas3d);
+    engine3d.resize(W, H);
+  } catch (e) { console.error('3D engine failed to load', e); }
+  engine3dLoading = false;
+  return engine3d;
+}
+
+async function load3DPreview() {
+  scene3dActive = true;
+  // Keep the 2D #preview in flow (it sizes #canvas-wrap); the opaque WebGL
+  // canvas simply overlays it.
+  canvas3d.style.display = 'block';
+  const eng = await ensure3DEngine();
+  if (eng) { try { eng.load(scene); } catch (e) { console.error('3D scene load failed', e); } }
+}
+
+function unload3DPreview() {
+  scene3dActive = false;
+  canvas3d.style.display = 'none';
+  if (engine3d) engine3d.clear();
+}
+
+// Push the current scene's environment/camera to the live engine (no rebuild).
+function syncEnv() { if (engine3d && scene3dActive) { engine3d.applyEnvironment(scene.environment || {}); engine3d.applyCamera(scene.camera || {}); } }
+// Rebuild the 3D scene in the engine (after structural object edits).
+function reload3D() { if (engine3d && scene3dActive) { try { engine3d.load(scene); } catch (e) { console.error(e); } } }
+// Coalesce rapid param edits (slider drags) into one rebuild.
+let _reloadTimer = null;
+function scheduleReload3D() { clearTimeout(_reloadTimer); _reloadTimer = setTimeout(reload3D, 130); }
+
+let selectedObjIdx = -1;   // selected 3D object (separate from 2D selectedIdx)
+
+const OBJECT_TYPES_3D = ['starscape','starfield','nebula_volume','dark_core','accretion_disk','embers',
+                         'planet','derelict_hull','station_cross','fire_vortex','debris_field',
+                         'dust_motes','sun_glow','light','grid'];
+
+const STARSCAPE_IMAGES = ['/static/tex/helix.jpg','/static/tex/trifid.jpg','/static/tex/n44c.jpg'];
+
+// Editable params per 3D object type. t: range|color|select|colors.
+const OBJECT_SCHEMA = {
+  starscape: [
+    {k:'src',l:'Image',t:'select',opts:STARSCAPE_IMAGES},
+    {k:'brightness',l:'Brightness',t:'range',min:0,max:1.5,step:0.05},
+    {k:'tint',l:'Tint',t:'color'},
+    {k:'spin',l:'Spin',t:'range',min:0,max:0.00002,step:0.0000005},
+    {k:'radius',l:'Radius',t:'range',min:100,max:600,step:10},
+  ],
+  starfield: [
+    {k:'count',l:'Count',t:'range',min:100,max:6000,step:50},
+    {k:'radius',l:'Radius',t:'range',min:20,max:300,step:1},
+    {k:'size',l:'Size',t:'range',min:0.2,max:3,step:0.05},
+    {k:'color',l:'Colour',t:'color'},{k:'warm',l:'Warm tint',t:'color'},{k:'cool',l:'Cool tint',t:'color'},
+    {k:'spin',l:'Spin',t:'range',min:0,max:0.00002,step:0.0000005},
+  ],
+  nebula_volume: [
+    {k:'count',l:'Puffs',t:'range',min:1,max:90,step:1},
+    {k:'spread',l:'Spread',t:'range',min:5,max:100,step:1},
+    {k:'flat',l:'Flatten',t:'range',min:0,max:1.5,step:0.05},
+    {k:'alpha_min',l:'Alpha min',t:'range',min:0,max:0.5,step:0.005},
+    {k:'alpha_max',l:'Alpha max',t:'range',min:0,max:0.6,step:0.005},
+    {k:'size_min',l:'Size min',t:'range',min:2,max:80,step:1},
+    {k:'size_max',l:'Size max',t:'range',min:4,max:120,step:1},
+    {k:'drift',l:'Drift',t:'range',min:0,max:0.0001,step:0.000002},
+    {k:'colors',l:'Colours',t:'colors'},
+  ],
+  dark_core: [
+    {k:'radius',l:'Core radius',t:'range',min:0.2,max:6,step:0.1},
+    {k:'glow',l:'Halo glow',t:'color'},{k:'photon',l:'Photon ring',t:'color'},
+    {k:'disk_hot',l:'Disk inner',t:'color'},{k:'disk_mid',l:'Disk mid',t:'color'},{k:'disk_out',l:'Disk outer',t:'color'},
+    {k:'disk_count',l:'Disk particles',t:'range',min:200,max:14000,step:100},
+    {k:'disk_radius',l:'Disk radius',t:'range',min:2,max:10,step:0.1},
+    {k:'disk_dot',l:'Particle size',t:'range',min:0.05,max:0.5,step:0.01},
+    {k:'tilt',l:'Tilt',t:'range',min:0,max:1.6,step:0.02},
+    {k:'disk_spin',l:'Spin',t:'range',min:0,max:0.001,step:0.00002},
+    {k:'disk_infall',l:'Infall',t:'range',min:0,max:0.0001,step:0.000001},
+    {k:'disk_brightness',l:'Brightness',t:'range',min:0.2,max:2,step:0.05},
+  ],
+  embers: [
+    {k:'count',l:'Count',t:'range',min:10,max:2000,step:10},
+    {k:'spread',l:'Spread',t:'range',min:2,max:60,step:1},
+    {k:'flat',l:'Flatten',t:'range',min:0,max:2,step:0.05},
+    {k:'color',l:'Colour',t:'color'},{k:'color2',l:'Colour 2',t:'color'},
+    {k:'size',l:'Size',t:'range',min:0.1,max:2,step:0.05},
+    {k:'spin',l:'Spin',t:'range',min:0,max:0.0003,step:0.000005},
+    {k:'bob',l:'Bob',t:'range',min:0,max:5,step:0.1},
+  ],
+  planet: [
+    {k:'radius',l:'Radius',t:'range',min:1,max:15,step:0.5},
+    {k:'color',l:'Surface',t:'color'},{k:'night',l:'Night side',t:'color'},{k:'atmosphere',l:'Atmosphere',t:'color'},
+    {k:'spin',l:'Spin',t:'range',min:0,max:0.0001,step:0.000002},
+  ],
+  derelict_hull: [
+    {k:'scale',l:'Scale',t:'range',min:0.2,max:4,step:0.1},
+    {k:'color',l:'Hull',t:'color'},{k:'lights',l:'Windows',t:'color'},{k:'beacon',l:'Beacon',t:'color'},
+    {k:'tumble',l:'Tumble X',t:'range',min:0,max:0.0002,step:0.000002},
+    {k:'tumble_y',l:'Tumble Y',t:'range',min:0,max:0.0002,step:0.000002},
+  ],
+  debris_field: [
+    {k:'count',l:'Count',t:'range',min:5,max:220,step:5},
+    {k:'spread',l:'Spread',t:'range',min:2,max:50,step:1},
+    {k:'color',l:'Colour',t:'color'},{k:'emissive',l:'Emissive',t:'color'},
+    {k:'size_min',l:'Size min',t:'range',min:0.05,max:2,step:0.05},
+    {k:'size_max',l:'Size max',t:'range',min:0.1,max:3,step:0.05},
+    {k:'drift',l:'Drift',t:'range',min:0,max:0.0001,step:0.000002},
+  ],
+  dust_motes: [
+    {k:'count',l:'Count',t:'range',min:10,max:2500,step:10},
+    {k:'spread',l:'Spread',t:'range',min:2,max:80,step:1},
+    {k:'color',l:'Colour',t:'color'},
+    {k:'opacity',l:'Opacity',t:'range',min:0,max:1,step:0.02},
+    {k:'size',l:'Size',t:'range',min:0.05,max:1,step:0.01},
+    {k:'drift',l:'Drift',t:'range',min:0,max:0.0001,step:0.000002},
+  ],
+  fire_vortex: [
+    {k:'size',l:'Size',t:'range',min:20,max:200,step:5},
+    {k:'brightness',l:'Brightness',t:'range',min:0.2,max:2,step:0.05},
+    {k:'tint',l:'Tint',t:'color'},
+    {k:'glow_color',l:'Glow colour',t:'color'},
+    {k:'glow_alpha',l:'Glow alpha',t:'range',min:0,max:1,step:0.02},
+    {k:'spin',l:'Spin',t:'range',min:0,max:0.0001,step:0.000002},
+  ],
+  station_cross: [
+    {k:'scale',l:'Scale',t:'range',min:0.2,max:4,step:0.1},
+    {k:'color',l:'Hull',t:'color'},{k:'lights',l:'Windows',t:'color'},{k:'beacon',l:'Beacon',t:'color'},
+    {k:'light_count',l:'Window count',t:'range',min:0,max:30,step:1},
+    {k:'drift',l:'Drift',t:'range',min:0,max:0.00005,step:0.000001},
+    {k:'sway',l:'Sway',t:'range',min:0,max:0.3,step:0.01},
+  ],
+  sun_glow: [
+    {k:'color',l:'Colour',t:'color'},{k:'halo_color',l:'Halo colour',t:'color'},
+    {k:'intensity',l:'Intensity',t:'range',min:0.2,max:6,step:0.1},
+    {k:'size',l:'Core size',t:'range',min:0.5,max:30,step:0.5},
+    {k:'halo_scale',l:'Halo scale',t:'range',min:1,max:12,step:0.5},
+    {k:'halo_alpha',l:'Halo alpha',t:'range',min:0,max:1,step:0.02},
+    {k:'pulse',l:'Pulse',t:'range',min:0,max:0.002,step:0.00005},
+  ],
+  light: [
+    {k:'kind',l:'Kind',t:'select',opts:['point','directional','ambient']},
+    {k:'color',l:'Colour',t:'color'},
+    {k:'intensity',l:'Intensity',t:'range',min:0,max:200,step:1},
+  ],
+  grid: [
+    {k:'size',l:'Size',t:'range',min:10,max:200,step:1},
+    {k:'divisions',l:'Divisions',t:'range',min:4,max:120,step:1},
+    {k:'color',l:'Colour',t:'color'},
+    {k:'opacity',l:'Opacity',t:'range',min:0,max:1,step:0.02},
+    {k:'y',l:'Height',t:'range',min:-30,max:30,step:0.5},
+  ],
+};
+OBJECT_SCHEMA.accretion_disk = OBJECT_SCHEMA.dark_core;
 
 // ===================================================================
 // UTILITY
@@ -975,6 +1149,15 @@ function renderFrame(ts) {
   const t = pauseOffset + (playing ? ts - startTime : 0);
   ctx.clearRect(0,0,W,H);
 
+  // 3D scenes have no 2D layers — the WebGL engine renders them on the display
+  // output. Show a placeholder here until the in-editor 3D preview lands.
+  if (!scene.layers) {
+    if (scene3dActive && engine3d) engine3d.render(t);
+    else draw3DPlaceholder();
+    document.getElementById('time-display').textContent = 't = ' + (t/1000).toFixed(1) + 's';
+    return;
+  }
+
   for (const layer of scene.layers) {
     if (!layer.visible) continue;
     ctx.save();
@@ -1057,7 +1240,11 @@ async function loadScene(sceneId) {
   motionFnCache.clear();
   scene = await apiGet(`/api/editor/scenes/${sceneId}`);
   selectedIdx = -1;
+  selectedObjIdx = -1;
+  if (scene.renderer === '3d') await load3DPreview();
+  else unload3DPreview();
   buildLayerList();
+  buildPropsPanel();
   updateSceneMeta();
   markClean();
 }
@@ -1092,6 +1279,7 @@ function buildLayerList() {
   const list = document.getElementById('layer-list');
   list.innerHTML = '';
   if (!scene) return;
+  if (!scene.layers) { build3DObjectList(list); return; }
   scene.layers.forEach((layer, i) => {
     const div = document.createElement('div');
     div.className = 'layer-item' + (i === selectedIdx ? ' selected' : '') +
@@ -1126,6 +1314,175 @@ function selectLayer(idx) {
   buildPropsPanel();
 }
 
+// --- 3D scene (experimental) ---------------------------------------------
+// Minimal, forward-compatible: list the 3D objects read-only and show a
+// placeholder in the preview. Full 3D authoring (param panels, in-editor
+// WebGL preview, gizmos) is the planned next phase.
+function build3DObjectList(list) {
+  // Header row doubles as "deselect" -> back to the scene/environment panel.
+  const head = document.createElement('div');
+  head.className = 'layer-item' + (selectedObjIdx < 0 ? ' selected' : '');
+  head.innerHTML = '<span class="layer-type-badge">3D</span>' +
+    '<span class="layer-name">◳ SCENE / ENVIRONMENT</span>';
+  head.addEventListener('click', () => { selectedObjIdx = -1; buildLayerList(); buildPropsPanel(); });
+  list.appendChild(head);
+
+  (scene.objects || []).forEach((obj, i) => {
+    const div = document.createElement('div');
+    div.className = 'layer-item' + (i === selectedObjIdx ? ' selected' : '');
+    const badge = document.createElement('span');
+    badge.className = 'layer-type-badge';
+    badge.textContent = obj.type;
+    const name = document.createElement('span');
+    name.className = 'layer-name';
+    name.textContent = obj.id || obj.type;
+    div.appendChild(badge);
+    div.appendChild(name);
+    div.addEventListener('click', () => selectObject(i));
+    list.appendChild(div);
+  });
+}
+
+function selectObject(i) { selectedObjIdx = i; buildLayerList(); buildPropsPanel(); }
+
+function addObject() {
+  scene.objects = scene.objects || [];
+  const type = prompt('Object type:\n' + OBJECT_TYPES_3D.join(', '), 'dark_core');
+  if (!type || !OBJECT_TYPES_3D.includes(type.trim())) return;
+  const t = type.trim();
+  scene.objects.push({ id: t + '_' + Math.random().toString(36).slice(2, 6), type: t, params: {} });
+  selectedObjIdx = scene.objects.length - 1;
+  reload3D(); buildLayerList(); buildPropsPanel(); markDirty();
+}
+
+function deleteObject() {
+  if (!scene.objects || selectedObjIdx < 0) return;
+  const obj = scene.objects[selectedObjIdx];
+  if (!confirm(`Delete object "${obj.id || obj.type}"?`)) return;
+  scene.objects.splice(selectedObjIdx, 1);
+  selectedObjIdx = Math.min(selectedObjIdx, scene.objects.length - 1);
+  reload3D(); buildLayerList(); buildPropsPanel(); markDirty();
+}
+
+function moveObject(dir) {
+  if (!scene.objects || selectedObjIdx < 0) return;
+  const i = selectedObjIdx, j = i + dir;
+  if (j < 0 || j >= scene.objects.length) return;
+  [scene.objects[i], scene.objects[j]] = [scene.objects[j], scene.objects[i]];
+  selectedObjIdx = j;
+  reload3D(); buildLayerList(); markDirty();
+}
+
+// Property panel for one 3D object.
+function buildObjectPanel(content, obj, idx) {
+  const baseS = makeSection('OBJECT');
+  baseS.appendChild(makeTextRow('ID', obj.id || '', v => { obj.id = v; buildLayerList(); markDirty(); }));
+  baseS.appendChild(makeSelectRow('Type', obj.type, OBJECT_TYPES_3D, v => {
+    obj.type = v; obj.params = obj.params || {}; reload3D(); selectObject(idx); markDirty();
+  }));
+  content.appendChild(baseS);
+
+  obj.params = obj.params || {};
+  const p = obj.params;
+  const pS = makeSection('PARAMS');
+  for (const f of (OBJECT_SCHEMA[obj.type] || [])) {
+    if (f.t === 'range') {
+      pS.appendChild(makeRangeRow(f.l, p[f.k], f.min, f.max, f.step, v => { p[f.k] = v; scheduleReload3D(); markDirty(); }));
+    } else if (f.t === 'color') {
+      pS.appendChild(makeColorRow(f.l, p[f.k] || '#ffffff', v => { p[f.k] = v; scheduleReload3D(); markDirty(); }));
+    } else if (f.t === 'select') {
+      pS.appendChild(makeSelectRow(f.l, p[f.k] || f.opts[0], f.opts, v => { p[f.k] = v; scheduleReload3D(); markDirty(); }));
+    } else if (f.t === 'colors') {
+      p.colors = p.colors || ['#5a1024', '#1a0a30'];
+      for (let ci = 0; ci < 3; ci++)
+        pS.appendChild(makeColorRow('Colour ' + (ci + 1), p.colors[ci] || '#000000',
+          v => { p.colors[ci] = v; scheduleReload3D(); markDirty(); }));
+    }
+  }
+  content.appendChild(pS);
+
+  p.position = p.position || [0, 0, 0];
+  const posS = makeSection('POSITION');
+  ['X', 'Y', 'Z'].forEach((ax, i) => posS.appendChild(
+    makeRangeRow(ax, p.position[i] ?? 0, -40, 40, 0.5, v => { p.position[i] = v; scheduleReload3D(); markDirty(); })));
+  content.appendChild(posS);
+
+  obj.motion = obj.motion || {};
+  const mS = makeSection('MOTION (expr of t)');
+  for (const axis of ['px', 'py', 'pz', 'rx', 'ry', 'rz'])
+    mS.appendChild(makeTextRow(axis, obj.motion[axis] || '',
+      v => { if (v) obj.motion[axis] = v; else delete obj.motion[axis]; scheduleReload3D(); markDirty(); }));
+  content.appendChild(mS);
+}
+
+// Environment / camera controls for a 3D scene — live-tuned via the engine.
+function buildEnvPanel(content) {
+  scene.environment = scene.environment || {};
+  scene.camera = scene.camera || {};
+  const env = scene.environment, cam = scene.camera;
+  env.bloom = env.bloom || {};
+  cam.position = cam.position || [0, 0, 14];
+
+  const head = document.createElement('div');
+  head.style.cssText = 'color:var(--dim);font-size:10px;padding:4px 8px;line-height:1.4;';
+  head.textContent = 'SCENE (3D) — select an object on the left to edit it, or tune the whole scene here.';
+  content.appendChild(head);
+
+  const envS = makeSection('ENVIRONMENT');
+  envS.appendChild(makeRangeRow('Exposure', env.exposure ?? 1.1, 0.3, 2.2, 0.05, v => { env.exposure = v; syncEnv(); markDirty(); }));
+  envS.appendChild(makeRangeRow('Grain', env.grain ?? 0.045, 0, 0.15, 0.005, v => { env.grain = v; syncEnv(); markDirty(); }));
+  envS.appendChild(makeRangeRow('Vignette', env.vignette ?? 0.55, 0, 1, 0.02, v => { env.vignette = v; syncEnv(); markDirty(); }));
+  envS.appendChild(makeColorRow('Background', env.background || '#000000', v => { env.background = v; syncEnv(); markDirty(); }));
+  content.appendChild(envS);
+
+  const bS = makeSection('BLOOM');
+  bS.appendChild(makeRangeRow('Strength', env.bloom.strength ?? 0.85, 0, 2, 0.05, v => { env.bloom.strength = v; syncEnv(); markDirty(); }));
+  bS.appendChild(makeRangeRow('Radius', env.bloom.radius ?? 0.6, 0, 1.2, 0.02, v => { env.bloom.radius = v; syncEnv(); markDirty(); }));
+  bS.appendChild(makeRangeRow('Threshold', env.bloom.threshold ?? 0.0, 0, 1, 0.02, v => { env.bloom.threshold = v; syncEnv(); markDirty(); }));
+  content.appendChild(bS);
+
+  const fog = env.fog || {};
+  const fS = makeSection('FOG');
+  fS.appendChild(makeRangeRow('Near', fog.near ?? 10, 0, 150, 1, v => { env.fog = env.fog || {}; env.fog.near = v; syncEnv(); markDirty(); }));
+  fS.appendChild(makeRangeRow('Far', fog.far ?? 90, 10, 320, 1, v => { env.fog = env.fog || {}; env.fog.far = v; syncEnv(); markDirty(); }));
+  fS.appendChild(makeColorRow('Colour', fog.color || '#000000', v => { env.fog = env.fog || {}; env.fog.color = v; syncEnv(); markDirty(); }));
+  content.appendChild(fS);
+
+  const cS = makeSection('CAMERA');
+  cS.appendChild(makeRangeRow('FOV', cam.fov ?? 55, 20, 100, 1, v => { cam.fov = v; syncEnv(); markDirty(); }));
+  ['X', 'Y', 'Z'].forEach((ax, i) => cS.appendChild(
+    makeRangeRow('Pos ' + ax, cam.position[i] ?? 0, -40, 40, 0.5, v => { cam.position[i] = v; syncEnv(); markDirty(); })));
+  if (cam.motion && Object.keys(cam.motion).length) {
+    const note = document.createElement('div');
+    note.style.cssText = 'color:var(--dim);font-size:9px;padding:2px 8px;';
+    note.textContent = '(animated axes below override the position sliders in the preview)';
+    cS.appendChild(note);
+  }
+  content.appendChild(cS);
+
+  // Camera motion: per-axis expressions of t. px/py/pz move the eye; lx/ly/lz aim it.
+  cam.motion = cam.motion || {};
+  const cmS = makeSection('CAMERA MOTION (expr of t)');
+  for (const axis of ['px', 'py', 'pz', 'lx', 'ly', 'lz'])
+    cmS.appendChild(makeTextRow(axis, cam.motion[axis] || '',
+      v => { if (v) cam.motion[axis] = v; else delete cam.motion[axis]; syncEnv(); markDirty(); }));
+  content.appendChild(cmS);
+}
+
+function draw3DPlaceholder() {
+  ctx.save();
+  ctx.fillStyle = '#7ab88a';
+  ctx.globalAlpha = 0.85;
+  ctx.font = 'bold 20px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('◉ 3D SCENE (WebGL)', W/2, H/2 - 14);
+  ctx.globalAlpha = 0.5;
+  ctx.font = '13px monospace';
+  ctx.fillText('Preview renders on the display output (/display).', W/2, H/2 + 14);
+  ctx.fillText((scene.objects ? scene.objects.length : 0) + ' objects · renderer:3d', W/2, H/2 + 36);
+  ctx.restore();
+}
+
 function toggleLayerVis(idx) {
   if (!scene) return;
   scene.layers[idx].visible = !scene.layers[idx].visible;
@@ -1142,6 +1499,7 @@ function updateSceneMeta() {
   const tags = document.getElementById('meta-tags');
   tags.innerHTML = '';
   const fields = [
+    ['RENDERER', scene.renderer === '3d' ? '3D' : '2D'],
     ['CLASS', scene.class],
     ['CODE', scene.code],
     ['LIFE', scene.life],
@@ -1256,7 +1614,15 @@ const LAYER_TYPES = [
 // ===================================================================
 function buildPropsPanel() {
   const content = document.getElementById('props-content');
-  if (selectedIdx < 0 || !scene || selectedIdx >= scene.layers.length) {
+  if (!scene) { content.innerHTML = '<span style="color:var(--dim)">No scene.</span>'; return; }
+  if (!scene.layers) {  // 3D scene: object panel if one is selected, else environment
+    content.innerHTML = '';
+    if (selectedObjIdx >= 0 && scene.objects && selectedObjIdx < scene.objects.length)
+      buildObjectPanel(content, scene.objects[selectedObjIdx], selectedObjIdx);
+    else buildEnvPanel(content);
+    return;
+  }
+  if (selectedIdx < 0 || selectedIdx >= scene.layers.length) {
     content.innerHTML = '<span style="color:var(--dim)">Select a layer.</span>';
     return;
   }
@@ -1599,6 +1965,7 @@ function makeNewLayer(type) {
 
 function addLayer() {
   if (!scene) return;
+  if (!scene.layers) { addObject(); return; }
   const types = LAYER_TYPES;
   const sel = prompt('Layer type:\n' + types.join(', '), 'solid_bg');
   if (!sel || !types.includes(sel.trim())) return;
@@ -1611,7 +1978,9 @@ function addLayer() {
 }
 
 function deleteLayer() {
-  if (!scene || selectedIdx < 0) return;
+  if (!scene) return;
+  if (!scene.layers) { deleteObject(); return; }
+  if (selectedIdx < 0) return;
   if (!confirm(`Delete layer "${scene.layers[selectedIdx].name}"?`)) return;
   particleState.delete(scene.layers[selectedIdx].id);
   scene.layers.splice(selectedIdx, 1);
@@ -1622,7 +1991,9 @@ function deleteLayer() {
 }
 
 function moveLayer(dir) {
-  if (!scene || selectedIdx < 0) return;
+  if (!scene) return;
+  if (!scene.layers) { moveObject(dir); return; }
+  if (selectedIdx < 0) return;
   const idx = selectedIdx;
   const newIdx = idx + dir;
   if (newIdx < 0 || newIdx >= scene.layers.length) return;
@@ -1650,25 +2021,78 @@ async function createNewScene() {
   if (!name) { alert('Enter a scene name.'); return; }
   if (!id) id = name.toLowerCase().replace(/[^a-z0-9]+/g,'_');
 
-  const newScene = {
-    id, name,
+  const renderer = (document.getElementById('new-scene-renderer') || {}).value || '2d';
+  const meta = {
     class: 'CUSTOM', sym: '●', desc: 'Custom scene.',
     code: 'AV-CS-00', life: 'NOMINAL', comms: 'ACTIVE', crew: 'NOMINAL', ship: 'NOMINAL',
     msg: 'CUSTOM VIBE SCENE ACTIVE',
-    layers: [makeNewLayer('solid_bg')],
   };
-  scene = newScene;
+  scene = renderer === '3d'
+    ? default3DScene(id, name, meta, '#ff3a2a')
+    : { id, name, ...meta, layers: [makeNewLayer('solid_bg')] };
+
+  await saveCurrentScene();
+  await loadSceneList();
+  hideModal();
+  document.getElementById('new-scene-name').value = '';
+  document.getElementById('new-scene-id').value = '';
+  document.getElementById('scene-select').value = id;
+  await loadScene(id);  // sets up 2D or 3D preview, lists, panels
+}
+
+// A starter 3D scene (also used to seed a 3D version of a 2D scene).
+function default3DScene(id, name, meta, accent) {
+  meta = meta || {}; accent = accent || '#ff3a2a';
+  return {
+    id, name, renderer: '3d',
+    class: meta.class || 'CUSTOM', sym: meta.sym || '◉', desc: meta.desc || 'Custom 3D scene.',
+    code: meta.code || 'AV-CS-3D', life: meta.life || 'NOMINAL', comms: meta.comms || 'ACTIVE',
+    crew: meta.crew || 'NOMINAL', ship: meta.ship || 'NOMINAL', msg: meta.msg || 'CUSTOM 3D VIBE ACTIVE',
+    environment: {
+      background: '#000000', fog: { color: '#0a0006', near: 24, far: 140 },
+      exposure: 1.12, bloom: { strength: 0.95, radius: 0.7, threshold: 0.0 },
+      grain: 0.045, vignette: 0.6, ambient: 0.18,
+    },
+    camera: { fov: 54, position: [0, 7, 13], lookAt: [0, 0, 0],
+      motion: { px: 'sin(t*0.00003)*12', pz: 'cos(t*0.00003)*12', py: '7 + sin(t*0.00002)*1.5' } },
+    objects: [
+      { id: 'stars', type: 'starfield', params: { count: 2200, radius: 150, size: 1.0 } },
+      { id: 'gas', type: 'nebula_volume', params: { count: 22, spread: 55, flat: 0.4,
+        colors: [accent, '#1a0a30'], alpha_min: 0.04, alpha_max: 0.14, size_min: 20, size_max: 52 } },
+      { id: 'core', type: 'dark_core', params: { radius: 2.4, glow: accent, photon: '#ffe6b0',
+        disk_hot: '#fff0c8', disk_mid: accent, disk_out: '#5a0a0a', disk_count: 4000, disk_radius: 5, tilt: 1.15 } },
+      { id: 'motes', type: 'dust_motes', params: { count: 300, spread: 40, opacity: 0.35 } },
+    ],
+  };
+}
+
+// Pull any #rrggbb colours out of a 2D scene's layers (for seeding a 3D palette).
+function extract2DPalette(s) {
+  const cols = [];
+  for (const L of (s.layers || [])) {
+    const p = L.params || {};
+    if (typeof p.color === 'string') { const m = p.color.match(/#([0-9a-fA-F]{6})/); if (m) cols.push('#' + m[1]); }
+    for (const st of (p.stops || [])) { if (st && st.color) { const m = String(st.color).match(/#([0-9a-fA-F]{6})/); if (m) cols.push('#' + m[1]); } }
+  }
+  return cols;
+}
+
+async function makeThreeDFromCurrent() {
+  if (!scene) return;
+  if (scene.renderer === '3d') { alert('This is already a 3D scene.'); return; }
+  const pal = extract2DPalette(scene);
+  const accent = pal.find(c => !/^#0{6}$/i.test(c)) || '#ff3a2a';
+  const id = (scene.id || 'scene') + '_3d';
+  const name = (scene.name || 'SCENE') + ' 3D';
+  const meta = {
+    class: scene.class, sym: scene.sym, desc: scene.desc, code: scene.code,
+    life: scene.life, comms: scene.comms, crew: scene.crew, ship: scene.ship, msg: scene.msg,
+  };
+  scene = default3DScene(id, name, meta, accent);
   await saveCurrentScene();
   await loadSceneList();
   document.getElementById('scene-select').value = id;
-  hideModal();
-  particleState.clear();
-  selectedIdx = -1;
-  buildLayerList();
-  buildPropsPanel();
-  updateSceneMeta();
-  document.getElementById('new-scene-name').value = '';
-  document.getElementById('new-scene-id').value = '';
+  await loadScene(id);
 }
 
 // ===================================================================
@@ -1798,6 +2222,7 @@ document.getElementById('scene-select').addEventListener('change', async (e) => 
 });
 
 document.getElementById('btn-new').addEventListener('click', showNewSceneModal);
+document.getElementById('btn-make3d').addEventListener('click', makeThreeDFromCurrent);
 document.getElementById('btn-save').addEventListener('click', saveCurrentScene);
 document.getElementById('btn-import').addEventListener('click', importScene);
 document.getElementById('btn-export').addEventListener('click', exportScene);
