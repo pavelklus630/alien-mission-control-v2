@@ -127,6 +127,55 @@ function cloudTexture(seed) {
   _cloudTex[seed] = t; return t;
 }
 
+// Blazing spiral vortex (burning accretion seen face-on): FBM sampled in
+// log-spiral coordinates so the noise streaks into arms; white-gold eye ->
+// orange -> deep red -> transparent rim. The painterly fire backdrop.
+let _fireVortexTex = null;
+function fireVortexTexture() {
+  if (_fireVortexTex) return _fireVortexTex;
+  const s = 512, cv = document.createElement('canvas'); cv.width = cv.height = s;
+  const g = cv.getContext('2d'), img = g.createImageData(s, s);
+  // colour ramp stops: pos, r, g, b (0-1)
+  const ramp = [
+    [0.00, 1.00, 0.98, 0.88],   // white-gold eye
+    [0.18, 1.00, 0.84, 0.42],   // gold
+    [0.42, 1.00, 0.48, 0.10],   // orange
+    [0.70, 0.62, 0.13, 0.04],   // deep red
+    [1.00, 0.14, 0.02, 0.01],   // ember rim
+  ];
+  function rampAt(x) {
+    x = Math.max(0, Math.min(1, x));
+    for (let i = 1; i < ramp.length; i++) {
+      if (x <= ramp[i][0]) {
+        const a = ramp[i - 1], b = ramp[i], f = (x - a[0]) / (b[0] - a[0] || 1);
+        return [a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f, a[3] + (b[3] - a[3]) * f];
+      }
+    }
+    return [ramp[ramp.length - 1][1], ramp[ramp.length - 1][2], ramp[ramp.length - 1][3]];
+  }
+  for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
+    const dx = (x / s - 0.5) * 2, dy = (y / s - 0.5) * 2;
+    const r = Math.sqrt(dx * dx + dy * dy);            // 0 centre -> ~1.4 corner
+    const th = Math.atan2(dy, dx);
+    // log-spiral coordinate: angle twists with radius -> streaked arms
+    const sp = th * 1.6 + Math.log(r + 0.07) * 4.2;
+    let n = _fbm(Math.cos(sp) * 1.8 + 2.7, Math.sin(sp) * 1.8 + r * 5.2, 5);
+    n = n * 0.75 + 0.25 * _fbm(dx * 3 + 9.1, dy * 3 + 4.4, 4);    // break up banding
+    const heat = Math.max(0, 1 - r * 1.05);            // radial falloff
+    let v = heat * (0.45 + 0.85 * n);
+    v = Math.pow(Math.max(0, v), 1.25);
+    const [cr, cg, cb] = rampAt(1 - v);
+    const alpha = Math.min(1, v * 2.4) * Math.max(0, 1 - (r - 0.78) / 0.3);
+    const i = (y * s + x) * 4;
+    img.data[i] = cr * 255; img.data[i + 1] = cg * 255; img.data[i + 2] = cb * 255;
+    img.data[i + 3] = Math.max(0, Math.min(1, alpha)) * 255;
+  }
+  g.putImageData(img, 0, 0);
+  _fireVortexTex = new THREE.CanvasTexture(cv);
+  _fireVortexTex.colorSpace = THREE.SRGBColorSpace;
+  return _fireVortexTex;
+}
+
 // Equirectangular planet surface: fbm mottling + faint latitude banding.
 function planetTexture(colorA, colorB) {
   const w = 256, h = 128, cv = document.createElement('canvas'); cv.width = w; cv.height = h;
@@ -380,6 +429,93 @@ const BUILDERS = {
     group.add(atmo);
     const spin = p.spin ?? 0.000015;
     return { object3d: group, update: (t) => { body.rotation.y = t * spin; } };
+  },
+
+  // Huge slowly-turning blazing spiral backdrop (procedural painterly fire).
+  // Mesh plane (not Sprite) so it can sit angled in the sky like a vast disc.
+  fire_vortex(p) {
+    const size = p.size ?? 90;
+    const mat = new THREE.MeshBasicMaterial({
+      map: fireVortexTexture(), transparent: true, depthWrite: false, fog: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+      color: new THREE.Color(p.tint || '#ffffff').multiplyScalar(p.brightness ?? 1.0),
+    });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size), mat);
+    const group = new THREE.Group();
+    group.add(mesh);
+    // soft wide glow behind the eye so the whole sky catches fire under bloom
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: glowTexture(), transparent: true, depthWrite: false, fog: false,
+      blending: THREE.AdditiveBlending, opacity: p.glow_alpha ?? 0.5,
+      color: new THREE.Color(p.glow_color || '#ff7a20'),
+    }));
+    glow.scale.set(size * 1.5, size * 1.5, 1);
+    group.add(glow);
+    const spin = p.spin ?? 0.000012;
+    return { object3d: group, update: (t) => { mesh.rotation.z = t * spin; } };
+  },
+
+  // Cross-shaped dead station: long spine + crossing arms, antenna masts,
+  // dish, module blocks. Near-black skin that catches rim light; sparse warm
+  // window dots + a blinking beacon. Built to be read as a silhouette.
+  station_cross(p) {
+    const group = new THREE.Group();
+    const skin = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(p.color || '#0c0a08'), roughness: 0.85, metalness: 0.55,
+      emissive: new THREE.Color('#030202'), emissiveIntensity: 0.5,
+    });
+    const add = (geo, x, y, z, rx = 0, ry = 0, rz = 0) => {
+      const m = new THREE.Mesh(geo, skin);
+      m.position.set(x, y, z); m.rotation.set(rx, ry, rz);
+      group.add(m); return m;
+    };
+    // vertical spine + lower keel
+    add(new THREE.BoxGeometry(0.55, 13, 0.55), 0, -0.5, 0);
+    add(new THREE.BoxGeometry(0.9, 2.2, 0.9), 0, -5.2, 0);
+    add(new THREE.BoxGeometry(0.75, 1.2, 0.75), 0, -3.4, 0);
+    // main horizontal arm + module blocks along it
+    add(new THREE.BoxGeometry(11, 0.6, 0.6), 0, 1.2, 0);
+    add(new THREE.BoxGeometry(2.6, 1.1, 1.1), -3.4, 1.2, 0);
+    add(new THREE.BoxGeometry(2.2, 1.0, 1.0), 3.0, 1.2, 0);
+    add(new THREE.BoxGeometry(1.4, 0.9, 0.9), 5.2, 1.2, 0);
+    // spur arm out the left (long thin boom like the art)
+    add(new THREE.BoxGeometry(4.5, 0.18, 0.18), -7.4, 1.2, 0);
+    // upper works: comm tower + masts
+    add(new THREE.BoxGeometry(0.8, 2.4, 0.8), 0, 5.4, 0);
+    add(new THREE.CylinderGeometry(0.05, 0.05, 3.2, 6), 0, 8.0, 0);
+    add(new THREE.CylinderGeometry(0.04, 0.04, 2.0, 6), -2.0, 3.2, 0);
+    add(new THREE.CylinderGeometry(0.04, 0.04, 1.6, 6), 1.6, 4.0, 0.2);
+    // dish
+    const dish = add(new THREE.CylinderGeometry(0.7, 0.1, 0.25, 16), -2.0, 2.6, 0, 0.9, 0, 0.5);
+    dish.scale.set(1, 0.5, 1);
+    // sparse warm window dots
+    const lit = new THREE.Color(p.lights || '#ff8a40');
+    for (let i = 0; i < (p.light_count ?? 9); i++) {
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6),
+        new THREE.MeshBasicMaterial({ color: lit.clone().multiplyScalar(rand(0.8, 1.8)) }));
+      const onArm = Math.random() < 0.55;
+      if (onArm) dot.position.set(rand(-5, 5), 1.2, 0.58);
+      else dot.position.set(0.3, rand(-4.5, 4.5), 0.32);
+      group.add(dot);
+    }
+    // blinking beacon at the mast tip
+    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(p.beacon || '#ff2a18') }));
+    beacon.position.set(0, 9.7, 0);
+    group.add(beacon);
+    group.scale.setScalar(p.scale ?? 1);
+    const drift = p.drift ?? 0.000006, sway = p.sway ?? 0.04;
+    let base = null;  // captured on first frame, after the engine applies params.rotation
+    return {
+      object3d: group,
+      update: (t) => {
+        if (!base) base = { y: group.rotation.y, z: group.rotation.z };
+        group.rotation.y = base.y + Math.sin(t * drift * 6) * sway * 2;
+        group.rotation.z = base.z + Math.sin(t * drift * 4 + 1) * sway;
+        const b = 0.3 + 0.7 * Math.pow(Math.max(0, Math.sin(t * 0.0016)), 8);
+        beacon.material.color.setRGB(b * 1.9, b * 0.32, b * 0.2);
+      },
+    };
   },
 
   // Distant dark wreck: near-black hull, bloom-bright window lights + beacon.

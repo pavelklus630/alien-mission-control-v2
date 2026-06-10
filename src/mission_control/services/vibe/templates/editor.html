@@ -457,7 +457,8 @@ function scheduleReload3D() { clearTimeout(_reloadTimer); _reloadTimer = setTime
 let selectedObjIdx = -1;   // selected 3D object (separate from 2D selectedIdx)
 
 const OBJECT_TYPES_3D = ['starscape','starfield','nebula_volume','dark_core','accretion_disk','embers',
-                         'planet','derelict_hull','debris_field','dust_motes','sun_glow','light','grid'];
+                         'planet','derelict_hull','station_cross','fire_vortex','debris_field',
+                         'dust_motes','sun_glow','light','grid'];
 
 const STARSCAPE_IMAGES = ['/static/tex/helix.jpg','/static/tex/trifid.jpg','/static/tex/n44c.jpg'];
 
@@ -535,6 +536,21 @@ const OBJECT_SCHEMA = {
     {k:'opacity',l:'Opacity',t:'range',min:0,max:1,step:0.02},
     {k:'size',l:'Size',t:'range',min:0.05,max:1,step:0.01},
     {k:'drift',l:'Drift',t:'range',min:0,max:0.0001,step:0.000002},
+  ],
+  fire_vortex: [
+    {k:'size',l:'Size',t:'range',min:20,max:200,step:5},
+    {k:'brightness',l:'Brightness',t:'range',min:0.2,max:2,step:0.05},
+    {k:'tint',l:'Tint',t:'color'},
+    {k:'glow_color',l:'Glow colour',t:'color'},
+    {k:'glow_alpha',l:'Glow alpha',t:'range',min:0,max:1,step:0.02},
+    {k:'spin',l:'Spin',t:'range',min:0,max:0.0001,step:0.000002},
+  ],
+  station_cross: [
+    {k:'scale',l:'Scale',t:'range',min:0.2,max:4,step:0.1},
+    {k:'color',l:'Hull',t:'color'},{k:'lights',l:'Windows',t:'color'},{k:'beacon',l:'Beacon',t:'color'},
+    {k:'light_count',l:'Window count',t:'range',min:0,max:30,step:1},
+    {k:'drift',l:'Drift',t:'range',min:0,max:0.00005,step:0.000001},
+    {k:'sway',l:'Sway',t:'range',min:0,max:0.3,step:0.01},
   ],
   sun_glow: [
     {k:'color',l:'Colour',t:'color'},{k:'halo_color',l:'Halo colour',t:'color'},
