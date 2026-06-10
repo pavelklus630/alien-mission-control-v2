@@ -314,3 +314,36 @@ Version `2.2.0` → `2.3.0` (`pyproject.toml`, `CURRENT_VERSION`, spec `CFBundle
 - **73 tests pass.** Build + codesign clean.
 
 Deferred to a later 4b: waveform trim/fade, per-sound tags, hotkey/Stream-Deck mapping, player-side music/SFX ducking.
+
+---
+
+### 2026-06-10 — v2.4.0 RELEASE — 3D Vibe Generator
+
+Version `2.3.0` → `2.4.0` (`pyproject.toml`, `CURRENT_VERSION`, spec `CFBundleShortVersionString`/`Version`). Ships the real-time 3D renderer for the Vibe Generator (branch `experiment/vibe-3d`, merged to `main`).
+
+**Architecture:** scenes with `"renderer":"3d"` branch at load time to a new WebGL engine (`vibe3d.js`) instead of the canvas-2D layer loop. Backend (state, SSE, routes) is completely untouched. The 2D and 3D engines coexist: a hidden `#c3` WebGL canvas sits behind the existing `#c` 2D canvas; the crossfade overlay covers both.
+
+**Tech stack (all vendored, no CDN — offline/frozen .app safe):**
+- Three.js r160 ESM build (`three.module.min.js`, 655 KB) resolved via `<script type="importmap">`.
+- Postprocessing addons at r160 (`static/jsm/`): EffectComposer, RenderPass, UnrealBloomPass, ShaderPass, OutputPass.
+- WebGL2 renderer — explicitly NOT WebGPU (CEF/OBS Browser Source does not support WebGPU).
+- ACES filmic tone mapping via OutputPass; FBM grain + vignette custom ShaderPass.
+
+**`vibe3d.js` engine:**
+- Procedural texture generators: `cloudTexture` (3 seeded FBM cloud variants), `planetTexture` (FBM + latitude banding), `glowTexture`, `starTexture`, `fireVortexTexture` (FBM in log-spiral coords → painterly spiral fire arms, white-gold→deep-red ramp).
+- GLSL shader disk (`DISK_VERT`/`DISK_FRAG`): Keplerian differential rotation + inward drift; `frustumCulled = false` (positions GPU-computed, CPU bounding sphere meaningless).
+- Object builders: `starfield`, `nebula_volume`, `dark_core`, `embers`, `planet`, `derelict_hull`, `station_cross`, `fire_vortex`, `debris_field`, `dust_motes`, `sun_glow`, `light`, `grid`, `starscape`.
+- Camera + object motion via `t`-expressions; `applyEnvironment`/`applyCamera` for live-tune without rebuild.
+- `?v=Date.now()` cache-bust on every dynamic `import()`.
+
+**Four new builtin 3D scenes (Heart of Darkness aesthetic):**
+- `12_dark_heart.json` — THE DARK HEART: accretion disk anomaly; 9 000 Keplerian shader particles; gold-hot disk vs crimson glow; near+far nebula shells.
+- `13_derelict_drift.json` — DERELICT DRIFT: redesigned from user art reference. `fire_vortex` (FBM log-spiral fire fills upper sky) + `station_cross` (spine/arm/spur/comm tower/masts/dish/modules/windows/beacon, sway additive on base rotation). Camera low-angle looking up at tilted cross.
+- `14_the_descent.json` — THE DESCENT: user's favourite; red dark_core, flying-in camera; retained throughout.
+- `15_the_long_dark.json` — THE LONG DARK: dead world + cold sun; `sun_glow` at the directional light's position.
+
+**Full 3D editor (E1–E3):** live WebGL preview; per-type property panels via `OBJECT_SCHEMA`; POSITION + MOTION expression sections; add/delete/reorder; NEW modal with 2D/3D choice; `default3DScene` template; "✦ MAKE 3D" button; CAMERA MOTION section.
+
+**Key lessons:** bloom + ACES is ~80% of the look; NASA photos on BackSide spheres → flat wallpaper (rejected); FBM log-spiral warping for spiral fire; sway must be additive on base rotation.
+
+**73 tests pass.** Branch `experiment/vibe-3d` merged to `main` via no-ff merge commit.
