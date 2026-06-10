@@ -4,7 +4,7 @@
   "renderer": "3d",
   "class": "WRECK",
   "sym": "⬡",
-  "desc": "A hull turning end over end in the dark. Emergency lighting only. No life signs — yet.",
+  "desc": "A graveyard of hulls turning end over end. Emergency lighting only. No life signs — yet.",
   "code": "AV-HOD-WRK",
   "life": "FLATLINE",
   "comms": "BEACON",
@@ -13,38 +13,41 @@
   "msg": "AUTOMATED DISTRESS BEACON — ORIGIN UNCONFIRMED",
   "environment": {
     "background": "#000000",
-    "fog": { "color": "#04060a", "near": 18, "far": 110 },
-    "exposure": 1.05,
-    "bloom": { "strength": 0.9, "radius": 0.6, "threshold": 0.04 },
-    "grain": 0.05, "vignette": 0.62, "ambient": 0.16
+    "fog": { "color": "#040608", "near": 10, "far": 60 },
+    "exposure": 1.1,
+    "bloom": { "strength": 1.0, "radius": 0.62, "threshold": 0.02 },
+    "grain": 0.055, "vignette": 0.66, "ambient": 0.1
   },
   "camera": {
-    "fov": 56,
-    "position": [5, 3, 12],
+    "fov": 58,
+    "position": [4, 1.5, 8],
     "lookAt": [0, 0, 0],
     "motion": {
-      "px": "5 + sin(t*0.000022)*2.5",
-      "py": "3 + sin(t*0.000016)*1.0"
+      "px": "4 + sin(t*0.000020)*2.0",
+      "py": "1.5 + sin(t*0.000014)*0.8",
+      "pz": "8 + cos(t*0.000017)*1.5"
     }
   },
   "objects": [
-    { "id": "sky", "type": "starscape",
-      "params": { "src": "/static/tex/n44c.jpg", "brightness": 0.3, "tint": "#9fb4d0", "radius": 360, "spin": 0.000002 } },
     { "id": "stars", "type": "starfield",
-      "params": { "count": 2200, "radius": 135, "size": 0.9, "color": "#bcc8e0", "warm": "#e0c4a0", "cool": "#9fc8ff" } },
+      "params": { "count": 2000, "radius": 130, "size": 0.85, "color": "#aab8d4", "warm": "#e0c4a0", "cool": "#9fc8ff" } },
     { "id": "haze", "type": "nebula_volume",
-      "params": { "count": 22, "spread": 48, "flat": 0.6, "colors": ["#103038", "#0a1a26", "#08111a"],
-                  "alpha_min": 0.04, "alpha_max": 0.12, "size_min": 20, "size_max": 50 } },
-    { "id": "scanner_haze", "type": "nebula_volume",
-      "params": { "count": 8, "spread": 34, "flat": 0.7, "colors": ["#0a2a1c", "#08160f"],
-                  "alpha_min": 0.02, "alpha_max": 0.06, "size_min": 16, "size_max": 38 } },
+      "params": { "count": 20, "spread": 40, "flat": 0.55, "colors": ["#0e2a32", "#081820", "#060e16"],
+                  "alpha_min": 0.04, "alpha_max": 0.12, "size_min": 16, "size_max": 42 } },
     { "id": "hull", "type": "derelict_hull",
-      "params": { "position": [0, 0, 0], "scale": 1.3, "color": "#141210", "lights": "#ffb060", "beacon": "#ff2a18",
-                  "tumble": 0.000016, "tumble_y": 0.00003 } },
+      "params": { "position": [0, 0, 0], "scale": 1.9, "color": "#161310", "lights": "#ffb060", "beacon": "#ff2a18",
+                  "tumble": 0.000014, "tumble_y": 0.000026 } },
+    { "id": "hull_far", "type": "derelict_hull",
+      "params": { "position": [-12, 3, -16], "scale": 1.1, "color": "#0c0a08", "lights": "#6a4828", "beacon": "#a01810",
+                  "tumble": 0.000022, "tumble_y": 0.000012 } },
+    { "id": "emergency_light", "type": "light",
+      "params": { "kind": "point", "color": "#ff8a40", "intensity": 90, "position": [3, 2, 3] } },
+    { "id": "fill_light", "type": "light",
+      "params": { "kind": "point", "color": "#2a6a7a", "intensity": 30, "position": [-5, -2, -4] } },
     { "id": "debris", "type": "debris_field",
-      "params": { "count": 60, "spread": 20, "color": "#23201c", "emissive": "#0a0604",
-                  "size_min": 0.14, "size_max": 0.9, "drift": 0.000008 } },
+      "params": { "count": 90, "spread": 14, "color": "#23201c", "emissive": "#0a0604",
+                  "size_min": 0.1, "size_max": 0.7, "drift": 0.00001 } },
     { "id": "motes", "type": "dust_motes",
-      "params": { "count": 360, "spread": 32, "color": "#6a6258", "opacity": 0.35, "size": 0.12 } }
+      "params": { "count": 600, "spread": 22, "color": "#6a6258", "opacity": 0.42, "size": 0.13, "drift": 0.00002 } }
   ]
 }

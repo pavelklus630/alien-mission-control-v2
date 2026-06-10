@@ -13,34 +13,35 @@
   "msg": "LIFE SUPPORT: MINIMAL — CONSERVATION MODE",
   "environment": {
     "background": "#000000",
-    "fog": { "color": "#000000", "near": 40, "far": 200 },
-    "exposure": 1.0,
-    "bloom": { "strength": 0.7, "radius": 0.6, "threshold": 0.08 },
-    "grain": 0.05, "vignette": 0.72, "ambient": 0.06
+    "fog": { "color": "#000000", "near": 60, "far": 240 },
+    "exposure": 1.05,
+    "bloom": { "strength": 0.85, "radius": 0.65, "threshold": 0.05 },
+    "grain": 0.05, "vignette": 0.7, "ambient": 0.05
   },
   "camera": {
-    "fov": 50,
-    "position": [0, 1, 22],
-    "lookAt": [-3, -1, 0],
+    "fov": 52,
+    "position": [0, 0.5, 17],
+    "lookAt": [-4, -2, 0],
     "motion": {
-      "px": "sin(t*0.000018)*2.5",
-      "py": "1 + sin(t*0.000013)*1.0"
+      "px": "sin(t*0.000014)*2.2",
+      "py": "0.5 + sin(t*0.000010)*0.9"
     }
   },
   "objects": [
-    { "id": "sky", "type": "starscape",
-      "params": { "src": "/static/tex/trifid.jpg", "brightness": 0.24, "tint": "#9fb0d8", "radius": 380, "spin": 0.0000018 } },
     { "id": "stars", "type": "starfield",
-      "params": { "count": 1400, "radius": 160, "size": 0.75, "color": "#8a90a8", "warm": "#d8b890", "cool": "#8a9ad8" } },
-    { "id": "reflection", "type": "nebula_volume",
-      "params": { "count": 16, "spread": 56, "flat": 0.7, "colors": ["#10203a", "#0a1428", "#06101e"],
-                  "alpha_min": 0.025, "alpha_max": 0.08, "size_min": 22, "size_max": 54, "position": [8, 4, -18] } },
-    { "id": "sun", "type": "light",
-      "params": { "kind": "directional", "color": "#ffcea0", "intensity": 2.8, "position": [38, 12, 18] } },
+      "params": { "count": 1600, "radius": 170, "size": 0.8, "color": "#9aa2bc", "warm": "#d8b890", "cool": "#8a9ad8" } },
+    { "id": "cold_sun", "type": "sun_glow",
+      "params": { "position": [52, 16, 24], "color": "#ffe2c0", "halo_color": "#c87a40",
+                  "intensity": 3.2, "size": 5, "halo_scale": 6, "halo_alpha": 0.3, "pulse": 0.00025 } },
+    { "id": "sun_light", "type": "light",
+      "params": { "kind": "directional", "color": "#ffcea0", "intensity": 3.2, "position": [52, 16, 24] } },
     { "id": "world", "type": "planet",
-      "params": { "position": [-7, -3.5, -10], "radius": 8.0, "color": "#2a1d14", "color2": "#4a3322",
-                  "night": "#0a0406", "atmosphere": "#ff6a2a", "spin": 0.000012 } },
+      "params": { "position": [-6, -4, -6], "radius": 10.5, "color": "#2a1d14", "color2": "#503824",
+                  "night": "#070304", "atmosphere": "#ff7a30", "spin": 0.00001 } },
+    { "id": "thin_haze", "type": "nebula_volume",
+      "params": { "count": 10, "spread": 60, "flat": 0.5, "colors": ["#0e1830", "#081020"],
+                  "alpha_min": 0.02, "alpha_max": 0.06, "size_min": 24, "size_max": 56, "position": [14, 8, -30] } },
     { "id": "motes", "type": "dust_motes",
-      "params": { "count": 260, "spread": 48, "color": "#2a2c36", "opacity": 0.32, "size": 0.11, "drift": 0.00001 } }
+      "params": { "count": 300, "spread": 50, "color": "#2a2c36", "opacity": 0.3, "size": 0.11, "drift": 0.00001 } }
   ]
 }

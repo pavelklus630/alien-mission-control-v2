@@ -461,6 +461,36 @@ const BUILDERS = {
     return { object3d: obj, update: (t) => { obj.rotation.x = t * drift; obj.rotation.z = t * drift * 0.6; } };
   },
 
+  // A distant star/sun: tight blazing core + wide soft halo, both additive
+  // sprites. Brighter-than-1 colour so it blooms hard. fog-immune.
+  sun_glow(p) {
+    const group = new THREE.Group();
+    const col = new THREE.Color(p.color || '#ffd9a8');
+    const core = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: starTexture(), transparent: true, depthWrite: false, fog: false,
+      blending: THREE.AdditiveBlending, color: col.clone().multiplyScalar(p.intensity ?? 2.5),
+    }));
+    const cs = p.size ?? 6; core.scale.set(cs, cs, 1);
+    group.add(core);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: glowTexture(), transparent: true, depthWrite: false, fog: false,
+      blending: THREE.AdditiveBlending, opacity: p.halo_alpha ?? 0.35,
+      color: new THREE.Color(p.halo_color || p.color || '#ff8a50'),
+    }));
+    const hs = (p.size ?? 6) * (p.halo_scale ?? 5); halo.scale.set(hs, hs, 1);
+    group.add(halo);
+    const pulse = p.pulse ?? 0.0004;
+    const baseI = p.intensity ?? 2.5;
+    return {
+      object3d: group,
+      update: (t) => {
+        const f = 1 + 0.12 * Math.sin(t * pulse);
+        core.material.color.copy(col).multiplyScalar(baseI * f);
+        halo.material.opacity = (p.halo_alpha ?? 0.35) * (0.8 + 0.2 * Math.sin(t * pulse * 0.7));
+      },
+    };
+  },
+
   // Real photographic backdrop (e.g. NASA public-domain nebulae) on a far
   // inside-out sphere. fog:false so it isn't swallowed by scene fog.
   starscape(p) {

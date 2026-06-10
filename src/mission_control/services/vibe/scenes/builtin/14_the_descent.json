@@ -29,8 +29,6 @@
     }
   },
   "objects": [
-    { "id": "sky", "type": "starscape",
-      "params": { "src": "/static/tex/trifid.jpg", "brightness": 0.26, "tint": "#ff9c90", "radius": 340, "spin": 0.000003 } },
     { "id": "stars", "type": "starfield",
       "params": { "count": 1500, "radius": 155, "size": 0.9, "color": "#d2dcf2", "warm": "#ffd2b0", "cool": "#aac2ff" } },
     { "id": "murk", "type": "nebula_volume",
